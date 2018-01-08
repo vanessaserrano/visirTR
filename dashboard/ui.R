@@ -1,27 +1,19 @@
 # Paquets a instal.lar/carregar
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
-         "tidyverse","XML","wordcloud","tm","slam","diptest","DT","gplots")
+         "tidyverse","XML","wordcloud","tm","slam","diptest","DT","gplots",
+         "googleVis","devtools","xts","dygraphs","scales",
+         "formattable","treemap","Rcpp","plotly","yaml")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg)}
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
-library(shiny)
-library(shinydashboard)
-library(devtools)
-library(xts)
-library(dplyr)
-library(googleVis)
-library(dygraphs)
-library(devtools)
-library(scales)
-library(formattable)
-library(rCharts)
-library(treemap)
-library(Rcpp)
-library(plotly)
-packageVersion('plotly')
+
+if (!require("rCharts")) {
+  install_github('ramnathv/rCharts', force= TRUE)
+  library("rCharts")
+}
+
 source("dashboard_functiVISIR.R")
-library(shinyjs)
 mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NULL, .list = NULL) {
   items <- c(list(...), .list)
   #lapply(items, tagAssert, type = "li", class = "dropdown")
