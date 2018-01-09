@@ -11,9 +11,10 @@ for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 if (!require("rCharts")) {
   install_github('ramnathv/rCharts', force= TRUE)
   library("rCharts")
-}
+} 
 
 source("dashboard_functiVISIR.R")
+library(shinyjs)
 mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NULL, .list = NULL) {
   items <- c(list(...), .list)
   #lapply(items, tagAssert, type = "li", class = "dropdown")
@@ -21,7 +22,7 @@ mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NU
               style = if (disable) "display: none;",
               span(class = "logo", title),
               tags$nav(class = "navbar navbar-static-top", role = "navigation",style = "logo{background-color:#FFF",
-                       # Embed hidden icon so that we get the font-awesome dependency
+                       
                        span(shiny::icon("bars"), style = "display:none;"),
                        # Sidebar toggle button
                        #                        a(href="#", class="sidebar-toggle", `data-toggle`="offcanvas",
@@ -61,7 +62,7 @@ ui <- dashboardPage(
           z-index: -99999;
         }
       '))),
-      
+
       menuItem("Browse data",icon = icon("dashboard"), tabName = "browsedata"),
       menuItem("Global Results",icon = icon("eye"), startExpanded = TRUE,
               
@@ -84,23 +85,13 @@ ui <- dashboardPage(
     menuItem("Browse data",icon = icon("dashboard"), tabName = "browsedata")
     
   )),
-  dashboardBody(    tags$style(HTML("
-                                    
-                                    
-                                    .box.box-solid.box-primary>.box-header {
-                                    color:#fff;
-                                    background:#0073b7
-                                    }
-                                    
-                                    .box.box-solid.box-primary{
-                                    border-bottom-color:#0073b7;
-                                    border-left-color:#0073b7;
-                                    border-right-color:#0073b7;
-                                    border-top-color:#0073b7;
-                                    }
-                                    
-                                    ")),
+  dashboardBody(    
                     tags$head(
+                      tags$style(HTML('.skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a {
+    color: #fff;
+                                      background: #1e282c;
+                                      border-left-color: #1e282c;
+                                      }')),
                       tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.css")),
                     
                     #boxes to be put in a row (or column)
@@ -183,7 +174,7 @@ ui <- dashboardPage(
                               
                               fluidRow(
                                 
-                                box(title="Mean number of Ciruits(Standard, Closed and Normalized) per Student and per Date",
+                                box(title="Number of Circuits per Date","Mean Number of Circuits per Student including Closed, Standard and Normalized,represented per Date",
                                     status="primary",dygraphOutput("dygraph2"), height=480, width=12)
                                 
                                 

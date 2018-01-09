@@ -67,7 +67,7 @@ shinyServer(function(input, output) {
     
   output$lowbound <-  renderInfoBox({
     infoBox(
-      title= NULL,value = InfovalueBoxlowbound(dfActionCircuit()),subtitle = "Low-bound of circuits performed",icon = icon("users"),
+      title= NULL,value = InfovalueBoxlowbound(dfActionCircuit()),subtitle = "Minimum circuits performed",icon = icon("arrow-down"),
       color = "teal",width = 3
       
     )})
@@ -76,7 +76,7 @@ shinyServer(function(input, output) {
   
   output$upbound <-  renderInfoBox({
     infoBox(
-      title= NULL,value = InfovalueBoxupbound(dfActionCircuit()) ,subtitle = "Up-bound of circuits performed", icon = icon("users"),
+      title= NULL,value = InfovalueBoxupbound(dfActionCircuit()) ,subtitle = "Maximum circuits performed", icon = icon("arrow-up"),
       color = "teal",width = 3
       
     )})
@@ -103,7 +103,7 @@ shinyServer(function(input, output) {
   output$umuniqnormcirc <-  renderInfoBox({
     infoBox(
       title= NULL,value = InfovalueBoxNNC(dfActionCircuit()) ,subtitle = "Total Number of Circuits", icon = icon("thumbs-up", lib = "glyphicon"),
-      color = "yellow",width = 3
+      color = "teal",width = 3
       
     )})
   
@@ -112,7 +112,7 @@ shinyServer(function(input, output) {
   output$Meannumuniqnormcircst <-  renderInfoBox({
     infoBox(
       title= NULL,value = InfovalueBoxMNNC(dfActionCircuit()) ,subtitle = "Mean Number Circuits per Student", icon = icon("users"),
-      color = "yellow",width = 3
+      color = "teal",width = 3
       
     )})
   
@@ -120,8 +120,8 @@ shinyServer(function(input, output) {
   
   output$lowboundN <-  renderInfoBox({
     infoBox(
-      title= NULL,value = InfovalueBoxlowboundN(dfActionCircuit()),subtitle ="Low-bound of circuits performed", icon = icon("users"),
-      color = "yellow",width = 3
+      title= NULL,value = InfovalueBoxlowboundN(dfActionCircuit()),subtitle ="Minimum circuits performed", icon = icon("arrow-down"),
+      color = "teal",width = 3
       
     )})
   
@@ -129,8 +129,8 @@ shinyServer(function(input, output) {
   
   output$upboundN <-  renderInfoBox({
     infoBox(
-      title= NULL,value = InfovalueBoxupboundN(dfActionCircuit()),subtitle = "Up-bound of circuits performed", icon = icon("users"),
-      color = "yellow",width = 3
+      title= NULL,value = InfovalueBoxupboundN(dfActionCircuit()),subtitle = "Maximum circuits performed", icon = icon("arrow-up"),
+      color = "teal",width = 3
       
     )})
   
@@ -163,8 +163,10 @@ shinyServer(function(input, output) {
   
   output$nActionsVStoT <- renderPlot({
    
-    ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu,color=Evaluation)) +  geom_point(size = I(3), alpha = I(0.6)) +
-      labs(x = "Time on Task", y = "Number of Circuits") + theme_bw()
+    ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) +
+      labs(x = "Time on Task", y = "Number of Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
+      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc")
+    
   })
   
   
@@ -265,12 +267,7 @@ shinyServer(function(input, output) {
   ## TIME PER STUDENT DISTRIBUTION
   
   #INFOBOXES
-  output$lowboundN <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxlowboundN(dfActionCircuit()),subtitle ="Low-bound of circuits performed", icon = icon("users"),
-      color = "yellow",width = 3
-      
-    )})
+
   
   
   

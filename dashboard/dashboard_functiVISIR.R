@@ -556,9 +556,9 @@ Dygraphfunc2 <- function(dfActionCircuit) {
   ga2Sus<-cbind(ses, con,cr)
   
   
-  dygraph(ga2Sus)%>% dyAxis("x",rangePad=c(-0.05)) %>%  dySeries("ses", label = "Standard",axis="y",fillGraph=TRUE) %>% 
-    dySeries("con",fillGraph=TRUE, label = "Closed",axis="y") %>% dySeries("cr", label = "Normalized",axis="y",strokePattern = "dashed") %>%
-    dyOptions(axisLineWidth = 1.5, fillGraph = TRUE, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
+  dygraph(ga2Sus)%>% dyAxis("x",rangePad=c(-0.05)) %>%  dySeries("ses", label = "Standard",axis="y") %>% 
+    dySeries("con",label = "Closed",axis="y",drawPoints = TRUE) %>% dySeries("cr", label = "Normalized",axis="y",drawPoints = TRUE) %>%
+    dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
   
 }
 
@@ -599,18 +599,18 @@ InfovalueBoxlowbound <- function(dfActionCircuit){
   lowboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(unique(Circuito)))
   
-  lowbound <- floor(mean(lowboundf$Circuito) - sd(lowboundf$Circuito))
+  mincircv <- min(lowboundf$Circuito)
   
-  return(lowbound)
+  return(mincircv)
 }
 InfovalueBoxupbound <- function(dfActionCircuit){
   
   upboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(unique(Circuito)))
   
-  upbound <- ceiling(mean(upboundf$Circuito) + sd(upboundf$Circuito))
+  maxcircv <- max(upboundf$Circuito)
   
-  return(upbound)
+  return(maxcircv)
 }
 InfovalueBoxmeanstud <- function(dfActionCircuit){
   
@@ -674,9 +674,9 @@ InfovalueBoxlowboundN <- function(dfActionCircuit){
   lowboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)))
   
-  lowboundN <- floor(mean(lowboundfN$CircuitoNormalizado) - sd(lowboundfN$CircuitoNormalizado))
+  mincircunv <- min(lowboundfN$CircuitoNormalizado)
   
-  return(lowboundN)
+  return(mincircunv)
 }
 
 InfovalueBoxupboundN <- function(dfActionCircuit){
@@ -684,9 +684,9 @@ InfovalueBoxupboundN <- function(dfActionCircuit){
   upboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)))
   
-  upboundN <- ceiling(mean(upboundfN$CircuitoNormalizado) + sd(upboundfN$CircuitoNormalizado))
+  maxcircnv <- max(upboundfN$CircuitoNormalizado)
   
-  return(upboundN)
+  return(maxcircnv)
 }
 
 
