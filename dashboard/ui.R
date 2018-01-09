@@ -14,7 +14,6 @@ if (!require("rCharts")) {
 } 
 
 source("dashboard_functiVISIR.R")
-library(shinyjs)
 mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NULL, .list = NULL) {
   items <- c(list(...), .list)
   #lapply(items, tagAssert, type = "li", class = "dropdown")
