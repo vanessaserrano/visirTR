@@ -11,7 +11,7 @@ for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 if (!require("rCharts")) {
   install_github('ramnathv/rCharts', force= TRUE)
   library("rCharts")
-}
+} 
 
 source("dashboard_functiVISIR.R")
 mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NULL, .list = NULL) {
