@@ -1,19 +1,27 @@
 # Paquets a instal.lar/carregar
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
-         "tidyverse","XML","wordcloud","tm","slam","diptest","DT","gplots",
-         "googleVis","devtools","xts","dygraphs","scales",
-         "formattable","treemap","Rcpp","plotly","yaml")
+         "tidyverse","XML","wordcloud","tm","slam","diptest","DT","gplots")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg)}
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
-
-if (!require("rCharts")) {
-  install_github('ramnathv/rCharts', force= TRUE)
-  library("rCharts")
-} 
-
+library(shiny)
+library(shinydashboard)
+library(devtools)
+library(xts)
+library(dplyr)
+library(googleVis)
+library(dygraphs)
+library(devtools)
+library(scales)
+library(formattable)
+library(rCharts)
+library(treemap)
+library(Rcpp)
+library(plotly)
+packageVersion('plotly')
 source("dashboard_functiVISIR.R")
+library(shinyjs)
 mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NULL, .list = NULL) {
   items <- c(list(...), .list)
   #lapply(items, tagAssert, type = "li", class = "dropdown")
@@ -21,7 +29,7 @@ mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NU
               style = if (disable) "display: none;",
               span(class = "logo", title),
               tags$nav(class = "navbar navbar-static-top", role = "navigation",style = "logo{background-color:#FFF",
-                       
+                       # Embed hidden icon so that we get the font-awesome dependency
                        span(shiny::icon("bars"), style = "display:none;"),
                        # Sidebar toggle button
                        #                        a(href="#", class="sidebar-toggle", `data-toggle`="offcanvas",
@@ -62,7 +70,7 @@ ui <- dashboardPage(
         }
       '))),
 
-      menuItem("Browse data",icon = icon("dashboard"), tabName = "browsedata"),
+      menuItem("Browse data",icon = icon("dashboard"), tabName = "Data Input"),
       menuItem("Global Results",icon = icon("eye"), startExpanded = TRUE,
               
                         menuSubItem("Circuits Distribution", tabName = "numcircu",icon = icon("area-chart")),
@@ -209,7 +217,7 @@ ui <- dashboardPage(
                                     fluidRow(
                                             
                                      box(title="Time(Minutes) spent per Student and per Date",
-                                         status="primary",plotlyOutput("plotly"), height=480, width=12))),
+                                         status="primary",plotOutput("plotly"), height=480, width=12))),
                       
                       
                       
