@@ -24,7 +24,7 @@ shinyServer(function(input, output) {
   })
   output$numActions <- renderValueBox({
     valueBox(
-      format(nrow(dfImport()),format="d",big.mark=""), 
+      format(length(dfImport()$Alumno),format="d",big.mark=""), 
       "Actions", icon = icon("cubes"), color = "blue")
   })
   
@@ -261,7 +261,7 @@ shinyServer(function(input, output) {
   
   ## DYGRAPH 3 Tiempo medio dedicado por alumno y por fecha
   
-  output$plotly <-renderPlotly({
+  output$plotly <-renderPlot({
     
     
     plotlyfunc3(dfMTS())
@@ -296,7 +296,7 @@ shinyServer(function(input, output) {
   
   output$maxtimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value=InfovalueBoxMaxT(dfOrderTime()),subtitle = "Max Time(Hours) spent",icon = icon("users"),
+      title= NULL,value=InfovalueBoxMaxT(dfOrderTime()),subtitle = "Max Time(Hours) spent",icon = icon("arrow-up"),
       color = "teal",width = 3
       
     )})
@@ -305,7 +305,7 @@ shinyServer(function(input, output) {
   
   output$mintimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value=InfovalueBoxMinT(dfOrderTime()),subtitle = "Min Time(Minutes) spent", icon = icon("users"),
+      title= NULL,value=InfovalueBoxMinT(dfOrderTime()),subtitle = "Min Time(Minutes) spent", icon = icon("arrow-down"),
       color = "teal",width = 3
       
     )})
@@ -316,7 +316,7 @@ shinyServer(function(input, output) {
   
   output$timstu <- renderPlot({
     if(is.null(dfOrderTime())) return(NULL)
-    plotDistribution(dfOrderTime()$TotalTime, xlabel="Time per Student (in minutes)")
+    plotDistribution(dfOrderTime()$TotalTime, xlabel="Time per Student")
   })
   
   

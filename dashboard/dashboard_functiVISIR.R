@@ -436,9 +436,15 @@ FunctionMTS <- function (dfVISIR_acciones) {
   
   Totaltimebydate <- dfVISIR_accionesOrdenado %>% select(Alumno,Dates,Hours,FechaHoraEnvio) %>% group_by(Alumno,Dates,Hours) %>%
     arrange(FechaHoraEnvio) %>% summarise(Diffti=sum(diff(FechaHoraEnvio))) %>%
-    group_by(Dates,Alumno) %>% summarise(MeanTimeSD=sum(Diffti)) %>% mutate(MeanTimeSD=MeanTimeSD/60) %>% 
-    mutate(Time=round(MeanTimeSD,digits = 2))
+    group_by(Dates,Alumno) %>% summarise(Time=sum(Diffti)) %>% mutate(Time=Time/60) %>% 
+    mutate(Time=round(Time,digits = 2))
   
+  
+  Totaltimebydate$Time<-as.numeric(Totaltimebydate$Time)
+  class( Totaltimebydate$Dates)
+  Totaltimebydate$Dates <- as.factor(Totaltimebydate$Dates)
+  Totaltimebydate$Alumno <- as.factor(Totaltimebydate$Alumno)
+  names(Totaltimebydate)[names(Totaltimebydate) == 'Alumno'] <- 'Student'
   
   return(Totaltimebydate)
   
@@ -835,7 +841,9 @@ plotDistribution <- function(time=NA,maxTime=NULL,xlabel="") {
 plotlyfunc3 <- function(dfMTS) {
   if(is.null(dfMTS)) return(NULL)
   
-  z <- plot_ly(dfMTS, y = ~Time , x = ~Dates, type = "box")
+  ggplot(data = dfMTS, aes(x = Student, y = Dates)) +
+    geom_tile(aes(fill = Time))                                
+  
   
   
   
