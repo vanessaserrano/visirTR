@@ -39,11 +39,6 @@ mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NU
   )
 }
 
-
-
-
-
-
 theme = "bootstrap.css"
 ui <- dashboardPage( 
   skin="yellow",

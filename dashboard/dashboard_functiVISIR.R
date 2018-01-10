@@ -1,6 +1,5 @@
 FunctionActionCircuit <- function (dfVISIR_acciones) {
- 
-  
+
   observaciones <- TRUE
   
   replaceMany <- function(x, find, replace) {
@@ -59,9 +58,9 @@ vecDiffTimeCumReal<-rep(0, numAcciones)
 for(i in 2:numAcciones) {
   if(dfVISIR_acciones$Alumno[i]==dfVISIR_acciones$Alumno[i-1]) {
     thisTime<-as.numeric(as.POSIXct(as.character(dfVISIR_acciones$FechaHoraEnvio[i]),
-                                    format="%m/%d/%Y %H:%M:%S"))
+                                    format="%Y-%m-%d %H:%M:%S"))
     previousTime<-as.numeric(as.POSIXct(as.character(dfVISIR_acciones$FechaHoraEnvio[i-1]),
-                                        format="%m/%d/%Y %H:%M:%S"))
+                                        format="%Y-%m-%d %H:%M:%S"))
     vecDiffTime[i]<-thisTime-previousTime
     
     vecDiffTimeCum[i]<-vecDiffTime[i]+vecDiffTimeCum[i-1]
@@ -72,6 +71,7 @@ for(i in 2:numAcciones) {
     vecDiffTimeCumReal[i]<-0
   }
 }
+
 dfVISIR_accionesOrdenado$TiempoDesdeAccionAnterior <- vecDiffTime / 60
 dfVISIR_accionesOrdenado$TiempoAcumulado <- vecDiffTimeCum / 60
 dfVISIR_accionesOrdenado$TiempoAcumuladoCorregido <- vecDiffTimeCumReal / 60
@@ -93,6 +93,7 @@ if(observaciones) {
   table(dfVISIR_accionesOrdenado$EsCircuito)
 }
 numCircuitos <- sum(dfVISIR_accionesOrdenado$EsCircuito)
+print(paste("NCirc:",numCircuitos))
 
 dfVISIR_accionesOrdenado$NumCircuito <- 0
 dfVISIR_accionesOrdenado$NumAccion <- 1
@@ -117,8 +118,11 @@ for(i in 1:numCircuitos){
   tempRegExpCircuito<-regexec("<circuitlist>([^<]*)",as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
   tempCircuitos[i]<-substr(dfVISIR_accionesCircuito$DatosEnviadosXML[i],tempRegExpCircuito[[1]][2],
                            tempRegExpCircuito[[1]][2]+attr(tempRegExpCircuito[[1]],"match.length")[2]-1)
-  
 }
+
+tempCircuitos <- gsub("[\n\r]","", tempCircuitos)
+print(head(tempCircuitos))
+str(tempCircuitos)
 
 tempMMConectado<-grepl("DMM_",dfVISIR_accionesCircuito$DatosEnviadosXML)
 tempMMOperativo<-grepl("<dmm_function value=",dfVISIR_accionesCircuito$DatosEnviadosXML)
@@ -130,7 +134,7 @@ for(i in 1:numCircuitos){
     #El primer resultat de regexec es el match global, el 2:n son els extrets
     tempRegExpMedida<-regexec("<dmm_function value=.(.)",
                               as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
-    print(tempRegExpMedida)
+    #print(tempRegExpMedida)
     tempMedidas[i]<-substr(as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]),
                            tempRegExpMedida[[1]][2],tempRegExpMedida[[1]][2]+4)
   }
@@ -314,13 +318,13 @@ FunctionOrderTime <- function (dfVISIR_acciones) {
   
   
   
-  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y")
-  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y %H")
+  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H")
   
   X_X <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,Hours,FechaHoraEnvio)
   
   X_X$FechaHoraEnvio<-as.POSIXct(as.character(X_X$FechaHoraEnvio),
-                                 format="%m/%d/%Y %H:%M:%S")
+                                 format="%Y-%m-%d %H:%M:%S")
   
   
   ordenAlumno <- X_X %>% group_by(Alumno,Dates,Hours) %>% arrange(FechaHoraEnvio) %>% 
@@ -345,8 +349,8 @@ FunctionSSA <- function (dfVISIR_acciones) {
   
   
   
-  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y")
-  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%m/%d/%Y")
+  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
   
   Acciones <- dfVISIR_accionesOrdenado %>% select(Dates,Sesion,Alumno) %>%group_by(Dates) %>% 
     summarise(Sesion=length(unique(Sesion)),Alumnos=length(unique(Alumno)),Acciones=length(Dates))
@@ -372,13 +376,13 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
   
   #Parte Tiempo
   
-  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y")
-  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y %H")
+  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H")
   
   X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,Hours,FechaHoraEnvio)
   
   X_P$FechaHoraEnvio<-as.POSIXct(as.character(X_P$FechaHoraEnvio),
-                                 format="%m/%d/%Y %H:%M:%S")
+                                 format="%Y-%m-%d %H:%M:%S")
   
 
   TimeStud <- X_P %>% group_by(Alumno,Dates,Hours) %>% arrange(FechaHoraEnvio) %>% 
@@ -423,12 +427,12 @@ FunctionMTS <- function (dfVISIR_acciones) {
   
   
   
-  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y")
-  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y %H")
-  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%m/%d/%Y")
+  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H")
+  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
   
   dfVISIR_accionesOrdenado$FechaHoraEnvio<-as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio),
-                                                      format="%m/%d/%Y %H:%M:%S")
+                                                      format="%Y-%m-%d %H:%M:%S")
   
   Totaltimebydate <- dfVISIR_accionesOrdenado %>% select(Alumno,Dates,Hours,FechaHoraEnvio) %>% group_by(Alumno,Dates,Hours) %>%
     arrange(FechaHoraEnvio) %>% summarise(Diffti=sum(diff(FechaHoraEnvio))) %>%
@@ -528,9 +532,9 @@ Dygraphfunc2 <- function(dfActionCircuit) {
   
   ADYygraph <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.))
   
-  ADYygraph$Dates <- format(as.Date(ADYygraph$FechaHoraEnvio, format="%m/%d/%Y %H:%M:%S"),"%m/%d/%Y")
+  ADYygraph$Dates <- format(as.Date(ADYygraph$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
   
-  ADYygraph$Dates <- as.Date(ADYygraph$Dates,"%m/%d/%Y")
+  ADYygraph$Dates <- as.Date(ADYygraph$Dates,"%Y-%m-%d")
   
   MeanNumCStudDate <- ADYygraph %>% group_by(Alumno,Dates) %>% summarise(MeanNumCircSD=length(unique(Circuito))) %>% #Data frame con el numero medio de ciruitos (BASIC) por estudiante por dia
     group_by(Dates) %>% summarise(MeanNumCircSD=mean(MeanNumCircSD,na.rm=TRUE)) %>% 
@@ -895,7 +899,7 @@ Numcirc <- function(dfActionCircuit=NA) {
   
 }
 
-# 2.2 PROPORCIÓN DE CIRCUITOS CERRADOS BILBAO
+# 2.2 PROPORCI?N DE CIRCUITOS CERRADOS BILBAO
 
 Propcirccerrb <- function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)
@@ -912,7 +916,7 @@ Propcirccerrb <- function(dfActionCircuit=NA) {
   
 }
   
-# 2.3 PROPORCIÓN DE CIRCUITOS CERRADOS DONOSTIA
+# 2.3 PROPORCI?N DE CIRCUITOS CERRADOS DONOSTIA
 
 Propcirccerrd <- function(dfActionCircuit=NA) {
 if(is.null(dfActionCircuit)) return(NULL)
@@ -931,7 +935,7 @@ if(is.null(dfActionCircuit)) return(NULL)
 }
 
 
-# 2.4 PROPORCIÓN DE MM BIEN CONECTADOS Y CONECTADOS DONOSTIA
+# 2.4 PROPORCI?N DE MM BIEN CONECTADOS Y CONECTADOS DONOSTIA
 
 Propcirmmokcond <- function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)
@@ -947,7 +951,7 @@ Propcirmmokcond <- function(dfActionCircuit=NA) {
     labs(x="Num. circuito", y="", title="Proportion of Multimeters OK and properly connected DONOSTIA")
 }
 
-# 2.5 PROPORCIÓN DE MM BIEN CONECTADOS Y CONECTADOS BILBAO
+# 2.5 PROPORCI?N DE MM BIEN CONECTADOS Y CONECTADOS BILBAO
 
 Propcirmmokconb <- function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)
@@ -966,7 +970,7 @@ Propcirmmokconb <- function(dfActionCircuit=NA) {
 
 # 3 SECCION
   
-# 3.1 PROPORCIÓN DE LAS DISTINTAS MEDIDAS CONFORME AL NÚMERO DE CIRCUITOS DONOSTIA
+# 3.1 PROPORCI?N DE LAS DISTINTAS MEDIDAS CONFORME AL N?MERO DE CIRCUITOS DONOSTIA
 
 Propmedynumd <-function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)
@@ -981,7 +985,7 @@ Propmedynumd <-function(dfActionCircuit=NA) {
     labs(x="Num. circuito", y="", title="Proportion of the different measures according to the number of circuits")
   
   }
-# 3.2 PROPORCIÓN DE LAS DISTINTAS MEDIDAS CONFORME AL NÚMERO DE CIRCUITOS BILBAO
+# 3.2 PROPORCI?N DE LAS DISTINTAS MEDIDAS CONFORME AL N?MERO DE CIRCUITOS BILBAO
 
 Propmedynumb <-function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)
@@ -997,7 +1001,7 @@ Propmedynumb <-function(dfActionCircuit=NA) {
   
 }
 
-# 3.3 TIEMPO ACUMULADO POR ALUMNO SEGÚN EL TIPO DE MEDIDA GENERAL
+# 3.3 TIEMPO ACUMULADO POR ALUMNO SEG?N EL TIPO DE MEDIDA GENERAL
 
 Tiempalumng <- function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)
@@ -1013,7 +1017,7 @@ Tiempalumng <- function(dfActionCircuit=NA) {
 
 }
 
-# 3.4 TIEMPO ACUMULADO POR ALUMNO SEGÚN EL TIPO DE MEDIDA DONOSTIA
+# 3.4 TIEMPO ACUMULADO POR ALUMNO SEG?N EL TIPO DE MEDIDA DONOSTIA
 
 Tiempalummedd <- function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)
@@ -1031,7 +1035,7 @@ Tiempalummedd <- function(dfActionCircuit=NA) {
 
 }
 
-# 3.5 TIEMPO ACUMULADO POR ALUMNO SEGÚN EL TIPO DE MEDIDA BILBAO
+# 3.5 TIEMPO ACUMULADO POR ALUMNO SEG?N EL TIPO DE MEDIDA BILBAO
 
 Tiempalummedb <- function(dfActionCircuit=NA) {
   if(is.null(dfActionCircuit)) return(NULL)

@@ -1,4 +1,4 @@
- options(shiny.maxRequestSize=40*1024^2)
+options(shiny.maxRequestSize=500*1024^2)
 shinyServer(function(input, output) {
 
   #Data selection
@@ -9,7 +9,11 @@ shinyServer(function(input, output) {
   dfImport<-reactive({
     inFile <- input$logsImport
     if (is.null(inFile)) return(NULL) else
-      return(read.delim2(inFile$datapath, header=TRUE, sep="\t", quote=""))
+      df <- read.table(inFile$datapath, header=F, sep=",", quote="\"",
+                       stringsAsFactors = FALSE)
+      colnames(df) <- c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+            "DatosEnviadosXML","DatosRecibidosXML","Tarea")
+      return(df)
   })
   
   # 1 TAB ValueBox
