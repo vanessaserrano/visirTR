@@ -56,20 +56,14 @@ ui <- dashboardPage(
         }
       '))),
 
-      menuItem("Browse data",icon = icon("dashboard"), tabName = "browsedata"),
+      menuItem("Data Input",icon = icon("dashboard"), tabName = "browsedata"),
       menuItem("Global Results",icon = icon("eye"), startExpanded = TRUE,
-              
-                        menuSubItem("Circuits Distribution", tabName = "numcircu",icon = icon("area-chart")),
-                        
-                        menuSubItem("Circuits per Date", tabName = "overtime",icon = icon("area-chart")),
-                        menuSubItem("Circuits vs Time", tabName = "circutime",icon = icon("area-chart")),
-                        menuSubItem("Types of Mesure", tabName = "tyofmes",icon = icon("code-fork"))
-                        
-                         ,
                
-             
-                        menuSubItem("Time spent per Date", tabName = "timdate",icon = icon("area-chart")),
-                        menuSubItem("Time/Student Distribution", tabName = "timstud",icon = icon("area-chart"))
+                        menuSubItem("Time Analysis", tabName = "timeana",icon = icon("area-chart")),
+              
+                        menuSubItem("Circuits Analysis", tabName = "numcircu",icon = icon("area-chart"))
+                        
+                      
                
       
       
@@ -158,69 +152,78 @@ ui <- dashboardPage(
                                               
                                               
                                               
-                                     ))
-                              
-                              
-                      ),
-                      
-                      tabItem("overtime", 
-                              
-                              fluidRow(
-                                
-                                box(title="Number of Circuits per Date","Mean Number of Circuits per Student including Closed, Standard and Normalized,represented per Date",
-                                    status="primary",dygraphOutput("dygraph2"), height=480, width=12)
-                                
-                                
-                                
-                              )
-                      ),
-                      tabItem("circutime", 
-                              
-                              fluidRow(
-                                
-                                box(title="Number of Circuits vs Time on task ",
-                                    status="primary",uiOutput("plotuinAct"),verbatimTextOutput("plot_pointsnAct"), height=480, width=12)
-                                
-                                
-                                
-                              )
-                      ),
-                      tabItem("tyofmes", 
-                              
-                              fluidRow(
-                                
-                                box(title="Number of normalized circuits per Type of mesure ",
-                                    status="primary",height=480, width=12,
-                                   showOutput("typmes", "Highcharts"))
-                                    
-     
-                                
-                                
-                                )),
-                      
-                             tabItem("timdate", 
-                                          
-                                    fluidRow(
+                                     ),
+                                     
+                                     tabPanel( "Circuits vs Date",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Total number of standard and normalized circuits per date",
+                                                     status="primary",dygraphOutput("dygraph2"), height=480, width=12)))
                                             
-                                     box(title="Time(Minutes) spent per Student and per Date",
-                                         status="primary",plotOutput("plotly"), height=480, width=12))),
+                                     
+                                     )
+                              
+                              
+                      ),
                       
-                      
-                      
-                              tabItem("timstud", 
-                                      
-                                      fluidRow(
-                                        infoBoxOutput("totaltimespend",width = 3),
-                                        infoBoxOutput("meantimespend",width = 3),
-                                        infoBoxOutput("maxtimespend",width = 3),
-                                        infoBoxOutput("mintimespend",width = 3)
+                      tabItem("timeana",
+                              
+                              tabBox(height=480, width=12,
+                                     
+                                     
+                                     tabPanel( "Total Time vs Date",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Total Time (Hours) vs Date",
+                                                     status="primary",dygraphOutput("dygraph"), height=480, width=12)
+                                                 
                                         
-                                      ),
-            
-                                      fluidRow(
-                                        
-                                        box(title="Time (Minutes) per Student Distribution",
-                                            status="primary",plotOutput("timstu"), height=480, width=12)))
+                                               )
+                                     
+                          
+                                     ),
+                                     tabPanel("Time on Task Distribution", 
+                                              
+                                              fluidRow(
+                                                infoBoxOutput("totaltimespend",width = 3),
+                                                infoBoxOutput("meantimespend",width = 3),
+                                                infoBoxOutput("maxtimespend",width = 3),
+                                                infoBoxOutput("mintimespend",width = 3)
+                                                
+                                              ) ,
+                                              
+                                              
+                                              fluidRow(
+                                                
+                                                box(title="Time (Minutes) per Student Distribution",
+                                                    status="primary",plotOutput("timstu"), height=480, width=12))),
+                                     
+                                     
+                                     tabPanel( "Time on Task vs User",
+                                               
+                                               fluidRow(
+                                                 box(title="Time on task vs User, per Date",
+                                                     status="primary",plotOutput("plotly"), height=480, width=12)
+                                                 
+                                               )
+                                               
+                                               
+                                     )
+                                     
+                                                
+                                                
+                                                
+                                              )  
+                                              
+                                              
+                                              
+                                              
+                                     )
+                              
+                              
+               
                                             
                
                                   

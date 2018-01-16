@@ -43,6 +43,20 @@ shinyServer(function(input, output) {
  ##### GLOBAL RESULTS
   
   
+  #### TIME ANALYSIS
+  
+  ### Total Time vs Date (Dygraph)
+  
+  output$dygraph <-renderDygraph({
+    
+    
+    Dygraphfunc(dfMTS())
+    
+  })
+  
+  
+  
+  
   #### 1 SECCION CIRCUIT DISTRIBUTION BOXES
   
     ### 1.1 STANDARD CIRCUITS
@@ -278,7 +292,7 @@ shinyServer(function(input, output) {
   # Total time spend
   output$totaltimespend <-  renderInfoBox({
     infoBox(
-      title= NULL, value =InfovalueBoxTT(dfOrderTime()) ,subtitle ="Total Time(Hours) spend", icon = icon("thumbs-up", lib = "glyphicon"),
+      title= NULL, value =InfovalueBoxTT(dfOrderTime()) ,subtitle ="Total Time (Hours)", icon = icon("thumbs-up", lib = "glyphicon"),
       color = "teal",width = 3
       
     )})
@@ -287,7 +301,7 @@ shinyServer(function(input, output) {
   
   output$meantimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value =InfovalueBoxMeT(dfOrderTime()),subtitle = "Mean Time/Student(Hours) spent" , icon = icon("users"),
+      title= NULL,value =InfovalueBoxMeT(dfOrderTime()),subtitle = "Mean Time/Student(Hours)" , icon = icon("users"),
       color = "teal",width = 3
       
     )})
@@ -296,7 +310,7 @@ shinyServer(function(input, output) {
   
   output$maxtimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value=InfovalueBoxMaxT(dfOrderTime()),subtitle = "Max Time(Hours) spent",icon = icon("arrow-up"),
+      title= NULL,value=InfovalueBoxMaxT(dfOrderTime()),subtitle = "Max Time(Hours)",icon = icon("arrow-up"),
       color = "teal",width = 3
       
     )})
@@ -305,7 +319,7 @@ shinyServer(function(input, output) {
   
   output$mintimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value=InfovalueBoxMinT(dfOrderTime()),subtitle = "Min Time(Minutes) spent", icon = icon("arrow-down"),
+      title= NULL,value=InfovalueBoxMinT(dfOrderTime()),subtitle = "Min Time(Hours)", icon = icon("arrow-down"),
       color = "teal",width = 3
       
     )})
@@ -392,13 +406,7 @@ shinyServer(function(input, output) {
   
   # DRYGRAPH 1
   
-  output$dygraph <-renderDygraph({
-  
-    
-    Dygraphfunc(dfSSA())
-    
-  })
-  
+
 
   
   #TABLA 20 circuitos normalizados mas frecuentes

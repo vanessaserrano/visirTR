@@ -323,8 +323,12 @@ FunctionOrderTime <- function (dfVISIR_acciones) {
   
   X_X <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,Hours,FechaHoraEnvio)
   
-  X_X$FechaHoraEnvio<-as.POSIXct(as.character(X_X$FechaHoraEnvio),
-                                 format="%Y-%m-%d %H:%M:%S")
+  
+  X_X$FechaHoraEnvio<-format(as.POSIXct(X_X$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%H:%M:%S")
+  
+  
+  
+  X_X$FechaHoraEnvio <- as.difftime(X_X$FechaHoraEnvio, format = "%H:%M:%S")
   
   
   ordenAlumno <- X_X %>% group_by(Alumno,Dates,Hours) %>% arrange(FechaHoraEnvio) %>% 
@@ -431,8 +435,11 @@ FunctionMTS <- function (dfVISIR_acciones) {
   dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H")
   dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
   
-  dfVISIR_accionesOrdenado$FechaHoraEnvio<-as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio),
-                                                      format="%Y-%m-%d %H:%M:%S")
+  dfVISIR_accionesOrdenado$FechaHoraEnvio<-format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%H:%M:%S")
+  
+  
+  
+  dfVISIR_accionesOrdenado$FechaHoraEnvio <- as.difftime(dfVISIR_accionesOrdenado$FechaHoraEnvio, format = "%H:%M:%S")
   
   Totaltimebydate <- dfVISIR_accionesOrdenado %>% select(Alumno,Dates,Hours,FechaHoraEnvio) %>% group_by(Alumno,Dates,Hours) %>%
     arrange(FechaHoraEnvio) %>% summarise(Diffti=sum(diff(FechaHoraEnvio))) %>%
@@ -440,11 +447,7 @@ FunctionMTS <- function (dfVISIR_acciones) {
     mutate(Time=round(Time,digits = 2))
   
   
-  Totaltimebydate$Time<-as.numeric(Totaltimebydate$Time)
-  class( Totaltimebydate$Dates)
-  Totaltimebydate$Dates <- as.factor(Totaltimebydate$Dates)
-  Totaltimebydate$Alumno <- as.factor(Totaltimebydate$Alumno)
-  names(Totaltimebydate)[names(Totaltimebydate) == 'Alumno'] <- 'Student'
+
   
   return(Totaltimebydate)
   
@@ -453,26 +456,32 @@ FunctionMTS <- function (dfVISIR_acciones) {
 
 
 
+#### TIME ANALYSIS
+
+### Total Time vs Date (Dygraph)
+
+Dygraphfunc <- function(dfMTS) {
+  if(is.null(dfMTS)) return(NULL)
+  
+  Totaltimebydate2 <-dfMTS %>% group_by(Dates)%>% 
+    summarise(Time=sum(Time,na.rm=TRUE)) %>%mutate(Time=Time/60) %>%  mutate(Time=round(Time,digits = 2))
+  
+  Totaltime <- zoo(Totaltimebydate2$Time,Totaltimebydate2$Dates)
+  
+  Tot<-cbind(Totaltime)
+  
+  dygraph(Tot)%>% dyAxis("x",rangePad=c(-0.05)) %>% dySeries("Totaltime", label = "Total Time",axis="y",fillGraph=TRUE)  %>%
+    dyOptions(axisLineWidth = 1.5, fillGraph = TRUE, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
+  
+  
+}
+
+
 
 
 
 # 1 TAB DATA INPUT
 
-Dygraphfunc <- function(dfSSA) {
-  if(is.null(dfSSA)) return(NULL)
-  
-  ses <- zoo(dfSSA$Sesion,dfSSA$Dates)
-  con<-zoo(dfSSA$Acciones,dfSSA$Dates)
-  cr<-zoo(dfSSA$Alumnos,dfSSA$Dates)
-  ga2Su<-cbind(ses, con,cr)
-  
-  
-  dygraph(ga2Su)%>% dySeries("ses", label = "Sessions",axis="y",stepPlot=TRUE,fillGraph=TRUE) %>% 
-    dySeries("con",fillGraph=TRUE, label = "Actions",axis="y") %>% dySeries("cr", label = "Students",axis="y2",strokePattern = "dashed") %>%
-    dyOptions(axisLineWidth = 1.5, fillGraph = TRUE, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
-
-  
-}
 
 # 2 TAB G RES NUMBER OF CIRCUITS
    # 2.1 First Row
@@ -542,32 +551,22 @@ Dygraphfunc2 <- function(dfActionCircuit) {
   
   ADYygraph$Dates <- as.Date(ADYygraph$Dates,"%Y-%m-%d")
   
-  MeanNumCStudDate <- ADYygraph %>% group_by(Alumno,Dates) %>% summarise(MeanNumCircSD=length(unique(Circuito))) %>% #Data frame con el numero medio de ciruitos (BASIC) por estudiante por dia
-    group_by(Dates) %>% summarise(MeanNumCircSD=mean(MeanNumCircSD,na.rm=TRUE)) %>% 
-    mutate(MeanNumCircSD=round(MeanNumCircSD,digits = 2)) 
   
-  MeanNumCCStudDate <- ADYygraph %>% group_by(Alumno,Dates,Circuito) %>% summarise(NumCCSD=sum(unique(EsCircuitoCerrado))) %>% #Data frame con el numero medio de ciruitos (Cerrados) por estudiante por dia
-    group_by(Alumno,Dates) %>% summarise(NumCCD=sum(NumCCSD)) %>% group_by(Dates) %>% 
-    summarise(MeanNumCCSD=mean(NumCCD,na.rm=TRUE)) %>% 
-    mutate(MeanNumCCSD=round(MeanNumCCSD,digits = 2))
+  TotcircuDate <- ADYygraph %>% group_by(Dates) %>%  summarise(TotalCircuits=length(Circuito))
   
-  MeanNumNCStudDate <- ADYygraph %>% group_by(Alumno,Dates) %>% summarise(MeanNumNCircSD=length(unique(CircuitoNormalizado))) %>% #Data frame con el numero medio de ciruitos (BASIC) por estudiante por dia
-    group_by(Dates) %>% summarise(MeanNumNCircSD=mean(MeanNumNCircSD,na.rm=TRUE)) %>% 
-    mutate(MeanNumNCircSD=round(MeanNumNCircSD,digits = 2))
+  TotNormcircuDate <- ADYygraph %>% group_by(Dates) %>%  summarise(TotalnormCircuits=length(unique(CircuitoNormalizado)))
   
-  MeanNumCStudDate$MeanNumCCSD <- MeanNumCCStudDate$MeanNumCCSD
-  
-  MeanNumCStudDate$MeanNumNCSD <- MeanNumNCStudDate$MeanNumNCircSD
-  
-  ses <- zoo(MeanNumCStudDate$MeanNumCircSD,MeanNumCStudDate$Dates)
-  con<-zoo(MeanNumCStudDate$MeanNumCCSD,MeanNumCStudDate$Dates)
-  cr<-zoo(MeanNumCStudDate$MeanNumNCSD,MeanNumCStudDate$Dates)
-  
-  ga2Sus<-cbind(ses, con,cr)
+  TotcircuDate$TotalnormCircuits <- TotNormcircuDate$TotalnormCircuits
   
   
-  dygraph(ga2Sus)%>% dyAxis("x",rangePad=c(-0.05)) %>%  dySeries("ses", label = "Standard",axis="y") %>% 
-    dySeries("con",label = "Closed",axis="y",drawPoints = TRUE) %>% dySeries("cr", label = "Normalized",axis="y",drawPoints = TRUE) %>%
+  ses<- zoo(TotcircuDate$TotalCircuits,TotcircuDate$Dates)
+  con<-zoo(TotcircuDate$TotalnormCircuits,TotcircuDate$Dates)
+  
+  Totcircu<-cbind(ses,con)
+  
+  
+  dygraph(Totcircu)%>% dyAxis("x",rangePad=c(-0.05)) %>%  dySeries("ses", label = "Total Circuits",axis="y") %>% 
+    dySeries("con",label = "Total Normalized Circuits",axis="y",drawPoints = TRUE) %>%
     dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
   
 }
@@ -588,7 +587,7 @@ InfovalueBoxNC <- function(dfActionCircuit){
   
   Acircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.))
   
-  NumcircuV<-length(unique(Acircu$Circuito))
+  NumcircuV<-length(Acircu$Circuito)
   
   return(NumcircuV)
   
@@ -597,7 +596,7 @@ InfovalueBoxMNC <- function(dfActionCircuit){
   
   
   MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(Circuito))
   
   MeanNumCircSV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
   
@@ -607,7 +606,7 @@ InfovalueBoxMNC <- function(dfActionCircuit){
 InfovalueBoxlowbound <- function(dfActionCircuit){
   
   lowboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(unique(Circuito)))
+    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(Circuito))
   
   mincircv <- min(lowboundf$Circuito)
   
@@ -616,7 +615,7 @@ InfovalueBoxlowbound <- function(dfActionCircuit){
 InfovalueBoxupbound <- function(dfActionCircuit){
   
   upboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(unique(Circuito)))
+    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(Circuito))
   
   maxcircv <- max(upboundf$Circuito)
   
@@ -647,7 +646,7 @@ distnumcirc <- function(dfActionCircuit){
   
   
   CircByStudentD <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(unique(Circuito)))
+    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(Circuito))
   
   return(CircByStudentD)
   
@@ -841,9 +840,17 @@ plotDistribution <- function(time=NA,maxTime=NULL,xlabel="") {
 plotlyfunc3 <- function(dfMTS) {
   if(is.null(dfMTS)) return(NULL)
   
-  ggplot(data = dfMTS, aes(x = Student, y = Dates)) +
-    geom_tile(aes(fill = Time))                                
+  dfMTS$Time<-as.numeric(dfMTS$Time)
   
+  dfMTS$Dates <- as.factor(dfMTS$Dates)
+  dfMTS$Alumno <- as.factor(dfMTS$Alumno)
+  names(dfMTS)[names(dfMTS) == 'Alumno'] <- 'Student'
+  
+  
+  
+  ggplot(data = dfMTS, aes(x = Student, y = Dates)) +
+    geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
+    scale_fill_gradient('Time',low = "lightblue", high = "darkblue")
   
   
   
@@ -868,7 +875,7 @@ InfovalueBoxMeT <- function(dfOrderTime){
   
 
 
-  meantime <- round(mean(dfOrderTime$TotalTime),digits = 2)
+  meantime <- round(mean(dfOrderTime$TotalTime/60),digits = 2)
   
   return(meantime)
   
@@ -882,7 +889,7 @@ InfovalueBoxMaxT <- function(dfOrderTime){
 
 InfovalueBoxMinT <- function(dfOrderTime){
   
-  mintime<-round(min(dfOrderTime$TotalTime),digits = 2)
+  mintime<-round(min(dfOrderTime$TotalTime/60),digits = 2)
   
   return(mintime)
 }
