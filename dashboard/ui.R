@@ -159,8 +159,31 @@ ui <- dashboardPage(
                                                fluidRow(
                                                  
                                                  box(title="Total number of standard and normalized circuits per date",
-                                                     status="primary",dygraphOutput("dygraph2"), height=480, width=12)))
-                                            
+                                                     status="primary",dygraphOutput("dygraph2"), height=480, width=12))),
+                                     
+                                     
+                                     tabPanel( "Circuits vs Time",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Number of Circuits vs Time on task ",
+                                                     status="primary",uiOutput("plotuinAct"),verbatimTextOutput("plot_pointsnAct"), height=480, width=12))),
+                                     
+                                     tabPanel( "Circuits vs User",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Circuits vs User per Date",
+                                                     status="primary",uiOutput("plotui"),verbatimTextOutput("plot_points"), height=480, width=12))),
+                                     
+                                     tabPanel( "Circuit Timeline vs User",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Circuits timeline vs User per Date",
+                                                     status="primary",uiOutput("plotu"),verbatimTextOutput("plot_point"), height=480, width=12)))
+                                     
+                                     
                                      
                                      )
                               
@@ -204,8 +227,8 @@ ui <- dashboardPage(
                                      tabPanel( "Time on Task vs User",
                                                
                                                fluidRow(
-                                                 box(title="Time on task vs User, per Date",
-                                                     status="primary",plotOutput("plotly"), height=480, width=12)
+                                                 box(title="Time vs User per Date",
+                                                     status="primary",uiOutput("plot"),verbatimTextOutput("plot_poin"), height=480, width=12)
                                                  
                                                )
                                                

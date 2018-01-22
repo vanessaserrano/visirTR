@@ -39,6 +39,9 @@ shinyServer(function(input, output) {
   dfSSA <- reactive({FunctionSSA(dfImport())})
   dfStudTime <- reactive({FunctionTimeStud(dfImport(),dfActionCircuit())})
   dfMTS <- reactive({FunctionMTS(dfImport())})
+  dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
+  dftimeuserdate <- reactive({fplotlyfunc3(dfMTS())})
+  
   
  ##### GLOBAL RESULTS
   
@@ -53,6 +56,150 @@ shinyServer(function(input, output) {
     Dygraphfunc(dfMTS())
     
   })
+  
+  
+  ## Time on taskl vs User per Date HeatMap
+  
+  output$timeheat <-renderPlot({
+    
+    
+    ggplot(data = dftimeuserdate(), aes(x = Student, y = Dates)) +
+      geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
+      scale_fill_gradient('Time',low = "lightblue", high = "darkblue")
+    
+  })
+  
+  output$plot <- renderUI({
+    
+    plotOutput("timeheat", height=400,
+               hover = hoverOpts(
+                 id = "plot_hovernAct",
+                 delay = 100,
+                 nullOutside = T)
+    )
+  })
+  
+  output$plot_poin <- renderText({
+    
+    
+    dat <- data.frame(ids=dftimeuserdate()$Time)
+    
+    dat$toT <- dftimeuserdate()$Student
+    dat$nAc <- dftimeuserdate()$Dates
+    dat <- as.data.frame(dat)
+    
+    res <- nearPoints(dat, input$plot_hovernAct, 
+                      xvar = "toT", yvar = "nAc",
+                      maxpoints = 1,
+                      addDist = TRUE)
+    
+    response <- unique(as.character(res$ids))
+    responsec <- unique(as.numeric(res$nAc))
+    responset <- unique(as.numeric(res$toT))
+    if(length(response)==0)
+      return ("Place your mouse over a data point to see the time dedicated.") 
+    else
+      return (paste("Time (Minutes):",response[1]))
+  })
+  
+  
+  
+  
+  #### CIRCUITS ANALYSIS 
+  
+  ## Circuits vs User heat map 2
+  
+  output$circsuserheat <-renderPlot({
+    
+
+    ggplot(data = dfcircuser(), aes(x = Student, y = Dates)) +
+      geom_tile(aes(fill=Circuits)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
+      scale_fill_gradient('Time',low = "lightblue", high = "darkblue")
+    
+  })
+  
+  
+  output$plotui <- renderUI({
+    
+    plotOutput("circsuserheat", height=400,
+               hover = hoverOpts(
+                 id = "plot_hovernAct",
+                 delay = 100,
+                 nullOutside = T)
+    )
+  })
+  
+  output$plot_points <- renderText({
+    
+    
+    dat <- data.frame(ids=dfcircuser()$Circuits)
+    
+    dat$toT <- dfcircuser()$Student
+    dat$nAc <- dfcircuser()$Dates
+    dat <- as.data.frame(dat)
+    
+    res <- nearPoints(dat, input$plot_hovernAct, 
+                      xvar = "toT", yvar = "nAc",
+                      maxpoints = 1,
+                      addDist = TRUE)
+    
+    response <- unique(as.character(res$ids))
+    responsec <- unique(as.numeric(res$nAc))
+    responset <- unique(as.numeric(res$toT))
+    if(length(response)==0)
+      return ("Place your mouse over a data point to see the number of circuits.") 
+    else
+      return (paste("Circuits:",response[1]))
+  })
+  
+  
+  
+  ###Circuits Time line vs user
+  
+  
+  output$timelineus <-renderPlot({
+    
+    
+    ggplot(dfActionCircuit(), aes(x = Alumno, y = Time,color=Mesure)) + 
+      geom_point(size = 1.5, alpha = 0.8) +
+      theme_few()+
+      theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
+            axis.ticks.x=element_blank())+scale_fill_manual(values=gra)
+    
+  })
+  
+  output$plotu <- renderUI({
+    
+    plotOutput("timelineus", height=400,
+               hover = hoverOpts(
+                 id = "plot_hovernAct",
+                 delay = 100,
+                 nullOutside = T)
+    )
+  })
+  
+  output$plot_point <- renderText({
+    
+    
+    dat <- data.frame(ids=dfActionCircuit()$Alumno)
+    
+    dat$toT <- dfActionCircuit()$Alumno
+    dat$nAc <- dfActionCircuit()$Time
+    dat <- as.data.frame(dat)
+    
+    res <- nearPoints(dat, input$plot_hovernAct, 
+                      xvar = "toT", yvar = "nAc",
+                      maxpoints = 1,
+                      addDist = TRUE)
+    
+    response <- unique(as.character(res$ids))
+    responsec <- unique(as.numeric(res$nAc))
+    responset <- unique(as.numeric(res$toT))
+    if(length(response)==0)
+      return ("Place your mouse over a data point to see the number of circuits.") 
+    else
+      return (paste("Student:",response[1]))
+  }) 
   
   
   
@@ -176,14 +323,15 @@ shinyServer(function(input, output) {
     
   })
   
-  ### 3 NUMBER OF CIRCUITS VS TIME ON TASK
+  ### 3 NUMBER OF CIRCUITS VS TIME ON TASK zz
 
   
   output$nActionsVStoT <- renderPlot({
    
     ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) +
       labs(x = "Time on Task", y = "Number of Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
-      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc")
+      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$NumCircu),digits = 2),hjust = -1.5))+
+      geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$TotalTime),digits = 2),hjust = 3.5,angle=-90))
     
   })
   
@@ -191,7 +339,7 @@ shinyServer(function(input, output) {
   
   output$plotuinAct <- renderUI({
     
-    plotOutput("nActionsVStoT", height=300,
+    plotOutput("nActionsVStoT", height=350,
                hover = hoverOpts(
                  id = "plot_hovernAct",
                  delay = 100,
@@ -275,12 +423,7 @@ shinyServer(function(input, output) {
   
   ## DYGRAPH 3 Tiempo medio dedicado por alumno y por fecha
   
-  output$plotly <-renderPlot({
-    
-    
-    plotlyfunc3(dfMTS())
-    
-  })
+
   
   ## TIME PER STUDENT DISTRIBUTION
   
@@ -301,7 +444,7 @@ shinyServer(function(input, output) {
   
   output$meantimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value =InfovalueBoxMeT(dfOrderTime()),subtitle = "Mean Time/Student(Hours)" , icon = icon("users"),
+      title= NULL,value =InfovalueBoxMeT(dfOrderTime()),subtitle = "Mean Time/Student (Hours)" , icon = icon("users"),
       color = "teal",width = 3
       
     )})
@@ -310,7 +453,7 @@ shinyServer(function(input, output) {
   
   output$maxtimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value=InfovalueBoxMaxT(dfOrderTime()),subtitle = "Max Time(Hours)",icon = icon("arrow-up"),
+      title= NULL,value=InfovalueBoxMaxT(dfOrderTime()),subtitle = "Max Time (Hours)",icon = icon("arrow-up"),
       color = "teal",width = 3
       
     )})
@@ -319,7 +462,7 @@ shinyServer(function(input, output) {
   
   output$mintimespend <-  renderInfoBox({
     infoBox(
-      title= NULL,value=InfovalueBoxMinT(dfOrderTime()),subtitle = "Min Time(Hours)", icon = icon("arrow-down"),
+      title= NULL,value=InfovalueBoxMinT(dfOrderTime()),subtitle = "Min Time (Hours)", icon = icon("arrow-down"),
       color = "teal",width = 3
       
     )})

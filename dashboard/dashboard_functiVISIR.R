@@ -39,50 +39,54 @@ FunctionActionCircuit <- function (dfVISIR_acciones) {
   }
  #ANTIGUO
   
-numAcciones<-nrow(dfVISIR_acciones)
-
-
+  numAcciones<-nrow(dfVISIR_acciones)
   
-dfVISIR_accionesOrdenado <- dfVISIR_acciones[
-  order(dfVISIR_acciones$Alumno,
-        dfVISIR_acciones$FechaHoraEnvio),]
-
-
-
-timeLimit <- 900
-vecDiffTime<-rep(NA,numAcciones)
-vecDiffTimeCum<-rep(0, numAcciones)
-vecDiffTimeCumReal<-rep(0, numAcciones)
-
+  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+    order(dfVISIR_acciones$Alumno,
+          dfVISIR_acciones$FechaHoraEnvio),]
   
-for(i in 2:numAcciones) {
-  if(dfVISIR_acciones$Alumno[i]==dfVISIR_acciones$Alumno[i-1]) {
-    thisTime<-as.numeric(as.POSIXct(as.character(dfVISIR_acciones$FechaHoraEnvio[i]),
-                                    format="%Y-%m-%d %H:%M:%S"))
-    previousTime<-as.numeric(as.POSIXct(as.character(dfVISIR_acciones$FechaHoraEnvio[i-1]),
-                                        format="%Y-%m-%d %H:%M:%S"))
-    vecDiffTime[i]<-thisTime-previousTime
-    
-    vecDiffTimeCum[i]<-vecDiffTime[i]+vecDiffTimeCum[i-1]
-    vecDiffTimeCumReal[i]<-ifelse(vecDiffTime[i]>timeLimit,0,vecDiffTime[i])+vecDiffTimeCumReal[i-1]
-  } else {
-    vecDiffTime[i]<-NA
-    vecDiffTimeCum[i]<-0
-    vecDiffTimeCumReal[i]<-0
+  
+  class(dfVISIR_accionesOrdenado$FechaHoraEnvio)
+  
+  dfVISIR_accionesOrdenado$FechaHoraEnvio <- as.factor(dfVISIR_accionesOrdenado$FechaHoraEnvio)
+  
+  #Tiempo de trabajo
+  timeLimit <- 900
+  vecDiffTime<-rep(NA,numAcciones)
+  vecDiffTimeCum<-rep(0, numAcciones)
+  vecDiffTimeCumReal<-rep(0, numAcciones)
+  
+  for(i in 2:numAcciones) {
+    if(dfVISIR_accionesOrdenado$Alumno[i]==dfVISIR_accionesOrdenado$Alumno[i-1]) {
+      thisTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i]),
+                                      format="%Y-%m-%d %H:%M:%S"))
+      previousTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i-1]),
+                                          format="%Y-%m-%d %H:%M:%S"))
+      vecDiffTime[i]<-thisTime-previousTime
+      
+      vecDiffTimeCum[i]<-vecDiffTime[i]+vecDiffTimeCum[i-1]
+      vecDiffTimeCumReal[i]<-ifelse(vecDiffTime[i]>timeLimit,0,vecDiffTime[i])+vecDiffTimeCumReal[i-1]
+    } else {
+      vecDiffTime[i]<-NA
+      vecDiffTimeCum[i]<-0
+      vecDiffTimeCumReal[i]<-0
+    }
   }
-}
-
-dfVISIR_accionesOrdenado$TiempoDesdeAccionAnterior <- vecDiffTime / 60
-dfVISIR_accionesOrdenado$TiempoAcumulado <- vecDiffTimeCum / 60
-dfVISIR_accionesOrdenado$TiempoAcumuladoCorregido <- vecDiffTimeCumReal / 60
-
-ordenAlumnos <- dfVISIR_accionesOrdenado %>% group_by(Alumno) %>% 
-  summarise(TiempoAcumuladoCorregidoMax = max(TiempoAcumuladoCorregido)) %>%
-  arrange(TiempoAcumuladoCorregidoMax)
-
-
-dfVISIR_accionesOrdenado$Alumno <- factor(dfVISIR_accionesOrdenado$Alumno, 
-                                          levels=ordenAlumnos$Alumno, ordered=TRUE)
+  dfVISIR_accionesOrdenado$TiempoDesdeAccionAnterior <- vecDiffTime / 60
+  dfVISIR_accionesOrdenado$TiempoAcumulado <- vecDiffTimeCum / 60
+  dfVISIR_accionesOrdenado$TiempoAcumuladoCorregido <- vecDiffTimeCumReal / 60
+  
+  summary(dfVISIR_accionesOrdenado)
+  
+  ordenAlumnos <- dfVISIR_accionesOrdenado %>% group_by(Alumno) %>% 
+    summarise(TiempoAcumuladoCorregidoMax = max(TiempoAcumuladoCorregido)) %>%
+    arrange(TiempoAcumuladoCorregidoMax)
+  
+  vecTiempoMax<- ordenAlumnos$TiempoAcumuladoCorregidoMax
+  # dfVISIR_accionesOrdenado$TiempoAcumuladoMax <- vecTiempoMax
+  
+  dfVISIR_accionesOrdenado$Alumno <- factor(dfVISIR_accionesOrdenado$Alumno, 
+                                            levels=ordenAlumnos$Alumno, ordered=TRUE)
 
   #ANTIGUO
 
@@ -299,7 +303,9 @@ dfVISIR_accionesCircuito$TypeofMesure <-as.factor(dfVISIR_accionesCircuito$Typeo
 
 dfVISIR_accionesCircuito$Circuito[is.na(dfVISIR_accionesCircuito$EsCircuitoCerrado)]
 
+names(dfVISIR_accionesCircuito)[names(dfVISIR_accionesCircuito) == 'TiempoAcumuladoCorregido'] <- 'Time'
 
+names(dfVISIR_accionesCircuito)[names(dfVISIR_accionesCircuito) == 'TypeofMesure'] <- 'Mesure'
 
 return(dfVISIR_accionesCircuito)
 
@@ -385,8 +391,12 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
   
   X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,Hours,FechaHoraEnvio)
   
-  X_P$FechaHoraEnvio<-as.POSIXct(as.character(X_P$FechaHoraEnvio),
-                                 format="%Y-%m-%d %H:%M:%S")
+  
+  X_P$FechaHoraEnvio<-format(as.POSIXct(X_P$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%H:%M:%S")
+  
+  
+  
+  X_P$FechaHoraEnvio <- as.difftime(X_P$FechaHoraEnvio, format = "%H:%M:%S")
   
 
   TimeStud <- X_P %>% group_by(Alumno,Dates,Hours) %>% arrange(FechaHoraEnvio) %>% 
@@ -397,7 +407,7 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
   #Parte Circuitos
   
   CircuTimebyStud <- dfActionCircuit %>% select(Alumno,Circuito) %>%  group_by(Alumno) %>% 
-    summarise(NumCircu=length(unique(Circuito)))
+    summarise(NumCircu=length(Circuito))
   
   
   # Mix Both Data Frames (Student Circuits Time)
@@ -456,6 +466,7 @@ FunctionMTS <- function (dfVISIR_acciones) {
 
 
 
+
 #### TIME ANALYSIS
 
 ### Total Time vs Date (Dygraph)
@@ -476,7 +487,72 @@ Dygraphfunc <- function(dfMTS) {
   
 }
 
+## HEATMAP Time on task vs user per date Hover
 
+
+fplotlyfunc3 <- function(dfMTS) {
+  if(is.null(dfMTS)) return(NULL)
+  
+  dfMTS$Time<-as.numeric(dfMTS$Time)
+  
+  dfMTS$Dates <- as.factor(dfMTS$Dates)
+  dfMTS$Alumno <- as.factor(dfMTS$Alumno)
+  names(dfMTS)[names(dfMTS) == 'Alumno'] <- 'Student'
+  
+  
+  
+ return(dfMTS)
+  
+  
+  
+}
+
+
+
+
+#### CIRCUITS ANALYSIS
+## NUMBER OF CIRCUITS VS USER DATE HEAT MAP
+
+
+fciruserdate <- function(dfActionCircuit) {
+  if(is.null(dfActionCircuit)) return(NULL)
+  
+  dfActionCircuit$Dates <- format(as.Date(dfActionCircuit$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  
+  
+  Circuitsperuserdate <- dfActionCircuit %>% select(Alumno,Dates,Circuito) %>% group_by(Alumno,Dates) %>%
+    summarise(Diffti=length(Circuito)) %>%  group_by(Dates,Alumno) %>% summarise(Circuits=sum(Diffti)) 
+  
+  
+  Circuitsperuserdate$Circuits<-as.numeric(Circuitsperuserdate$Circuits)
+  
+  Circuitsperuserdate$Dates <- as.factor(Circuitsperuserdate$Dates)
+  Circuitsperuserdate$Alumno <- as.factor(Circuitsperuserdate$Alumno)
+  names(Circuitsperuserdate)[names(Circuitsperuserdate) == 'Alumno'] <- 'Student'
+  
+  
+  return(Circuitsperuserdate)
+  
+  
+}
+
+
+###Circuits Time line vs user
+
+
+timelineuser<- function(dfActionCircuit) {
+  
+
+  
+  ggplot(dfActionCircuit, aes(x = Alumno, y = Time,color=Mesure)) + 
+    geom_point(size = 1.5, alpha = 0.8) +
+    theme_few()+
+    theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
+          axis.ticks.x=element_blank())+scale_fill_manual(values=gra)
+  
+  
+  
+}
 
 
 
@@ -837,24 +913,7 @@ plotDistribution <- function(time=NA,maxTime=NULL,xlabel="") {
 ## DYGRAPH 3 Tiempo medio dedicado por alumno y por fecha
 
  
-plotlyfunc3 <- function(dfMTS) {
-  if(is.null(dfMTS)) return(NULL)
-  
-  dfMTS$Time<-as.numeric(dfMTS$Time)
-  
-  dfMTS$Dates <- as.factor(dfMTS$Dates)
-  dfMTS$Alumno <- as.factor(dfMTS$Alumno)
-  names(dfMTS)[names(dfMTS) == 'Alumno'] <- 'Student'
-  
-  
-  
-  ggplot(data = dfMTS, aes(x = Student, y = Dates)) +
-    geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
-    scale_fill_gradient('Time',low = "lightblue", high = "darkblue")
-  
-  
-  
-}
+
 
 ## TIME PER STUDENT DISTRIBUTION
 
