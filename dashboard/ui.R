@@ -1,7 +1,7 @@
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","wordcloud","tm","slam","diptest","DT","gplots",
          "googleVis","devtools","xts","dygraphs","scales",
-         "formattable","treemap","Rcpp","plotly","yaml")
+         "formattable","treemap","Rcpp","plotly","yaml","viridis")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg)}
@@ -59,12 +59,13 @@ ui <- dashboardPage(
       menuItem("Data Input",icon = icon("dashboard"), tabName = "browsedata"),
       menuItem("Global Results",icon = icon("eye"), startExpanded = TRUE,
                
-                        menuSubItem("Time Analysis", tabName = "timeana",icon = icon("area-chart")),
+                        menuSubItem("Time", tabName = "timeana",icon = icon("area-chart")),
               
-                        menuSubItem("Circuits Analysis", tabName = "numcircu",icon = icon("area-chart"))
+                        menuSubItem("Circuits", tabName = "numcircu",icon = icon("area-chart")),
                         
-                      
-               
+                        menuSubItem("Circuits vs Time", tabName = "circvstim",icon = icon("area-chart")),
+                        
+                        menuSubItem("Normalized Circuits vs Time", tabName = "ncircvstim",icon = icon("area-chart"))
       
       
       
@@ -85,20 +86,24 @@ ui <- dashboardPage(
                     tabItems(
                       
                       tabItem("browsedata", 
+                              fluidRow(
                               
-                              
-                              box(title = "Data Input", status = "warning", solidHeader = TRUE,
+                              box(title = "Data Input", status = "warning", solidHeader = TRUE,width = 4,
                                   collapsible = TRUE,
                                   fileInput('logsImport', 'Log Files',accept=c('text/plain', '.txt') )
                               )
                               ,
                               
-                              fluidRow(
-                                column(width = 6,
-                                       valueBoxOutput("numStudents"),
-                                       valueBoxOutput("numActions")
+                             
+                                
+                                         
+                                       valueBoxOutput("numStudents",width = 3),
+                                       valueBoxOutput("numActions",width = 3),
+                                       valueBoxOutput("mindate",width = 3),
+                                       valueBoxOutput("maxdate",width = 3)
                                        
-                                ) )
+                                       
+                                )
                               
                               
                       ),
@@ -108,7 +113,7 @@ ui <- dashboardPage(
                               tabBox(height=480, width=12,
                                      
                                      
-                                     tabPanel( "Standard Circuits",
+                                     tabPanel( "Circuits",
                                                
                                                fluidRow(
                                                  infoBoxOutput("numuniquecirc",width = 3),
@@ -129,6 +134,30 @@ ui <- dashboardPage(
                                                )
                                                
                                      ),
+                      
+                                     
+                                     tabPanel( "Circuits vs Date",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Total number of circuits per date",
+                                                     status="primary",dygraphOutput("dygraph2"), height=480, width=12))),
+
+                                     
+                                     tabPanel( "Circuits vs User",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Circuits vs User per Date",
+                                                     status="primary",uiOutput("plotui"),verbatimTextOutput("plot_points"), height=480, width=12))),
+                                     
+                                     tabPanel( "Circuit Timeline vs User",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(title="Circuits timeline vs User per Date",
+                                                     status="primary",uiOutput("plotu"),verbatimTextOutput("plot_point"), height=480, width=12))),
+                                     
                                      tabPanel("Normalized Circuits", 
                                               
                                               fluidRow(
@@ -152,36 +181,7 @@ ui <- dashboardPage(
                                               
                                               
                                               
-                                     ),
-                                     
-                                     tabPanel( "Circuits vs Date",
-                                               
-                                               fluidRow(
-                                                 
-                                                 box(title="Total number of standard and normalized circuits per date",
-                                                     status="primary",dygraphOutput("dygraph2"), height=480, width=12))),
-                                     
-                                     
-                                     tabPanel( "Circuits vs Time",
-                                               
-                                               fluidRow(
-                                                 
-                                                 box(title="Number of Circuits vs Time on task ",
-                                                     status="primary",uiOutput("plotuinAct"),verbatimTextOutput("plot_pointsnAct"), height=480, width=12))),
-                                     
-                                     tabPanel( "Circuits vs User",
-                                               
-                                               fluidRow(
-                                                 
-                                                 box(title="Circuits vs User per Date",
-                                                     status="primary",uiOutput("plotui"),verbatimTextOutput("plot_points"), height=480, width=12))),
-                                     
-                                     tabPanel( "Circuit Timeline vs User",
-                                               
-                                               fluidRow(
-                                                 
-                                                 box(title="Circuits timeline vs User per Date",
-                                                     status="primary",uiOutput("plotu"),verbatimTextOutput("plot_point"), height=480, width=12)))
+                                     )
                                      
                                      
                                      
@@ -194,20 +194,7 @@ ui <- dashboardPage(
                               
                               tabBox(height=480, width=12,
                                      
-                                     
-                                     tabPanel( "Total Time vs Date",
-                                               
-                                               fluidRow(
-                                                 
-                                                 box(title="Total Time (Hours) vs Date",
-                                                     status="primary",dygraphOutput("dygraph"), height=480, width=12)
-                                                 
-                                        
-                                               )
-                                     
-                          
-                                     ),
-                                     tabPanel("Time on Task Distribution", 
+                                     tabPanel("Time Distribution", 
                                               
                                               fluidRow(
                                                 infoBoxOutput("totaltimespend",width = 3),
@@ -220,11 +207,23 @@ ui <- dashboardPage(
                                               
                                               fluidRow(
                                                 
-                                                box(title="Time (Minutes) per Student Distribution",
+                                                box(title="Time per Student Distribution",
                                                     status="primary",plotOutput("timstu"), height=480, width=12))),
                                      
+                                     tabPanel( "Total Time vs Date",
+                                               
+                                               fluidRow(
+                                                 
+                                                 box(
+                                                     status="primary",dygraphOutput("dygraph"), height=480, width=12)
+                                                 
+                                        
+                                               )
                                      
-                                     tabPanel( "Time on Task vs User",
+                          
+                                     ),
+                                    
+                                     tabPanel( "Time vs User",
                                                
                                                fluidRow(
                                                  box(title="Time vs User per Date",
@@ -243,7 +242,26 @@ ui <- dashboardPage(
                                               
                                               
                                               
-                                     )
+                                     ),
+                      
+                      tabItem("circvstim",
+                              
+                              
+                                fluidRow(
+                                          
+                                          box(title="Number of Circuits vs Time",
+                                              status="primary",uiOutput("plotuinAct"),verbatimTextOutput("plot_pointsnAct"), height=480, width=12))),
+                      
+                      
+                      tabItem("ncircvstim",
+                              
+                              
+                              fluidRow(
+                                
+                                box(title="Number of Normalized Circuits vs Time",
+                                    status="primary",uiOutput("plotuinActnorm"),verbatimTextOutput("plot_pointsnActnorm"), height=480, width=12)))
+                      
+                      
                               
                               
                

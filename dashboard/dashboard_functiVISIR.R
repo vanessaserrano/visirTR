@@ -295,7 +295,7 @@ dfVISIR_accionesCircuito$MedidaCorrectaR <- dfVISIR_accionesCircuito$MultimetroV
 Medida <- factor(ifelse(dfVISIR_accionesCircuito$MedidaCorrectaV,"Voltage",
                         ifelse(dfVISIR_accionesCircuito$MedidaCorrectaR,"Resistance",
                                ifelse(dfVISIR_accionesCircuito$MedidaCorrectaA,"Current",
-                                      "NA"))),ordered=TRUE,levels=c("NA", "Voltage","Resistance","Current"))
+                                      "Error"))),ordered=TRUE,levels=c("Current", "Resistance","Voltage","Error"))
 
 dfVISIR_accionesCircuito$TypeofMesure <- Medida
 
@@ -322,24 +322,27 @@ FunctionOrderTime <- function (dfVISIR_acciones) {
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
   
+  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
+  
+  dfVISIR_accionesOrdenado$ConnectionIni <- grepl("@@@initial::request@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$ConnectionFina <- grepl("@@@finish@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
+                                                      ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
+                                                             "NA")))
   
   
-  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H")
+  X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,FechaHoraEnvio,Connection)
   
-  X_X <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,Hours,FechaHoraEnvio)
+  X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
+                                              format="%Y-%m-%d %H:%M:%S"))
+
   
-  
-  X_X$FechaHoraEnvio<-format(as.POSIXct(X_X$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%H:%M:%S")
-  
-  
-  
-  X_X$FechaHoraEnvio <- as.difftime(X_X$FechaHoraEnvio, format = "%H:%M:%S")
-  
-  
-  ordenAlumno <- X_X %>% group_by(Alumno,Dates,Hours) %>% arrange(FechaHoraEnvio) %>% 
-    summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% mutate(TotalTime=TotalTime/60) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
+  ordenAlumno <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>% group_by(Alumno,Dates,seqid) %>% arrange(FechaHoraEnvio) %>% 
+    summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% mutate(TotalTime=TotalTime/3600) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
     group_by(Alumno) %>% summarise(TotalTime=sum(TotalTime))
+  
   
   
   ordenAlumno$TotalTime <-as.numeric(ordenAlumno$TotalTime)
@@ -386,22 +389,27 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
   
   #Parte Tiempo
   
-  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H")
+  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
   
-  X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,Hours,FechaHoraEnvio)
+  dfVISIR_accionesOrdenado$ConnectionIni <- grepl("@@@initial::request@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$ConnectionFina <- grepl("@@@finish@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
+                                                      ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
+                                                             "NA")))
   
   
-  X_P$FechaHoraEnvio<-format(as.POSIXct(X_P$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%H:%M:%S")
+  X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,FechaHoraEnvio,Connection)
   
+  X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
+                                              format="%Y-%m-%d %H:%M:%S"))
   
-  
-  X_P$FechaHoraEnvio <- as.difftime(X_P$FechaHoraEnvio, format = "%H:%M:%S")
-  
-
-  TimeStud <- X_P %>% group_by(Alumno,Dates,Hours) %>% arrange(FechaHoraEnvio) %>% 
-    summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% mutate(TotalTime=TotalTime/60) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
+  TimeStud <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
+    group_by(Alumno,Dates,seqid) %>% summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% 
+    mutate(TotalTime=TotalTime/60) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
     group_by(Alumno) %>% summarise(TotalTime=sum(TotalTime))
+  
   
  
   #Parte Circuitos
@@ -431,6 +439,72 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
   
 }
 
+FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
+  
+  numAcciones<-nrow(dfVISIR_acciones)
+  
+  
+  
+  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+    order(dfVISIR_acciones$Alumno,
+          dfVISIR_acciones$FechaHoraEnvio),]
+  
+  
+  
+  
+  #Parte Tiempo
+  
+  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
+  
+  dfVISIR_accionesOrdenado$ConnectionIni <- grepl("@@@initial::request@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$ConnectionFina <- grepl("@@@finish@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
+                                                      ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
+                                                             "NA")))
+  
+  
+  X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,FechaHoraEnvio,Connection)
+  
+  X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
+                                              format="%Y-%m-%d %H:%M:%S"))
+  
+  TimeStud <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
+    group_by(Alumno,Dates,seqid) %>% summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% 
+    mutate(TotalTime=TotalTime/60) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
+    group_by(Alumno) %>% summarise(TotalTime=sum(TotalTime))
+  
+  
+  
+  #Parte Circuitos
+  
+  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%  group_by(Alumno) %>% 
+    summarise(NumCircu=length(unique(CircuitoNormalizado)))
+  
+  
+  # Mix Both Data Frames (Student Circuits Time)
+  zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
+  
+  zz$TotalTime <- as.numeric(zz$TotalTime)
+  
+  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
+  MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
+  
+  zz$NumCircu <- as.numeric(zz$NumCircu)
+  
+  zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
+  
+  zz$Evaluation <- as.factor(zz$Evaluation)
+  
+  
+  return(zz)
+  
+  
+}
+
+
 FunctionMTS <- function (dfVISIR_acciones) {
   
   
@@ -441,23 +515,27 @@ FunctionMTS <- function (dfVISIR_acciones) {
   
   
   
-  dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-  dfVISIR_accionesOrdenado$Hours <- format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d %H")
   dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
   
-  dfVISIR_accionesOrdenado$FechaHoraEnvio<-format(as.POSIXct(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%H:%M:%S")
+  dfVISIR_accionesOrdenado$ConnectionIni <- grepl("@@@initial::request@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$ConnectionFina <- grepl("@@@finish@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
+  
+  dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
+                                                      ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
+                                                             "NA")))
   
   
+  X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,FechaHoraEnvio,Connection)
   
-  dfVISIR_accionesOrdenado$FechaHoraEnvio <- as.difftime(dfVISIR_accionesOrdenado$FechaHoraEnvio, format = "%H:%M:%S")
+  X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
+                                              format="%Y-%m-%d %H:%M:%S"))
   
-  Totaltimebydate <- dfVISIR_accionesOrdenado %>% select(Alumno,Dates,Hours,FechaHoraEnvio) %>% group_by(Alumno,Dates,Hours) %>%
-    arrange(FechaHoraEnvio) %>% summarise(Diffti=sum(diff(FechaHoraEnvio))) %>%
-    group_by(Dates,Alumno) %>% summarise(Time=sum(Diffti)) %>% mutate(Time=Time/60) %>% 
-    mutate(Time=round(Time,digits = 2))
+  Totaltimebydate <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
+    group_by(Alumno,Dates,seqid) %>% summarise(TimeSpent=sum(diff(FechaHoraEnvio))) %>% 
+    group_by(Alumno,Dates) %>% summarise(TimeSpent=sum(TimeSpent)) %>%
+    mutate(TimeSpent=TimeSpent/60) %>% mutate(TimeSpent=round(TimeSpent,digits = 2))
   
-  
-
   
   return(Totaltimebydate)
   
@@ -475,14 +553,14 @@ Dygraphfunc <- function(dfMTS) {
   if(is.null(dfMTS)) return(NULL)
   
   Totaltimebydate2 <-dfMTS %>% group_by(Dates)%>% 
-    summarise(Time=sum(Time,na.rm=TRUE)) %>%mutate(Time=Time/60) %>%  mutate(Time=round(Time,digits = 2))
+    summarise(Time=sum(TimeSpent,na.rm=TRUE)) %>%mutate(Time=Time/60) %>%  mutate(Time=round(Time,digits = 2))
   
   Totaltime <- zoo(Totaltimebydate2$Time,Totaltimebydate2$Dates)
   
   Tot<-cbind(Totaltime)
   
-  dygraph(Tot)%>% dyAxis("x",rangePad=c(-0.05)) %>% dySeries("Totaltime", label = "Total Time",axis="y",fillGraph=TRUE)  %>%
-    dyOptions(axisLineWidth = 1.5, fillGraph = TRUE, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
+  dygraph(Tot)%>% dyAxis("y",rangePad=c(-0.05),label = "Time (Hours)") %>% dySeries("Totaltime", label = "Total Time",axis="y")  %>%
+    dyOptions(axisLineWidth = 1.5,drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
   
   
 }
@@ -493,12 +571,12 @@ Dygraphfunc <- function(dfMTS) {
 fplotlyfunc3 <- function(dfMTS) {
   if(is.null(dfMTS)) return(NULL)
   
-  dfMTS$Time<-as.numeric(dfMTS$Time)
+  dfMTS$TimeSpent<-as.numeric(dfMTS$TimeSpent)
   
   dfMTS$Dates <- as.factor(dfMTS$Dates)
   dfMTS$Alumno <- as.factor(dfMTS$Alumno)
   names(dfMTS)[names(dfMTS) == 'Alumno'] <- 'Student'
-  
+  names(dfMTS)[names(dfMTS) == 'TimeSpent'] <- 'Time'
   
   
  return(dfMTS)
@@ -636,13 +714,11 @@ Dygraphfunc2 <- function(dfActionCircuit) {
   
   
   ses<- zoo(TotcircuDate$TotalCircuits,TotcircuDate$Dates)
-  con<-zoo(TotcircuDate$TotalnormCircuits,TotcircuDate$Dates)
   
-  Totcircu<-cbind(ses,con)
+  Totcircu<-cbind(ses)
   
   
   dygraph(Totcircu)%>% dyAxis("x",rangePad=c(-0.05)) %>%  dySeries("ses", label = "Total Circuits",axis="y") %>% 
-    dySeries("con",label = "Total Normalized Circuits",axis="y",drawPoints = TRUE) %>%
     dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
   
 }
