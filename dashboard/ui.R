@@ -4,7 +4,7 @@ pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "formattable","treemap","Rcpp","plotly","yaml","viridis")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
-for(pckg in pckgs2Install) {install.packages(pckg)}
+for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/")}
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 
 if (!require("rCharts")) {
