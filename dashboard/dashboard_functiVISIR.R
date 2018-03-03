@@ -573,7 +573,14 @@ plotDistribution <- function(values=NA,maxValues=NULL,xlabel="") {
   bw2<-ifelse(bw2>=5,5,ifelse(bw2>=2,2,1))
   bw2<-bw2*10^floor(log(bw)/log(10))
   
-  nbins<-ceiling(diff(range(values))/bw2)
+  nbins <- ceiling(max(values)/bw2)
+  nbins <- min(20, length(values)/4 , nbins)
+  
+  bw <- max(values) / nbins
+  bw2 <- floor(bw/10^floor(log(bw)/log(10)))
+  bw2<-ifelse(bw2>=5,5,ifelse(bw2>=2,2,1))
+  bw2<-bw2*10^floor(log(bw)/log(10))
+  
   bw2<-ifelse(nbins>=7,bw2,bw2/2+.Machine$double.eps)
   bw2 <- floor(bw2/10^floor(log(bw2)/log(10)))*10^floor(log(bw2)/log(10))
   
