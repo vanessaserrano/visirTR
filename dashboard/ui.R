@@ -89,39 +89,6 @@ ui <- dashboardPage(
         )
       ),
 
-      tabItem("numcircu",
-        tabBox(height=480, width=12,
-          tabPanel( "Circuits Distribution",
-            fluidRow(
-              infoBoxOutput("numuniquecirc",width = 3),
-              infoBoxOutput("Meannumuniquecircst",width = 3),
-              infoBoxOutput("lowbound",width = 3),
-              infoBoxOutput("upbound",width = 3)
-            ),
-            fluidRow(
-              box(status="primary",plotOutput("circdist"), height=480, width=12)
-            )
-          ),
-          tabPanel( "Circuits vs Date",
-            fluidRow(box(status="primary",dygraphOutput("dygraph2"), height=480, width=12))),
-          tabPanel( "Circuits vs User & Date",
-            fluidRow(box(status="primary",uiOutput("plotui"),verbatimTextOutput("plot_points"), height=480, width=12))),
-          tabPanel( "Circuit Timeline vs User",
-            fluidRow(box(status="primary",uiOutput("plotu"),verbatimTextOutput("plot_point"), height=480, width=12))),
-          tabPanel("Normalized Circuits Distribution", 
-            fluidRow(
-              infoBoxOutput("umuniqnormcirc",width = 3),
-              infoBoxOutput("Meannumuniqnormcircst",width = 3),
-              infoBoxOutput("lowboundN",width = 3),
-              infoBoxOutput("upboundN",width = 3)
-            ),
-            fluidRow(
-              box(status="primary",plotOutput("circdistN"), height=480, width=12)
-            )  
-          )
-        )
-      ),
-      
       tabItem("timeana",
         tabBox(height=480, width=12,
           tabPanel("Time Distribution", 
@@ -146,6 +113,44 @@ ui <- dashboardPage(
         )  
       ),
   
+      
+      tabItem("numcircu",
+              tabBox(height=480, width=12,
+                     tabPanel( "Circuits Distribution",
+                               fluidRow(
+                                 infoBoxOutput("numuniquecirc",width = 3),
+                                 infoBoxOutput("Meannumuniquecircst",width = 3),
+                                 infoBoxOutput("lowbound",width = 3),
+                                 infoBoxOutput("upbound",width = 3)
+                               ),
+                               fluidRow(
+                                 box(status="primary",plotOutput("circdist"), height=480, width=12)
+                               )
+                     ),
+                     tabPanel( "Circuits vs Date",
+                               fluidRow(box(status="primary",dygraphOutput("dygraph2"), height=480, width=12))),
+                     tabPanel( "Circuits vs User & Date",
+                               fluidRow(box(status="primary",uiOutput("plotui"),verbatimTextOutput("plot_points"), height=480, width=12))),
+                     tabPanel( "Circuit Timeline vs User",
+                               fluidRow(box(status="primary",
+                                            checkboxInput("timeline_facet","Show facetted"),
+                                            uiOutput("plotu"),
+                                            verbatimTextOutput("plot_point"),
+                                            height=540, width=12))),
+                     tabPanel("Normalized Circuits Distribution", 
+                              fluidRow(
+                                infoBoxOutput("umuniqnormcirc",width = 3),
+                                infoBoxOutput("Meannumuniqnormcircst",width = 3),
+                                infoBoxOutput("lowboundN",width = 3),
+                                infoBoxOutput("upboundN",width = 3)
+                              ),
+                              fluidRow(
+                                box(status="primary",plotOutput("circdistN"), height=480, width=12)
+                              )  
+                     )
+              )
+      ),
+      
       tabItem("circvstim",
         tabBox(height=480, width=12,
           tabPanel( "Circuits vs Time",

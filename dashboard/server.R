@@ -173,7 +173,7 @@ shinyServer(function(input, output, session) {
 ## Circuits Timeline vs user ####
   output$timelineus <-renderPlot({
     gra=c("red","green","blue","yellow")
-    ggplot(dfActionCircuit(), aes(x = Alumno, y = Time,
+    g <- ggplot(dfActionCircuit(), aes(x = Alumno, y = Time,
                                   color = Mesure,shape= Mesure)) + 
       geom_point(size = 4, alpha = 0.5) +
       scale_color_manual(values = gra) +
@@ -183,6 +183,8 @@ shinyServer(function(input, output, session) {
             axis.ticks.x=element_blank(), legend.text = element_text(size=8),
             legend.key.size=unit(5,"points")) +
       guides(color = guide_legend(override.aes = list(size=8)))
+    if(input$timeline_facet) g <- g + facet_wrap(~Mesure,nrow=2)
+    g
   })
   
   output$plotu <- renderUI({
