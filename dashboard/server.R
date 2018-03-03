@@ -20,7 +20,7 @@ shinyServer(function(input, output, session) {
   })
 
   dfActionCircuit<- reactive({funActionCircuit(dfImport())})
-  dfOrderTime <- reactive({funOrderTime(dfImport())})
+  dfOrderTime <- reactive({funOrderTime(dfActionCircuit())})
   dfSSA <- reactive({FunctionSSA(dfImport())})
   dfStudTime <- reactive({FunctionTimeStud(dfImport(),dfActionCircuit())})
   dfMTS <- reactive({FunctionMTS(dfImport())})
@@ -94,7 +94,7 @@ shinyServer(function(input, output, session) {
   
   output$timstu <- renderPlot({
     if(is.null(dfOrderTime())) return(NULL)
-    plotDistribution(dfOrderTime()$TotalTime, xlabel="Time(Hours) per Student")
+    plotDistribution(dfOrderTime()$TotalTime/60, xlabel="Time(Hours) per Student")
   })
   
 ## Time on task vs User per Date HeatMap ####
@@ -248,7 +248,7 @@ shinyServer(function(input, output, session) {
   
   output$circdist <- renderPlot({
     if(is.null(dfActionCircuit())) return(NULL)
-    plotDistribution(distnumcirc(dfActionCircuit())$Circuito, xlabel="Standard Circuits per Student Distribution")
+    plotDistribution(distnumcirc(dfActionCircuit())$Circuito, xlabel="Circuits per User")
   })
 
 ## Circuitos normalizados únicos ####
@@ -282,7 +282,7 @@ shinyServer(function(input, output, session) {
   
   output$circdistN <- renderPlot({
     if(is.null(dfActionCircuit())) return(NULL)
-    plotDistribution(distnumcircN(dfActionCircuit())$CircuitoNormalizado, xlabel="Normalized Circuits per Student Distribution")
+    plotDistribution(distnumcircN(dfActionCircuit())$CircuitoNormalizado, xlabel="Normalized Circuits per User")
   })
   
 ## Circuits per date ####
