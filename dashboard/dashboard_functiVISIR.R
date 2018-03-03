@@ -1,160 +1,39 @@
-FunctionActionCircuit <- function (dfVISIR_acciones) {
-
-  observaciones <- TRUE
-  
-  replaceMany <- function(x, find, replace) {
-    for(i in 1:length(find)) {
-      x <- gsub(find[i], replace[i], x, fixed=T)
-    }
-    x
+#### INTERNAL FUNCTIONS ####
+replaceMany <- function(x, find, replace) {
+  for(i in 1:length(find)) {
+    x <- gsub(find[i], replace[i], x, fixed=T)
   }
-  
-  # From package "Deducer"
-  perm <- function (vec, duplicates = FALSE) 
-  {
-    if (!is.vector(vec)) 
-      stop("vec must be a vector")
-    n <- length(vec)
-    if (n == 1) 
-      return(as.matrix(vec[1]))
-    else if (n < 2) 
-      return(NULL)
-    z <- matrix(1)
-    if (all(!duplicated(vec))) 
-      duplicates = TRUE
-    for (i in 2:n) {
-      x <- cbind(z, i)
-      a <- c(1:i, 1:(i - 1))
-      z <- matrix(0, ncol = ncol(x), nrow = i * nrow(x))
-      z[1:nrow(x), ] <- x
-      for (j in 2:i - 1) {
-        z[j * nrow(x) + 1:nrow(x), ] <- x[, a[1:i + j]]
-      }
-    }
-    dimnames(z) <- NULL
-    z <- apply(z, c(1, 2), function(x) vec[x])
-    if (!duplicates) 
-      z[!duplicated(z), ]
-    else z
-  }
- #ANTIGUO
-  
-  numAcciones<-nrow(dfVISIR_acciones)
-  
-  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
-    order(dfVISIR_acciones$Alumno,
-          dfVISIR_acciones$FechaHoraEnvio),]
-  
-  
-  class(dfVISIR_accionesOrdenado$FechaHoraEnvio)
-  
-  dfVISIR_accionesOrdenado$FechaHoraEnvio <- as.factor(dfVISIR_accionesOrdenado$FechaHoraEnvio)
-  
-  #Tiempo de trabajo
-  timeLimit <- 900
-  vecDiffTime<-rep(NA,numAcciones)
-  vecDiffTimeCum<-rep(0, numAcciones)
-  vecDiffTimeCumReal<-rep(0, numAcciones)
-  
-  for(i in 2:numAcciones) {
-    if(dfVISIR_accionesOrdenado$Alumno[i]==dfVISIR_accionesOrdenado$Alumno[i-1]) {
-      thisTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i]),
-                                      format="%Y-%m-%d %H:%M:%S"))
-      previousTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i-1]),
-                                          format="%Y-%m-%d %H:%M:%S"))
-      vecDiffTime[i]<-thisTime-previousTime
-      
-      vecDiffTimeCum[i]<-vecDiffTime[i]+vecDiffTimeCum[i-1]
-      vecDiffTimeCumReal[i]<-ifelse(vecDiffTime[i]>timeLimit,0,vecDiffTime[i])+vecDiffTimeCumReal[i-1]
-    } else {
-      vecDiffTime[i]<-NA
-      vecDiffTimeCum[i]<-0
-      vecDiffTimeCumReal[i]<-0
-    }
-  }
-  dfVISIR_accionesOrdenado$TiempoDesdeAccionAnterior <- vecDiffTime / 60
-  dfVISIR_accionesOrdenado$TiempoAcumulado <- vecDiffTimeCum / 60
-  dfVISIR_accionesOrdenado$TiempoAcumuladoCorregido <- vecDiffTimeCumReal / 60
-  
-  summary(dfVISIR_accionesOrdenado)
-  
-  ordenAlumnos <- dfVISIR_accionesOrdenado %>% group_by(Alumno) %>% 
-    summarise(TiempoAcumuladoCorregidoMax = max(TiempoAcumuladoCorregido)) %>%
-    arrange(TiempoAcumuladoCorregidoMax)
-  
-  vecTiempoMax<- ordenAlumnos$TiempoAcumuladoCorregidoMax
-  # dfVISIR_accionesOrdenado$TiempoAcumuladoMax <- vecTiempoMax
-  
-  dfVISIR_accionesOrdenado$Alumno <- factor(dfVISIR_accionesOrdenado$Alumno, 
-                                            levels=ordenAlumnos$Alumno, ordered=TRUE)
-
-  #ANTIGUO
-
-  #NUEVO
-dfVISIR_accionesOrdenado$EsCircuito <- grepl("<circuitlist>",dfVISIR_accionesOrdenado$DatosEnviadosXML)
-
-if(observaciones) {
-  table(dfVISIR_accionesOrdenado$EsCircuito)
-}
-numCircuitos <- sum(dfVISIR_accionesOrdenado$EsCircuito)
-print(paste("NCirc:",numCircuitos))
-
-dfVISIR_accionesOrdenado$NumCircuito <- 0
-dfVISIR_accionesOrdenado$NumAccion <- 1
-for(i in 2:nrow(dfVISIR_accionesOrdenado)) {
-  if(dfVISIR_accionesOrdenado$Alumno[i] == dfVISIR_accionesOrdenado$Alumno[i-1]) {
-    dfVISIR_accionesOrdenado$NumAccion[i] <- dfVISIR_accionesOrdenado$NumAccion[i-1] + 1
-    if(dfVISIR_accionesOrdenado$EsCircuito[i]) {
-      dfVISIR_accionesOrdenado$NumCircuito[i] <- dfVISIR_accionesOrdenado$NumCircuito[i-1] + 1 
-    } else {
-      dfVISIR_accionesOrdenado$NumCircuito[i] <- dfVISIR_accionesOrdenado$NumCircuito[i-1] 
-    }
-  }
-}
-dfVISIR_accionesOrdenado$NumCircuito[!dfVISIR_accionesOrdenado$EsCircuito]<-NA #Aquellos circuitos distintos de EScircuito son NA
-
-#### 1B.ACCIONES CON CIRCUITO ####
-dfVISIR_accionesCircuito <- dfVISIR_accionesOrdenado[dfVISIR_accionesOrdenado$EsCircuito,] 
-
-tempCircuitos<-as.character(rep(NA,numCircuitos))
-for(i in 1:numCircuitos){
-  #El primer resultat de regexec es el match global, el 2:n son els extrets
-  tempRegExpCircuito<-regexec("<circuitlist>([^<]*)",as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
-  tempCircuitos[i]<-substr(dfVISIR_accionesCircuito$DatosEnviadosXML[i],tempRegExpCircuito[[1]][2],
-                           tempRegExpCircuito[[1]][2]+attr(tempRegExpCircuito[[1]],"match.length")[2]-1)
+  x
 }
 
-tempCircuitos <- gsub("[\n\r]","", tempCircuitos)
-print(head(tempCircuitos))
-str(tempCircuitos)
-
-tempMMConectado<-grepl("DMM_",dfVISIR_accionesCircuito$DatosEnviadosXML)
-tempMMOperativo<-grepl("<dmm_function value=",dfVISIR_accionesCircuito$DatosEnviadosXML)
-tempHayMedida<-tempMMConectado & tempMMOperativo
-
-tempMedidas<-rep("",numCircuitos)
-for(i in 1:numCircuitos){
-  if(tempHayMedida[i]) {
-    #El primer resultat de regexec es el match global, el 2:n son els extrets
-    tempRegExpMedida<-regexec("<dmm_function value=.(.)",
-                              as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
-    #print(tempRegExpMedida)
-    tempMedidas[i]<-substr(as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]),
-                           tempRegExpMedida[[1]][2],tempRegExpMedida[[1]][2]+4)
+# From package "Deducer"
+perm <- function (vec, duplicates = FALSE) 
+{
+  if (!is.vector(vec)) 
+    stop("vec must be a vector")
+  n <- length(vec)
+  if (n == 1) 
+    return(as.matrix(vec[1]))
+  else if (n < 2) 
+    return(NULL)
+  z <- matrix(1)
+  if (all(!duplicated(vec))) 
+    duplicates = TRUE
+  for (i in 2:n) {
+    x <- cbind(z, i)
+    a <- c(1:i, 1:(i - 1))
+    z <- matrix(0, ncol = ncol(x), nrow = i * nrow(x))
+    z[1:nrow(x), ] <- x
+    for (j in 2:i - 1) {
+      z[j * nrow(x) + 1:nrow(x), ] <- x[, a[1:i + j]]
+    }
   }
+  dimnames(z) <- NULL
+  z <- apply(z, c(1, 2), function(x) vec[x])
+  if (!duplicates) 
+    z[!duplicated(z), ]
+  else z
 }
-
-
-dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
-                                Circuito = tempCircuitos,
-                                MultimetroConectado=tempMMConectado,
-                                MultimetroEncendido=tempMMOperativo,
-                                EsMedida = tempHayMedida,
-                                Medida = tempMedidas)
-
-dfVISIR_accionesCircuito$Circuito<-gsub("W_X","/W_X",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
-dfVISIR_accionesCircuito$Circuito<-gsub("R_X","/R_X",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
-dfVISIR_accionesCircuito$Circuito<-substring(dfVISIR_accionesCircuito$Circuito,2)
 
 normalizarCircuito<-function(x) {
   # x es una cadena
@@ -232,8 +111,6 @@ normalizarCircuito<-function(x) {
   return(circuito)
 }
 
-
-
 normalizarCircuitos<-function(x) {
   y <- character(length(x))
   for (i in 1:length(x)) {
@@ -241,10 +118,6 @@ normalizarCircuitos<-function(x) {
   }
   return(y)
 }
-
-tempCircuitoNormalizado <- normalizarCircuitos(dfVISIR_accionesCircuito$Circuito)
-
-dfVISIR_accionesCircuito$CircuitoNormalizado <- tempCircuitoNormalizado
 
 esCircuitoCerrado <- function(x) {
   # x es una cadena
@@ -271,86 +144,167 @@ esCircuitoCerrado <- function(x) {
   !any(table(codigos)<2)
 }
 
+#### PUBLIC FUNCTIONS ####
+### >> DATASETS ####
+funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
+  numAcciones<-nrow(dfVISIR_acciones)
+  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+    order(dfVISIR_acciones$Alumno,
+          dfVISIR_acciones$FechaHoraEnvio),]
 
-vecCircuitoCerrado <- sapply(dfVISIR_accionesCircuito$Circuito, esCircuitoCerrado)
-dfVISIR_accionesCircuito$EsCircuitoCerrado <- vecCircuitoCerrado
+  dfVISIR_accionesOrdenado$FechaHoraEnvio <- as.factor(dfVISIR_accionesOrdenado$FechaHoraEnvio)
+  
+  #Tiempo de trabajo
+  vecDiffTime<-rep(NA,numAcciones)
+  vecDiffTimeCum<-rep(0, numAcciones)
+  vecDiffTimeCumReal<-rep(0, numAcciones)
+  
+  for(i in 2:numAcciones) {
+    if(dfVISIR_accionesOrdenado$Alumno[i]==dfVISIR_accionesOrdenado$Alumno[i-1]) {
+      thisTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i]),
+                                      format="%Y-%m-%d %H:%M:%S"))
+      previousTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i-1]),
+                                          format="%Y-%m-%d %H:%M:%S"))
+      vecDiffTime[i]<-thisTime-previousTime
+      
+      vecDiffTimeCum[i]<-vecDiffTime[i]+vecDiffTimeCum[i-1]
+      vecDiffTimeCumReal[i]<-ifelse(vecDiffTime[i]>timeLimit,0,vecDiffTime[i])+vecDiffTimeCumReal[i-1]
+    } else {
+      vecDiffTime[i]<-NA
+      vecDiffTimeCum[i]<-0
+      vecDiffTimeCumReal[i]<-0
+    }
+  }
+  dfVISIR_accionesOrdenado$TiempoDesdeAccionAnterior <- vecDiffTime / 60
+  dfVISIR_accionesOrdenado$TiempoAcumulado <- vecDiffTimeCum / 60
+  dfVISIR_accionesOrdenado$TiempoAcumuladoCorregido <- vecDiffTimeCumReal / 60
+  
+  ordenAlumnos <- dfVISIR_accionesOrdenado %>% group_by(Alumno) %>% 
+    summarise(TiempoAcumuladoCorregidoMax = max(TiempoAcumuladoCorregido)) %>%
+    arrange(TiempoAcumuladoCorregidoMax)
+  
+  vecTiempoMax <- ordenAlumnos$TiempoAcumuladoCorregidoMax
+  
+  dfVISIR_accionesOrdenado$Alumno <- factor(dfVISIR_accionesOrdenado$Alumno, 
+                                            levels=ordenAlumnos$Alumno, ordered=TRUE)
+  
+  dfVISIR_accionesOrdenado$EsCircuito <- grepl("<circuitlist>",
+    dfVISIR_accionesOrdenado$DatosEnviadosXML)
 
-colnames(dfVISIR_accionesCircuito)
+  numCircuitos <- sum(dfVISIR_accionesOrdenado$EsCircuito)
 
-vecMMMal <- grepl("(DMM_V.*DMM_A)|(DMM_A.*DMM_V)",
-                  dfVISIR_accionesCircuito$CircuitoNormalizado)  
-vecMMOKV <- !vecMMMal & grepl("(DMM_V.*DMM_V)",
-                              dfVISIR_accionesCircuito$CircuitoNormalizado) 
-vecMMOKA <- !vecMMMal & grepl("(DMM_A.*DMM_A)",
-                              dfVISIR_accionesCircuito$CircuitoNormalizado) 
-dfVISIR_accionesCircuito$MultimetroMal <- !vecMMOKV & !vecMMOKA  #No hay multimetro o estÃ¡ mal conectado
-dfVISIR_accionesCircuito$MultimetroV <- vecMMOKV
-dfVISIR_accionesCircuito$MultimetroA <- vecMMOKA
-dfVISIR_accionesCircuito$MedidaCorrectaV <- dfVISIR_accionesCircuito$MultimetroV & grepl("dc v",dfVISIR_accionesCircuito$Medida)
+  dfVISIR_accionesOrdenado$NumCircuito <- 0
+  dfVISIR_accionesOrdenado$NumAccion <- 1
+  for(i in 2:nrow(dfVISIR_accionesOrdenado)) {
+    if(dfVISIR_accionesOrdenado$Alumno[i] == dfVISIR_accionesOrdenado$Alumno[i-1]) {
+      dfVISIR_accionesOrdenado$NumAccion[i] <- dfVISIR_accionesOrdenado$NumAccion[i-1] + 1
+      if(dfVISIR_accionesOrdenado$EsCircuito[i]) {
+        dfVISIR_accionesOrdenado$NumCircuito[i] <- dfVISIR_accionesOrdenado$NumCircuito[i-1] + 1 
+      } else {
+        dfVISIR_accionesOrdenado$NumCircuito[i] <- dfVISIR_accionesOrdenado$NumCircuito[i-1] 
+      }
+    }
+  }
+  # Aquellos circuitos distintos de EsCircuito deben ser NA
+  dfVISIR_accionesOrdenado$NumCircuito[!dfVISIR_accionesOrdenado$EsCircuito]<-NA 
 
-dfVISIR_accionesCircuito$MedidaCorrectaA <- dfVISIR_accionesCircuito$MultimetroA & grepl("dc c",dfVISIR_accionesCircuito$Medida)
+  dfVISIR_accionesCircuito <- dfVISIR_accionesOrdenado[dfVISIR_accionesOrdenado$EsCircuito,] 
+  
+  tempCircuitos<-as.character(rep(NA,numCircuitos))
+  for(i in 1:numCircuitos){
+    #El primer resultat de regexec es el match global, el 2:n son els extrets
+    tempRegExpCircuito<-regexec("<circuitlist>([^<]*)",as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
+    tempCircuitos[i]<-substr(dfVISIR_accionesCircuito$DatosEnviadosXML[i],tempRegExpCircuito[[1]][2],
+                             tempRegExpCircuito[[1]][2]+attr(tempRegExpCircuito[[1]],"match.length")[2]-1)
+  }
+  
+  tempCircuitos <- gsub("[\n\r]","", tempCircuitos)
+  
+  tempMMConectado<-grepl("DMM_",dfVISIR_accionesCircuito$DatosEnviadosXML)
+  tempMMOperativo<-grepl("<dmm_function value=",dfVISIR_accionesCircuito$DatosEnviadosXML)
+  tempHayMedida<-tempMMConectado & tempMMOperativo
+  
+  tempMedidas<-rep("",numCircuitos)
+  for(i in 1:numCircuitos){
+    if(tempHayMedida[i]) {
+      #El primer resultat de regexec es el match global, el 2:n son els extrets
+      tempRegExpMedida<-regexec("<dmm_function value=.(.)",
+                                as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
+      #print(tempRegExpMedida)
+      tempMedidas[i]<-substr(as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]),
+                             tempRegExpMedida[[1]][2],tempRegExpMedida[[1]][2]+4)
+    }
+  }
+  
+  dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
+                                  Circuito = tempCircuitos,
+                                  MultimetroConectado=tempMMConectado,
+                                  MultimetroEncendido=tempMMOperativo,
+                                  EsMedida = tempHayMedida,
+                                  Medida = tempMedidas)
+  
+  dfVISIR_accionesCircuito$Circuito<-gsub("W_X","/W_X",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("R_X","/R_X",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-substring(dfVISIR_accionesCircuito$Circuito,2)
 
-dfVISIR_accionesCircuito$MedidaCorrectaR <- dfVISIR_accionesCircuito$MultimetroV & grepl("resi",dfVISIR_accionesCircuito$Medida) & !grepl("DC_+",dfVISIR_accionesCircuito$DatosEnviadosXML)
+  tempCircuitoNormalizado <- normalizarCircuitos(dfVISIR_accionesCircuito$Circuito)
 
-Medida <- factor(ifelse(dfVISIR_accionesCircuito$MedidaCorrectaV,"Voltage",
-                        ifelse(dfVISIR_accionesCircuito$MedidaCorrectaR,"Resistance",
-                               ifelse(dfVISIR_accionesCircuito$MedidaCorrectaA,"Current",
-                                      "Error"))),ordered=TRUE,levels=c("Current", "Resistance","Voltage","Error"))
+  dfVISIR_accionesCircuito$CircuitoNormalizado <- tempCircuitoNormalizado
 
-dfVISIR_accionesCircuito$TypeofMesure <- Medida
+  vecCircuitoCerrado <- sapply(dfVISIR_accionesCircuito$Circuito, esCircuitoCerrado)
+  dfVISIR_accionesCircuito$EsCircuitoCerrado <- vecCircuitoCerrado
 
-dfVISIR_accionesCircuito$TypeofMesure <-as.factor(dfVISIR_accionesCircuito$TypeofMesure)
-
-dfVISIR_accionesCircuito$Circuito[is.na(dfVISIR_accionesCircuito$EsCircuitoCerrado)]
-
-names(dfVISIR_accionesCircuito)[names(dfVISIR_accionesCircuito) == 'TiempoAcumuladoCorregido'] <- 'Time'
-
-names(dfVISIR_accionesCircuito)[names(dfVISIR_accionesCircuito) == 'TypeofMesure'] <- 'Mesure'
-
-return(dfVISIR_accionesCircuito)
-
-
+  vecMMMal <- grepl("(DMM_V.*DMM_A)|(DMM_A.*DMM_V)",
+                    dfVISIR_accionesCircuito$CircuitoNormalizado)  
+  vecMMOKV <- !vecMMMal & grepl("(DMM_V.*DMM_V)",
+                                dfVISIR_accionesCircuito$CircuitoNormalizado) 
+  vecMMOKA <- !vecMMMal & grepl("(DMM_A.*DMM_A)",
+                                dfVISIR_accionesCircuito$CircuitoNormalizado) 
+  dfVISIR_accionesCircuito$MultimetroMal <- !vecMMOKV & !vecMMOKA  #No hay multimetro o estÃ¡ mal conectado
+  dfVISIR_accionesCircuito$MultimetroV <- vecMMOKV
+  dfVISIR_accionesCircuito$MultimetroA <- vecMMOKA
+  dfVISIR_accionesCircuito$MedidaCorrectaV <- dfVISIR_accionesCircuito$MultimetroV & grepl("dc v",dfVISIR_accionesCircuito$Medida)
+  
+  dfVISIR_accionesCircuito$MedidaCorrectaA <- dfVISIR_accionesCircuito$MultimetroA & grepl("dc c",dfVISIR_accionesCircuito$Medida)
+  
+  dfVISIR_accionesCircuito$MedidaCorrectaR <- dfVISIR_accionesCircuito$MultimetroV & grepl("resi",dfVISIR_accionesCircuito$Medida) & !grepl("DC_+",dfVISIR_accionesCircuito$DatosEnviadosXML)
+  
+  Medida <- factor(ifelse(dfVISIR_accionesCircuito$MedidaCorrectaV,"Voltage",
+                          ifelse(dfVISIR_accionesCircuito$MedidaCorrectaR,"Resistance",
+                                 ifelse(dfVISIR_accionesCircuito$MedidaCorrectaA,"Current",
+                                        "Error"))),ordered=TRUE,levels=c("Current", "Resistance","Voltage","Error"))
+  
+  dfVISIR_accionesCircuito$Measure <- as.factor(Medida)
+  names(dfVISIR_accionesCircuito)[names(dfVISIR_accionesCircuito) == 'TiempoAcumuladoCorregido'] <- 'Time'
+  
+  return(dfVISIR_accionesCircuito)
 }
 
-FunctionOrderTime <- function (dfVISIR_acciones) {
-  
+funOrderTime <- function (dfVISIR_acciones) {
   numAcciones<-nrow(dfVISIR_acciones)
-  
-  
-  
-  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+
+    dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
   
   dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
-  
   dfVISIR_accionesOrdenado$ConnectionIni <- grepl("@@@initial::request@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
-  
   dfVISIR_accionesOrdenado$ConnectionFina <- grepl("@@@finish@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
-  
   dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
                                                       ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
                                                              "NA")))
-  
-  
   X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,FechaHoraEnvio,Connection)
-  
   X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
                                               format="%Y-%m-%d %H:%M:%S"))
 
-  
   ordenAlumno <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>% group_by(Alumno,Dates,seqid) %>% arrange(FechaHoraEnvio) %>% 
     summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% mutate(TotalTime=TotalTime/3600) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
     group_by(Alumno) %>% summarise(TotalTime=sum(TotalTime))
   
-  
-  
   ordenAlumno$TotalTime <-as.numeric(ordenAlumno$TotalTime)
-  
-
   return(ordenAlumno)
-  
 }
+
 
 FunctionSSA <- function (dfVISIR_acciones) {
   

@@ -19,8 +19,8 @@ shinyServer(function(input, output, session) {
     return(df)
   })
 
-  dfActionCircuit<- reactive({FunctionActionCircuit(dfImport())})
-  dfOrderTime <- reactive({FunctionOrderTime(dfImport())})
+  dfActionCircuit<- reactive({funActionCircuit(dfImport())})
+  dfOrderTime <- reactive({funOrderTime(dfImport())})
   dfSSA <- reactive({FunctionSSA(dfImport())})
   dfStudTime <- reactive({FunctionTimeStud(dfImport(),dfActionCircuit())})
   dfMTS <- reactive({FunctionMTS(dfImport())})
@@ -174,7 +174,7 @@ shinyServer(function(input, output, session) {
   output$timelineus <-renderPlot({
     gra=c("red","green","blue","yellow")
     g <- ggplot(dfActionCircuit(), aes(x = Alumno, y = Time,
-                                  color = Mesure,shape= Mesure)) + 
+                                  color = Measure,shape= Measure)) + 
       geom_point(size = 4, alpha = 0.5) +
       scale_color_manual(values = gra) +
       scale_shape_manual(values= c(95,95,95,1)) + 
@@ -183,7 +183,7 @@ shinyServer(function(input, output, session) {
             axis.ticks.x=element_blank(), legend.text = element_text(size=8),
             legend.key.size=unit(5,"points")) +
       guides(color = guide_legend(override.aes = list(size=8)))
-    if(input$timeline_facet) g <- g + facet_wrap(~Mesure,nrow=2)
+    if(input$timeline_facet) g <- g + facet_wrap(~Measure,nrow=2)
     g
   })
   
@@ -211,7 +211,7 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to identify the student.") 
+      return ("In the non-facetted chart, place your mouse over a data point to identify the student.") 
     else
       return (paste("Student:",response[1]))
   }) 
@@ -322,9 +322,11 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to identify the student.") 
+      return ("Place your mouse over a data point to identify the student.\n\n") 
     else
-      return (paste("Student Id:",response[1],"Number of circuts:",responsec[1],"Time (Minutes):",responset[1]))
+      return (paste("Student Id:",response[1],"\n",
+                    "Number of circuts:",responsec[1],"\n",
+                    "Time (Minutes):",responset[1]))
   })
   
 ### >> NUMBER OF NORMALIZED CIRCUITS VS TIME ON TASK ####
@@ -359,8 +361,10 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to identify the student.") 
+      return ("Place your mouse over a data point to identify the student.\n\n") 
     else
-      return (paste("Student Id:",response[1],"Number of Normalized Circuits:",responsec[1],"Time (Minutes):",responset[1]))
+      return (paste("Student Id:",response[1],"\n",
+                    "Number of Normalized Circuits:",responsec[1],"\n",
+                    "Time (Minutes):",responset[1]))
   })
 })
