@@ -170,7 +170,7 @@ shinyServer(function(input, output, session) {
       return (paste("Circuits:",response[1]))
   })
   
-## Circuits Time line vs user ####
+## Circuits Timeline vs user ####
   output$timelineus <-renderPlot({
     gra=c("red","green","blue","yellow")
     ggplot(dfActionCircuit(), aes(x = Alumno, y = Time,
@@ -209,7 +209,7 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to see the number of circuits.") 
+      return ("Place your mouse over a data point to identify the student.") 
     else
       return (paste("Student:",response[1]))
   }) 
