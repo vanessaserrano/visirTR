@@ -27,6 +27,11 @@ shinyServer(function(input, output, session) {
   dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
   dftimeuserdate <- reactive({fplotlyfunc3(dfMTS())})
   dfStudTimeNorm <- reactive({FunctionTimeStudNorm(dfImport(),dfActionCircuit())})
+  tabNCircuits <- reactive({
+    tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
+    tab <- tab[order(-tab)]
+    data.frame(Circuit = names(tab), TimesTested = as.integer(tab), stringsAsFactors = FALSE) 
+  })
 
 #### DATA INPUT ####
   output$numStudents <- renderValueBox({
@@ -367,4 +372,70 @@ shinyServer(function(input, output, session) {
                     "Number of Normalized Circuits:",responsec[1],"\n",
                     "Time (Minutes):",responset[1]))
   })
+
+#### CIRCUIT-BASED RESULTS ####
+### >> COMMON CIRCUITS ####
+## Common circuits ####
+  output$cc_circuits <- renderDataTable({
+    datatable(tabNCircuits())
+  })
+
+## Circuit in timeline
+  output$ct_selectCircuit <- renderUI({
+    if(is.null(tabNCircuits())) 
+      return(selectInput("ct_circuit", "Select a circuit..", c("No data available")))
+    else {
+      return(selectInput("ct_circuit", "Select a circuit..", tabNCircuits()$Circuit))
+    }})
+  
+  output$ct_plotu_chart <- renderPlot({
+    gra <- c("grey","red")
+    grafdata <- dfActionCircuit() %>% select(Alumno,Time)
+    
+    if(is.null(input$ct_circuit)) {
+      grafdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
+    } else {
+      grafdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ct_circuit
+    }
+    g <- ggplot(grafdata, aes(x = Alumno, y = Time,
+                                       color = sel,shape= sel)) + 
+      geom_point(size = 4, alpha = 0.5) +
+      scale_color_manual(values = gra) +
+      scale_shape_manual(values= c(95,1)) + 
+      theme_few() +
+      theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
+            axis.ticks.x=element_blank(), legend.position="none")
+    g
+  })
+  
+  output$ct_plotu <- renderUI({
+    plotOutput("ct_plotu_chart", height=400,
+               hover = hoverOpts(
+                 id = "ct_plotu_hover",
+                 delay = 100,
+                 nullOutside = T)
+    )
+  })
+  
+  output$ct_plot_point <- renderText({
+    dat <- data.frame(ids=dfActionCircuit()$Alumno)
+    dat$toT <- dfActionCircuit()$Alumno
+    dat$nAc <- dfActionCircuit()$Time
+    dat <- as.data.frame(dat)
+    
+    res <- nearPoints(dat, input$ct_plotu_hover, 
+                      xvar = "toT", yvar = "nAc",
+                      maxpoints = 1,
+                      addDist = TRUE)
+    
+    response <- unique(as.character(res$ids))
+    responsec <- unique(as.numeric(res$nAc))
+    responset <- unique(as.numeric(res$toT))
+    if(length(response)==0)
+      return ("Place your mouse over a data point to identify the student.") 
+    else
+      return (paste("Student:",response[1]))
+  }) 
+  
+  
 })
