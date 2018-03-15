@@ -179,7 +179,16 @@ ui <- dashboardPage(
                                 uiOutput("ct_plotu"),
                                 verbatimTextOutput("ct_plot_point"),
                                 height=540, width=12))
-          )
+          ),
+          
+          tabPanel("Number of Circuits vs User",
+                   fluidRow(box(status="primary",
+                                htmlOutput("ntc_selectCircuit"),
+                                uiOutput("ntc_plotu"),
+                                verbatimTextOutput("ntc_plot_point"),
+                                height=540, width=12)))
+          
+          
         )
       )
 

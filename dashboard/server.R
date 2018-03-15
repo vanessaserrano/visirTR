@@ -435,7 +435,72 @@ shinyServer(function(input, output, session) {
       return ("Place your mouse over a data point to identify the student.") 
     else
       return (paste("Student:",response[1]))
-  }) 
+  })
   
+  ## Number of Circuits vs User
+  
+  
+  
+  output$ntc_selectCircuit <- renderUI({
+    if(is.null(tabNCircuits())) 
+      return(selectInput("ct_circuit", "Select a circuit..", c("No data available")))
+    else {
+      return(selectInput("ct_circuit", "Select a circuit..", tabNCircuits()$Circuit))
+    }})
+  
+  output$ntc_plotu_chart <- renderPlot({
+    
+        grafntcdata <- dfActionCircuit() %>% select(Alumno)
+    
+    if(is.null(input$ct_circuit)) {
+      grafntcdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
+    } else {
+      
+      grafntcdata$sol <- factor(ifelse(dfActionCircuit()$CircuitoNormalizado == input$ct_circuit,"YES",
+                                      NA))
+    
+      grafntcdata <- grafntcdata %>% select(Alumno,sol)%>% filter(complete.cases(.))
+      
+      
+      grafntcdata <- grafntcdata %>% group_by(Alumno,sol) %>% summarise(Len=length(sol))
+      
+    }
+        
+    g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + 
+      geom_bar(stat="identity") 
+    g
+  })
+  
+  output$ntc_plotu <- renderUI({
+    plotOutput("ntc_plotu_chart", height=400,
+               hover = hoverOpts(
+                 id = "ntc_plotu_hover",
+                 delay = 100,
+                 nullOutside = T)
+    )
+  })
+  
+  output$ntc_plot_point <- renderText({
+    dat <- data.frame(ids=dfActionCircuit()$Alumno)
+    dat$toT <- dfActionCircuit()$Alumno
+    dat$nAc <- dfActionCircuit()$Time
+    dat <- as.data.frame(dat)
+    
+    res <- nearPoints(dat, input$ntc_plotu_hover, 
+                      xvar = "toT", yvar = "nAc",
+                      maxpoints = 1,
+                      addDist = TRUE)
+    
+    response <- unique(as.character(res$ids))
+    responsec <- unique(as.numeric(res$nAc))
+    responset <- unique(as.numeric(res$toT))
+    if(length(response)==0)
+      return ("Place your mouse over a data point to identify the student.") 
+    else
+      return (paste("Student:",response[1]))
+  })
+  
+  
+
   
 })
