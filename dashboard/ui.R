@@ -62,7 +62,10 @@ ui <- dashboardPage(
         menuSubItem("Circuits", tabName = "numcircu",icon = icon("wrench")),
         menuSubItem("Circuits vs Time", tabName = "circvstim",icon = icon("area-chart"))),
       menuItem("Circuit-based Analysis",icon = icon("folder"), startExpanded  = TRUE,
-        menuSubItem("Common Circuits",tabName = "common-circuits", icon = icon("heart")))
+        menuSubItem("Common Circuits",tabName = "common-circuits", icon = icon("heart"))),
+      menuItem("Student-specific Results",icon = icon("folder"), startExpanded  = TRUE,
+        menuSubItem("Users Results",tabName = "usresults", icon = icon("street-view")))  
+      
   )),
   dashboardBody(tags$head(
     tags$style(HTML('.skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a {
@@ -165,32 +168,55 @@ ui <- dashboardPage(
         )
       ),
       
-  #----------    
-      tabItem("common-circuits",
-        tabBox(height=480, width=12,
-          tabPanel("Common Circuits",
-            fluidRow(box(status="primary",
-                         dataTableOutput("cc_circuits"), 
-                         height=480, width=12))
-          ),
-          tabPanel("Circuits in Timeline",
-                   fluidRow(box(status="primary",
-                                htmlOutput("ct_selectCircuit"),
-                                uiOutput("ct_plotu"),
-                                verbatimTextOutput("ct_plot_point"),
-                                height=540, width=12))
-          ),
+
+  tabItem("common-circuits",
+          tabBox(height=480, width=12,
+                 tabPanel("Common Circuits",
+                          fluidRow(box(status="primary",
+                                       dataTableOutput("cc_circuits"), 
+                                       height=480, width=12))
+                 ),
+                 tabPanel("Circuits in Timeline",
+                          fluidRow(box(status="primary",
+                                       htmlOutput("ct_selectCircuit"),
+                                       uiOutput("ct_plotu"),
+                                       verbatimTextOutput("ct_plot_point"),
+                                       height=540, width=12))
+                 ),
+                 
+                 tabPanel("Number of Circuits vs User",
+                          fluidRow(box(status="primary",
+                                       htmlOutput("ntc_selectCircuit"),
+                                       uiOutput("ntc_plotu"),
+                                       verbatimTextOutput("ntc_plot_point"),
+                                       height=540, width=12)))
+                 
+                 
+          )
+  ),
+  
+  tabItem("usresults",
+          fluidRow(
+            box( status = "primary",width = 12,
+                collapsible = TRUE,
+                htmlOutput("spr_selectStudent")
+            
+  ,
+  tabBox(height=480, width=12,
+         tabPanel("Summary",
+  valueBoxOutput("numStudActions",width = 3)))))
+  
+  
+  
+  
+  )
           
-          tabPanel("Number of Circuits vs User",
-                   fluidRow(box(status="primary",
-                                htmlOutput("ntc_selectCircuit"),
-                                uiOutput("ntc_plotu"),
-                                verbatimTextOutput("ntc_plot_point"),
-                                height=540, width=12)))
+          
+  
+                   
           
           
-        )
-      )
+  
 
     )
   )

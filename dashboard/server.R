@@ -32,6 +32,13 @@ shinyServer(function(input, output, session) {
     tab <- tab[order(-tab)]
     data.frame(Circuit = names(tab), TimesTested = as.integer(tab), stringsAsFactors = FALSE) 
   })
+  
+  tabNStudents <- reactive({
+    tab <- table(na.omit(dfActionCircuit()$Alumno))
+    tab <- tab[order(tab)]
+    data.frame(Student = names(tab), TimesTested = as.integer(tab), stringsAsFactors = FALSE) 
+  }) 
+  
 
 #### DATA INPUT ####
   output$numStudents <- renderValueBox({
@@ -498,6 +505,24 @@ shinyServer(function(input, output, session) {
       return ("Place your mouse over a data point to identify the student.") 
     else
       return (paste("Student:",response[1]))
+  })
+  
+  #### Student-specific Results ####
+  ### >> User results ####
+  
+  output$spr_selectStudent <- renderUI({
+    if(is.null(tabNCircuits())) 
+      return(selectInput("ns_student", "Select a student..", c("No data available")))
+    else {
+      return(selectInput("ns_student", "Select a student..", tabNStudents()$Student))
+    }})
+  
+  
+  output$numStudActions <- renderValueBox({
+    valueBox(
+      ifelse(is.null(dfImport()),"--",
+             format(length(input$ct_circuit),format="d",big.mark="")), 
+      "Actions", icon = icon("cubes"), color = "red")
   })
   
   
