@@ -204,7 +204,13 @@ ui <- dashboardPage(
   ,
   tabBox(height=480, width=12,
          tabPanel("Summary",
-  valueBoxOutput("numStudActions",width = 3)))))
+  valueBoxOutput("numStudActions",width = 3),
+  valueBoxOutput("timstud",width = 3),
+  valueBoxOutput("numcircuit",width = 3),
+  valueBoxOutput("numnormcircuit",width = 3)
+  
+  
+  ))))
   
   
   

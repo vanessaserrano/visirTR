@@ -519,13 +519,86 @@ shinyServer(function(input, output, session) {
   
   
   output$numStudActions <- renderValueBox({
+     df1 <-dfActionCircuit() %>%  select(Alumno)
+     df1$stu <-dfActionCircuit()$Alumno == input$ns_student
+     
+     
+     df1$sol <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
+                                      NA))
+     
+     df1<- df1 %>% select(Alumno,sol)%>% filter(complete.cases(.))
+     
+     
+     df1 <- df1 %>% summarise(Act=length(sol))
+     
+     
+     
     valueBox(
-      ifelse(is.null(dfImport()),"--",
-             format(length(input$ct_circuit),format="d",big.mark="")), 
+      
+      ifelse(is.null(df1),"--",
+             format(df1$Act,format="d",big.mark="")), 
       "Actions", icon = icon("cubes"), color = "red")
+
   })
   
+  output$timstud <- renderValueBox({
+    
+    df2 <-dfStudTime() %>%  select(Alumno,TotalTime)
+    df2$st <-dfStudTime()$Alumno == input$ns_student
+    
+    
+    df2$co <- factor(ifelse(dfStudTime()$Alumno == input$ns_student,"YES",
+                             NA))
+    
+    df2<- df2 %>% select(Alumno,TotalTime,co)%>% filter(complete.cases(.))
+    
+    
+    valueBox(
+      
+      ifelse(is.null(df2),"--",
+             format(df2$TotalTime,format="d",big.mark="")), 
+      "Total Time (Minutes)", icon = icon("hourglass-half"), color = "green")
+    
+  })
   
-
+  output$numcircuit <- renderValueBox({
+    
+    df3 <-dfStudTime() %>%  select(Alumno,NumCircu)
+    df3$st <-dfStudTime()$Alumno == input$ns_student
+    
+    
+    df3$co <- factor(ifelse(dfStudTime()$Alumno == input$ns_student,"YES",
+                            NA))
+    
+    df3<- df3 %>% select(Alumno,NumCircu,co)%>% filter(complete.cases(.))
+    
+    
+    valueBox(
+      
+      ifelse(is.null(df3),"--",
+             format(df3$NumCircu,format="d",big.mark="")), 
+      "Circuits", icon = icon("wrench"), color = "orange")
+    
+  })  
+  
+  output$numnormcircuit <- renderValueBox({
+    
+    df4 <-dfStudTimeNorm() %>%  select(Alumno,NumCircu)
+    df4$st <-dfStudTimeNorm()$Alumno == input$ns_student
+    
+    
+    df4$co <- factor(ifelse(dfStudTimeNorm()$Alumno == input$ns_student,"YES",
+                            NA))
+    
+    df4<- df4 %>% select(Alumno,NumCircu,co)%>% filter(complete.cases(.))
+    
+    
+    valueBox(
+      
+      ifelse(is.null(df4),"--",
+             format(df4$NumCircu,format="d",big.mark="")), 
+      "Circuits", icon = icon("wrench"), color = "teal")
+    
+  }) 
   
 })
