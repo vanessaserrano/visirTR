@@ -30,7 +30,7 @@ shinyServer(function(input, output, session) {
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
     tab <- tab[order(-tab)]
-    data.frame(Circuit = names(tab), TimesTested = as.integer(tab), stringsAsFactors = FALSE) 
+    data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
   })
   
   tabNStudents <- reactive({
@@ -597,8 +597,29 @@ shinyServer(function(input, output, session) {
       
       ifelse(is.null(df4),"--",
              format(df4$NumCircu,format="d",big.mark="")), 
-      "Circuits", icon = icon("wrench"), color = "teal")
+      "Normalized Circuits", icon = icon("wrench"), color = "teal")
     
-  }) 
+  })
+  
+  output$lcn_circuits <- renderDataTable({
+    
+    df5 <-dfActionCircuit() %>%  select(Alumno,CircuitoNormalizado)
+    
+    df5$scl <-dfActionCircuit()$Alumno == input$ns_student
+    
+    df5$co <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
+                            NA))
+    
+    df5<- df5 %>% select(Alumno,CircuitoNormalizado,co)%>% filter(complete.cases(.))
+    
+    df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>% summarise(TimTes=length(CircuitoNormalizado)) 
+    
+    df5 <- df5 %>%arrange(desc(TimTes)) %>%
+      ungroup(Alumno,CircuitoNormalizado) %>%select(CircuitoNormalizado,TimTes) 
+   
+    datatable(df5)
+  })
+  
+  
   
 })

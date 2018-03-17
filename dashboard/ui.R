@@ -207,7 +207,17 @@ ui <- dashboardPage(
   valueBoxOutput("numStudActions",width = 3),
   valueBoxOutput("timstud",width = 3),
   valueBoxOutput("numcircuit",width = 3),
-  valueBoxOutput("numnormcircuit",width = 3)
+  valueBoxOutput("numnormcircuit",width = 3)),
+  
+        tabPanel("List of Noramalized Ciruits",
+                 
+                 fluidRow(box(status="primary",
+                              dataTableOutput("lcn_circuits"), 
+                              height=480, width=12))
+                 
+                 
+                 
+                 
   
   
   ))))
