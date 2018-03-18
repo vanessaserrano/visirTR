@@ -615,10 +615,30 @@ shinyServer(function(input, output, session) {
     df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>% summarise(TimTes=length(CircuitoNormalizado)) 
     
     df5 <- df5 %>%arrange(desc(TimTes)) %>%
-      ungroup(Alumno,CircuitoNormalizado) %>%select(CircuitoNormalizado,TimTes) 
+      ungroup(Alumno,CircuitoNormalizado) %>%select(CircuitoNormalizado,TimTes)
+    
+    names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuits'
+    names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
    
     datatable(df5)
   })
+  
+  output$hc_circuits <- renderDataTable({
+    
+    df6 <-dfActionCircuit() %>%  select(Alumno,Sesion,FechaHoraEnvio,Circuito)
+    
+    df6$hc <-dfActionCircuit()$Alumno == input$ns_student
+    
+    df6$hco <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
+                            NA))
+   
+    df6<- df6 %>% filter(complete.cases(.)) %>% select(Sesion,FechaHoraEnvio,Circuito)
+   
+ 
+    datatable(df6)
+  })
+  
+  
   
   
   

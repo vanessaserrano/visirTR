@@ -213,14 +213,20 @@ ui <- dashboardPage(
                  
                  fluidRow(box(status="primary",
                               dataTableOutput("lcn_circuits"), 
-                              height=480, width=12))
+                              height=480, width=12))),
+  
+  tabPanel("History of circuits",
+           
+           fluidRow(box(status="primary",
+                        dataTableOutput("hc_circuits"), 
+                        height=480, width=12)))
                  
                  
                  
                  
   
   
-  ))))
+  )))
   
   
   
