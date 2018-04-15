@@ -56,7 +56,8 @@ ui <- dashboardPage(
         }
       '))),
 
-      menuItem("Data Input",icon = icon("database"), tabName = "browsedata"),
+        menuItem("Data Input",icon = icon("folder"), startExpanded = TRUE,
+            menuSubItem("Log Files", tabName = "browsedata",icon = icon("database"))),
       menuItem("Global Results",icon = icon("folder"), startExpanded = TRUE,
         menuSubItem("Time", tabName = "timeana",icon = icon("hourglass-start")),
         menuSubItem("Circuits", tabName = "numcircu",icon = icon("wrench")),
@@ -202,14 +203,27 @@ ui <- dashboardPage(
                 htmlOutput("spr_selectStudent")
             
   ,
-  tabBox(height=480, width=12,
+  tabBox(height=540, width=12,
          tabPanel("Summary",
+                  fluidRow(
   valueBoxOutput("numStudActions",width = 3),
   valueBoxOutput("timstud",width = 3),
   valueBoxOutput("numcircuit",width = 3),
   valueBoxOutput("numnormcircuit",width = 3)),
   
-        tabPanel("List of Noramalized Ciruits",
+  fluidRow(
+    valueBoxOutput("numresist",width = 3),  
+    valueBoxOutput("numcurr",width = 3),
+    valueBoxOutput("numvoltag",width = 3),
+    valueBoxOutput("numerror",width = 3)
+    
+  )
+
+  
+  
+  ),
+  
+        tabPanel("List of Normalized Ciruits",
                  
                  fluidRow(box(status="primary",
                               dataTableOutput("lcn_circuits"), 
