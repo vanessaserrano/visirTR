@@ -472,7 +472,7 @@ FunctionMTS <- function (dfVISIR_acciones) {
   Totaltimebydate <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
     group_by(Alumno,Dates,seqid) %>% summarise(TimeSpent=sum(diff(FechaHoraEnvio))) %>% 
     group_by(Alumno,Dates) %>% summarise(TimeSpent=sum(TimeSpent)) %>%
-    mutate(TimeSpent=TimeSpent/60) %>% mutate(TimeSpent=round(TimeSpent,digits = 2))
+    mutate(TimeSpent=TimeSpent/3600) %>% mutate(TimeSpent=round(TimeSpent,digits = 2))
   
   
   return(Totaltimebydate)
@@ -500,7 +500,7 @@ Dygraphfunc <- function(dfMTS) {
     summarise(Time=sum(TimeSpent,na.rm=TRUE)) %>%mutate(Time=Time/60) %>%  mutate(Time=round(Time,digits = 2))
   Totaltime <- zoo(Totaltimebydate2$Time,Totaltimebydate2$Dates)
   Tot<-cbind(Totaltime)
-  dygraph(Tot)%>% dyAxis("y",rangePad=c(-0.05),label = "Time (Hours)") %>% dySeries("Totaltime", label = "Total Time",axis="y")  %>%
+  dygraph(Tot)%>% dyAxis("y",rangePad=c(-0.05),label = "Time (in h)") %>% dySeries("Totaltime", label = "Total Time",axis="y")  %>%
     dyOptions(axisLineWidth = 1.5,drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
 }
 

@@ -54,23 +54,23 @@ shinyServer(function(input, output, session) {
     valueBox(
       ifelse(is.null(dfImport()),"--",
              format(length(unique(dfImport()$Alumno)),format="d",big.mark="")), 
-      "Students", icon = icon("group"), color = "blue")
+      "Students", color = "blue")
   })
   output$numActions <- renderValueBox({
     valueBox(
       ifelse(is.null(dfImport()),"--",
              format(length(dfImport()$Alumno),format="d",big.mark="")), 
-      "Actions", icon = icon("cubes"), color = "blue")
+      "Actions", color = "blue")
   })
   output$maxdate <- renderValueBox({
       valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",max(dfImport()$Dates)),
                               style = "font-size: 90%;"), width = 4, 
-        "Final Date", icon = icon("calendar-o"), color = "blue")
+        "Last logged day", color = "blue")
   })
   output$mindate <- renderValueBox({
     valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",min(dfImport()$Dates)),
                             style = "font-size: 90%;"),width = 4, 
-      "Start Date", icon = icon("calendar-o"), color = "blue")
+      "First logged day", color = "blue")
   })
 
   
@@ -78,54 +78,69 @@ shinyServer(function(input, output, session) {
 ### >> TIME ####
 ## Total Time vs Date (Dygraph) ####
   output$dygraph <-renderDygraph({
+    if(is.null(dfImport())) return(NULL)
     Dygraphfunc(dfMTS())
   })
 
+
+  
+  
+  
+  
 ## Distribution of time on task ####
   # Total time spend
-  output$totaltimespend <-  renderInfoBox({
-    infoBox(
-      title= NULL, value =InfovalueBoxTT(dfOrderTime()) ,subtitle ="Total Time (Hours)", icon = icon("thumbs-up", lib = "glyphicon"),
-      color = "teal",width = 3
-    )})
+  output$totaltimespend <-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+             InfovalueBoxTT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
+      "Total Time (in h)",color = "blue")
+    })
+      
   
   # Mean time spend
-  output$meantimespend <-  renderInfoBox({
-    infoBox(
-      title= NULL,value =InfovalueBoxMeT(dfOrderTime()),subtitle = "Mean Time/Student (Hours)" , icon = icon("users"),
-      color = "teal",width = 3
-      
-    )})
   
+  output$meantimespend <-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxMeT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
+      "Mean Time/Student (in h)",color = "blue")
+  })
+  
+
   # Max time spend
-  output$maxtimespend <-  renderInfoBox({
-    infoBox(
-      title= NULL,value=InfovalueBoxMaxT(dfOrderTime()),subtitle = "Max Time (Hours)",icon = icon("arrow-up"),
-      color = "teal",width = 3
-      
-    )})
+  output$maxtimespend <-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxMaxT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
+      "Max Time (in h)",color = "blue")
+  })
   
+
   # Min time spend
-  output$mintimespend <-  renderInfoBox({
-    infoBox(
-      title= NULL,value=InfovalueBoxMinT(dfOrderTime()),subtitle = "Min Time (Hours)", icon = icon("arrow-down"),
-      color = "teal",width = 3
-      
-    )})
   
+  output$mintimespend<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxMinT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
+      "Min Time (in h)",color = "blue")
+  })
+  
+
   output$timstu <- renderPlot({
-    if(is.null(dfOrderTime())) return(NULL)
-    plotDistribution(dfOrderTime()$TotalTime/60, xlabel="Time(Hours) per Student")
+    if(is.null(dfImport())) return(NULL)
+    plotDistribution(dfOrderTime()$TotalTime/60, xlabel="Time(in h) per Student")
   })
   
 ## Time on task vs User per Date HeatMap ####
   output$timeheat <-renderPlot({
-    ggplot(data = dftimeuserdate(), aes(x = Student, y = Dates)) +
+    if(is.null(dfImport())) return(NULL)
+    ggplot(data = dftimeuserdate(), aes(x = Student, y = Dates)) + theme_bw() +
       geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
       scale_fill_viridis(direction=-1)
   })
   
   output$plot <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     plotOutput("timeheat", height=400,
                hover = hoverOpts(
                  id = "plot_hovernAct",
@@ -135,6 +150,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$plot_poin <- renderText({
+    if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dftimeuserdate()$Time)
     dat$toT <- dftimeuserdate()$Student
     dat$nAc <- dftimeuserdate()$Dates
@@ -146,18 +162,26 @@ shinyServer(function(input, output, session) {
                       addDist = TRUE)
     
     response <- unique(as.character(res$ids))
-    responsec <- unique(as.numeric(res$nAc))
-    responset <- unique(as.numeric(res$toT))
+    responsec <- unique(as.factor(res$nAc))
+    responset <- unique(as.factor(res$toT))
     if(length(response)==0)
       return ("Place your mouse over a data point to see the time dedicated.") 
     else
-      return (paste("Time (Minutes):",response[1]))
+      return (paste("Student Id:",responset[1],"\n",
+                   "Date:",responsec[1],"\n",
+                   "Time (in h):",response[1]))
+    
   })
+  
+  
+  
+  
+  
   
 ### >> CIRCUITS ####
 ## Circuits vs User heat map ####
   output$circsuserheat <-renderPlot({
-    ggplot(data = dfcircuser(), aes(x = Student, y = Dates)) +
+    ggplot(data = dfcircuser(), aes(x = Student, y = Dates)) + theme_bw() +
       geom_tile(aes(fill=Circuits)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
       scale_fill_viridis(direction=-1)
   })
@@ -484,8 +508,8 @@ shinyServer(function(input, output, session) {
       
     }
         
-    g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + 
-      geom_bar(stat="identity",fill="steelblue") +  geom_text(aes(label=Len), vjust=1.6, color="white", size=3.5)+
+    g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
+      geom_bar(stat="identity",fill="steelblue") +
       theme(axis.text.x=element_text(angle = 90, vjust = 0.5)) + labs(x = "Student", y= "Number of Circuits")
     g
   })

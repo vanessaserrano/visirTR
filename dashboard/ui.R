@@ -13,35 +13,11 @@ if (!require("rCharts")) {
 } 
 
 source("dashboard_functiVISIR.R")
-mydashboardHeader <- function(..., title = NULL, disable = FALSE,title.navbar=NULL, .list = NULL) {
-  items <- c(list(...), .list)
-  #lapply(items, tagAssert, type = "li", class = "dropdown")
-  tags$header(class = "main-header",
-              style = if (disable) "display: none;",
-              span(class = "logo", title),
-              tags$nav(class = "navbar navbar-static-top", role = "navigation",style = "logo{background-color:#FFF",
-                       # Embed hidden icon so that we get the font-awesome dependency
-                       span(shiny::icon("bars"), style = "display:none;"),
-                       # Sidebar toggle button
-                       #                        a(href="#", class="sidebar-toggle", `data-toggle`="offcanvas",
-                       #                          role="button",
-                       #                          span(class="sr-only", "Toggle navigation")
-                       #                        ),
-                       
-                       title.navbar,
-                       div(class = "navbar-custom-menu",
-                           tags$ul(class = "nav navbar-nav",
-                                   items
-                           )
-                       )
-              )
-  )
-}
 
 theme = "bootstrap.css"
 ui <- dashboardPage( 
   skin="yellow",
-  mydashboardHeader(
+  dashboardHeader(
     title="VISIR DASHBOARD"
     
   ),
@@ -57,15 +33,15 @@ ui <- dashboardPage(
       '))),
 
         menuItem("Data Input",icon = icon("folder"), startExpanded = TRUE,
-            menuSubItem("Log Files", tabName = "browsedata",icon = icon("database"))),
+            menuSubItem("Log Files", tabName = "browsedata")),
       menuItem("Global Results",icon = icon("folder"), startExpanded = TRUE,
-        menuSubItem("Time", tabName = "timeana",icon = icon("hourglass-start")),
-        menuSubItem("Circuits", tabName = "numcircu",icon = icon("wrench")),
-        menuSubItem("Circuits vs Time", tabName = "circvstim",icon = icon("area-chart"))),
+        menuSubItem("Time", tabName = "timeana"),
+        menuSubItem("Circuits", tabName = "numcircu"),
+        menuSubItem("Circuits vs Time", tabName = "circvstim")),
       menuItem("Circuit-based Analysis",icon = icon("folder"), startExpanded  = TRUE,
-        menuSubItem("Common Circuits",tabName = "common-circuits", icon = icon("heart"))),
-      menuItem("Student-specific Results",icon = icon("folder"), startExpanded  = TRUE,
-        menuSubItem("Users Results",tabName = "usresults", icon = icon("street-view")))  
+        menuSubItem("Common Circuits",tabName = "common-circuits")),
+      menuItem("Users-specific Results",icon = icon("folder"), startExpanded  = TRUE,
+        menuSubItem("Users Results",tabName = "usresults"))  
       
   )),
   dashboardBody(tags$head(
@@ -73,19 +49,52 @@ ui <- dashboardPage(
           color: #fff;
           background: #1e282c;
           border-left-color: #1e282c;
-          }')),
+          }
+          @media (min-width: 1500px)
+.col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
+                    float: left;
+                    }          
+             @media (min-width: 1500px)
+.col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
+                    float: left;
+                    }       
+                    
+                    
+                    
+                    
+                    ')),
     tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.css")),
       
+    tags$head(tags$style(
+      "body{
+      min-width: 1300px;
+      margin: auto;
+      
+      
+      
+      }")
+    ),
+    
+    
     #boxes to be put in a row (or column)
     tabItems(
       tabItem("browsedata", 
-        fluidRow(
+              fluidRow(
           box(title = "Data Input", status = "warning", solidHeader = TRUE,width = 4,
               collapsible = TRUE,
               fileInput('logsImport', 'Log Files')
           ),
+          box(
+            title = "Information", width = 4, solidHeader = TRUE,
+            "To start press button Browse and load user traces"
+          )
+          
+          ),
+          fluidRow(
           valueBoxOutput("numStudents",width = 3),
-          valueBoxOutput("numActions",width = 3),
+          valueBoxOutput("numActions",width = 3)),
+          
+          fluidRow( 
           valueBoxOutput("mindate",width = 3),
           valueBoxOutput("maxdate",width = 3)
         )
@@ -95,10 +104,10 @@ ui <- dashboardPage(
         tabBox(height=480, width=12,
           tabPanel("Time Distribution", 
             fluidRow(
-              infoBoxOutput("totaltimespend",width = 3),
-              infoBoxOutput("meantimespend",width = 3),
-              infoBoxOutput("maxtimespend",width = 3),
-              infoBoxOutput("mintimespend",width = 3)
+              valueBoxOutput("totaltimespend",width = 3),
+              valueBoxOutput("meantimespend",width = 3),
+              valueBoxOutput("maxtimespend",width = 3),
+              valueBoxOutput("mintimespend",width = 3)
             ),
             fluidRow(
               box(status="primary",plotOutput("timstu"), height=480, width=12)
