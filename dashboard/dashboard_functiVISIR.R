@@ -345,7 +345,7 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
   
   TimeStud <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
     group_by(Alumno,Dates,seqid) %>% summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% 
-    mutate(TotalTime=TotalTime/60) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
+    mutate(TotalTime=TotalTime/3600) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
     group_by(Alumno) %>% summarise(TotalTime=sum(TotalTime))
   
   
@@ -410,7 +410,7 @@ FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
   
   TimeStud <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
     group_by(Alumno,Dates,seqid) %>% summarise(TotalTime=sum(diff(FechaHoraEnvio))) %>% 
-    mutate(TotalTime=TotalTime/60) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
+    mutate(TotalTime=TotalTime/3600) %>% mutate(TotalTime=round(TotalTime,digits = 2)) %>% 
     group_by(Alumno) %>% summarise(TotalTime=sum(TotalTime))
   
   
@@ -554,9 +554,12 @@ Dygraphfunc2 <- function(dfActionCircuit) {
   ses<- zoo(TotcircuDate$TotalCircuits,TotcircuDate$Dates)
   Totcircu<-cbind(ses)
   
-  dygraph(Totcircu)%>% dyAxis("x",rangePad=c(-0.05)) %>%  dySeries("ses", label = "Total Circuits",axis="y") %>% 
+  dygraph(Totcircu)%>% dyAxis("y",rangePad=c(-0.05),label = "Circuits") %>%  dySeries("ses", label = "Total Circuits",axis="y") %>% 
     dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
 }
+
+
+
 
 plotDistribution <- function(values=NA,maxValues=NULL,xlabel="") {
   if(is.null(values)) return(NULL)
@@ -589,9 +592,7 @@ plotDistribution <- function(values=NA,maxValues=NULL,xlabel="") {
   dense<-density(values,adjust=1,bw="SJ")
   df_density=data.frame(x=dense$x,y=dense$y/sum(dense$y)*bw2*
                           length(values)/mean(diff(dense$x)))
-  theme_remove_all <- theme(
-    axis.text.x = element_text(margin=margin(0,0,0,0,"lines")),
-    axis.ticks.length = unit(0, "cm"))
+  theme_remove_all <- theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   
   ghist<-ggplot(data=NULL,aes(x=values)) +
     geom_histogram(color="black", alpha=.2, fill="skyblue",
@@ -755,3 +756,5 @@ InfovalueBoxMinT <- function(dfOrderTime){
   mintime<-round(min(dfOrderTime$TotalTime/60),digits = 2)
   return(mintime)
 }
+
+

@@ -129,10 +129,10 @@ ui <- dashboardPage(
               tabBox(height=480, width=12,
                      tabPanel( "Circuits Distribution",
                                fluidRow(
-                                 infoBoxOutput("numuniquecirc",width = 3),
-                                 infoBoxOutput("Meannumuniquecircst",width = 3),
-                                 infoBoxOutput("lowbound",width = 3),
-                                 infoBoxOutput("upbound",width = 3)
+                                 valueBoxOutput("numuniquecirc",width = 3),
+                                 valueBoxOutput("Meannumuniquecircst",width = 3),
+                                 valueBoxOutput("lowbound",width = 3),
+                                 valueBoxOutput("upbound",width = 3)
                                ),
                                fluidRow(
                                  box(status="primary",plotOutput("circdist"), height=480, width=12)
@@ -150,10 +150,10 @@ ui <- dashboardPage(
                                             height=540, width=12))),
                      tabPanel("Normalized Circuits Distribution", 
                               fluidRow(
-                                infoBoxOutput("umuniqnormcirc",width = 3),
-                                infoBoxOutput("Meannumuniqnormcircst",width = 3),
-                                infoBoxOutput("lowboundN",width = 3),
-                                infoBoxOutput("upboundN",width = 3)
+                                valueBoxOutput("umuniqnormcirc",width = 3),
+                                valueBoxOutput("Meannumuniqnormcircst",width = 3),
+                                valueBoxOutput("lowboundN",width = 3),
+                                valueBoxOutput("upboundN",width = 3)
                               ),
                               fluidRow(
                                 box(status="primary",plotOutput("circdistN"), height=480, width=12)

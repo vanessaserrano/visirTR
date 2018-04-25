@@ -135,7 +135,7 @@ shinyServer(function(input, output, session) {
   output$timeheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
     ggplot(data = dftimeuserdate(), aes(x = Student, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
+      geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
       scale_fill_viridis(direction=-1)
   })
   
@@ -181,12 +181,14 @@ shinyServer(function(input, output, session) {
 ### >> CIRCUITS ####
 ## Circuits vs User heat map ####
   output$circsuserheat <-renderPlot({
+    if(is.null(dfImport())) return(NULL)
     ggplot(data = dfcircuser(), aes(x = Student, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=Circuits)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5))+
+      geom_tile(aes(fill=Circuits)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
       scale_fill_viridis(direction=-1)
   })
   
   output$plotui <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     plotOutput("circsuserheat", height=400,
                hover = hoverOpts(
                  id = "plot_hovernAct",
@@ -196,6 +198,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$plot_points <- renderText({
+    if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dfcircuser()$Circuits)
     dat$toT <- dfcircuser()$Student
     dat$nAc <- dfcircuser()$Dates
@@ -212,11 +215,16 @@ shinyServer(function(input, output, session) {
     if(length(response)==0)
       return ("Place your mouse over a data point to see the number of circuits.") 
     else
-      return (paste("Circuits:",response[1]))
+      return (paste("Student Id:",responset[1],"\n",
+                    "Date:",responsec[1],"\n",
+                    "Circuits:",response[1]))
   })
+  
+
   
 ## Circuits Timeline vs user ####
   output$timelineus <-renderPlot({
+    if(is.null(dfImport())) return(NULL)
     gra=c("red","green","blue","yellow")
     g <- ggplot(dfActionCircuit(), aes(x = Alumno, y = Time,
                                   color = Measure,shape= Measure)) + 
@@ -233,6 +241,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$plotu <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     plotOutput("timelineus", height=400,
                hover = hoverOpts(
                  id = "plot_hovernAct",
@@ -242,6 +251,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$plot_point <- renderText({
+    if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dfActionCircuit()$Alumno)
     dat$toT <- dfActionCircuit()$Alumno
     dat$nAc <- dfActionCircuit()$Time
@@ -263,87 +273,110 @@ shinyServer(function(input, output, session) {
   
 ## Circuits distribution ####
   # Total number of circuits
-  output$numuniquecirc <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxNC(dfActionCircuit()) ,subtitle =  "Total Number of Circuits", icon = icon("thumbs-up", lib = "glyphicon"),
-      color = "teal",width = 3
-      
-    )})
-      
+  
+  output$numuniquecirc<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Total Number of Circuits",color = "blue")
+  })
+  
+
   # Mean number of circuits by student  
-  output$Meannumuniquecircst <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxMNC(dfActionCircuit()) ,subtitle = "Mean Number Circuits per Student", icon = icon("users"),
-      color = "teal",width = 3
-    )})
   
+  output$Meannumuniquecircst<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxMNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Mean Number Circuits per Student",color = "blue")
+  })
+  
+
   # Lower bound
-  output$lowbound <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxlowbound(dfActionCircuit()),subtitle = "Minimum circuits performed",icon = icon("arrow-down"),
-      color = "teal",width = 3
-    )})
   
+  output$lowbound<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxlowbound(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Minimum circuits performed",color = "blue")
+  })
+
   # Upper bound 
-  output$upbound <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxupbound(dfActionCircuit()) ,subtitle = "Maximum circuits performed", icon = icon("arrow-up"),
-      color = "teal",width = 3
-    )})
   
+  output$upbound<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxupbound(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Maximum circuits performed",color = "blue")
+  })
+  
+
   output$circdist <- renderPlot({
-    if(is.null(dfActionCircuit())) return(NULL)
+    if(is.null(dfImport())) return(NULL)
     plotDistribution(distnumcirc(dfActionCircuit())$Circuito, xlabel="Circuits per User")
   })
 
 ## Circuitos normalizados únicos ####
   # Total number of normalized circuits
-  output$umuniqnormcirc <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxNNC(dfActionCircuit()) ,subtitle = "Total Number of Circuits", icon = icon("thumbs-up", lib = "glyphicon"),
-      color = "teal",width = 3
-    )})
   
+  
+  output$umuniqnormcirc<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Total Number of Circuits",color = "blue")
+  })
+  
+
   #Mean number of circuits by student  
-  output$Meannumuniqnormcircst <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxMNNC(dfActionCircuit()) ,subtitle = "Mean Number Circuits per Student", icon = icon("users"),
-      color = "teal",width = 3
-    )})
-  
+  output$Meannumuniqnormcircst<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxMNNC(dfActionCircuit())),style = "font-size: 70%;"),width = 4, 
+      "Mean Number Circuits per Student",color = "blue")
+  })
+
   #Low bound 
-  output$lowboundN <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxlowboundN(dfActionCircuit()),subtitle ="Minimum circuits performed", icon = icon("arrow-down"),
-      color = "teal",width = 3
-    )})
+  
+  output$lowboundN<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxlowboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Minimum circuits performed",color = "blue")
+  })
   
   #Upper bound 
-  output$upboundN <-  renderInfoBox({
-    infoBox(
-      title= NULL,value = InfovalueBoxupboundN(dfActionCircuit()),subtitle = "Maximum circuits performed", icon = icon("arrow-up"),
-      color = "teal",width = 3
-    )})
+  
+  output$upboundN<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxupboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Maximum circuits performed",color = "blue")
+  })
+
   
   output$circdistN <- renderPlot({
-    if(is.null(dfActionCircuit())) return(NULL)
+    if(is.null(dfImport())) return(NULL)
     plotDistribution(distnumcircN(dfActionCircuit())$CircuitoNormalizado, xlabel="Normalized Circuits per User")
   })
   
 ## Circuits per date ####
   output$dygraph2 <-renderDygraph({
+    if(is.null(dfImport())) return(NULL)
     Dygraphfunc2(dfActionCircuit())
   })
   
 ### >> NUMBER OF CIRCUITS VS TIME ON TASK ####
   output$nActionsVStoT <- renderPlot({
-    ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) +
-      labs(x = "Time on Task", y = "Number of Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
-      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$NumCircu),digits = 2),hjust = -1.5))+
-      geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$TotalTime),digits = 2),hjust = -3.5,angle=90))
+    if(is.null(dfImport())) return(NULL)
+    ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu))  +  geom_point(size = I(3), alpha = I(0.4)) + 
+      labs(x = "Time (in h)", y = "Number of Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
+      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$NumCircu),digits = 2),hjust = -25.5))+
+      geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$TotalTime),digits = 2),vjust = -7.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   })
 
   output$plotuinAct <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     plotOutput("nActionsVStoT", height=350,
                hover = hoverOpts(
                  id = "plot_hovernAct",
@@ -353,6 +386,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$plot_pointsnAct <- renderText({
+    if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dfStudTime()$Alumno)
     dat$toT <- dfStudTime()$TotalTime
     dat$nAc <- dfStudTime()$NumCircu
@@ -371,18 +405,20 @@ shinyServer(function(input, output, session) {
     else
       return (paste("Student Id:",response[1],"\n",
                     "Number of circuts:",responsec[1],"\n",
-                    "Time (Minutes):",responset[1]))
+                    "Time (in h):",responset[1]))
   })
   
 ### >> NUMBER OF NORMALIZED CIRCUITS VS TIME ON TASK ####
   output$nActionsVStoTnorm <- renderPlot({
-    ggplot(dfStudTimeNorm(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) +
-      labs(x = "Time on Task", y = "Number of Normalized Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTimeNorm()$NumCircu), color="#fbada7")+
-      geom_vline(xintercept = mean(dfStudTimeNorm()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$NumCircu),digits = 2),hjust = -1.5))+
-      geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$TotalTime),digits = 2),hjust = -3.5,angle=90))
+    if(is.null(dfImport())) return(NULL)
+    ggplot(dfStudTimeNorm(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) + 
+      labs(x = "Time (in h)", y = "Number of Normalized Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTimeNorm()$NumCircu), color="#fbada7")+
+      geom_vline(xintercept = mean(dfStudTimeNorm()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$NumCircu),digits = 2),hjust = -25.5))+
+      geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$TotalTime),digits = 2),vjust = -3.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   })
 
   output$plotuinActnorm <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     plotOutput("nActionsVStoTnorm", height=350,
                hover = hoverOpts(
                  id = "plot_hovernAct",
@@ -392,6 +428,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$plot_pointsnActnorm <- renderText({
+    if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dfStudTimeNorm()$Alumno)
     dat$toT <- dfStudTimeNorm()$TotalTime
     dat$nAc <- dfStudTimeNorm()$NumCircu
@@ -410,18 +447,20 @@ shinyServer(function(input, output, session) {
     else
       return (paste("Student Id:",response[1],"\n",
                     "Number of Normalized Circuits:",responsec[1],"\n",
-                    "Time (Minutes):",responset[1]))
+                    "Time (in h):",responset[1]))
   })
 
 #### CIRCUIT-BASED RESULTS ####
 ### >> COMMON CIRCUITS ####
 ## Common circuits ####
   output$cc_circuits <- renderDataTable({
+    if(is.null(dfImport())) return(NULL)
     datatable(tabNCircuits())
   })
 
 ## Circuit in timeline
   output$ct_selectCircuit <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     if(is.null(tabNCircuits())) 
       return(selectInput("ct_circuit", "Select a circuit...", c("No data available")))
     else {
@@ -429,6 +468,7 @@ shinyServer(function(input, output, session) {
     }})
   
   output$ct_plotu_chart <- renderPlot({
+    if(is.null(dfImport())) return(NULL)
     gra <- c("grey","red")
     grafdata <- dfActionCircuit() %>% select(Alumno,Time)
     
@@ -449,6 +489,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$ct_plotu <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     plotOutput("ct_plotu_chart", height=400,
                hover = hoverOpts(
                  id = "ct_plotu_hover",
@@ -458,6 +499,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$ct_plot_point <- renderText({
+    if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dfActionCircuit()$Alumno)
     dat$toT <- dfActionCircuit()$Alumno
     dat$nAc <- dfActionCircuit()$Time
@@ -482,6 +524,7 @@ shinyServer(function(input, output, session) {
   
   
   output$ntc_selectCircuit <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     if(is.null(tabN1Circuits())) 
       return(selectInput("ct_circuit", "Select a circuit...", c("No data available")))
     else {
@@ -489,6 +532,7 @@ shinyServer(function(input, output, session) {
     }})
   
   output$ntc_plotu_chart <- renderPlot({
+    if(is.null(dfImport())) return(NULL)
     
         grafntcdata <- dfActionCircuit() %>% select(Alumno)
     
@@ -510,11 +554,12 @@ shinyServer(function(input, output, session) {
         
     g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
       geom_bar(stat="identity",fill="steelblue") +
-      theme(axis.text.x=element_text(angle = 90, vjust = 0.5)) + labs(x = "Student", y= "Number of Circuits")
+      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) + labs(x = "Student", y= "Number of Circuits")
     g
   })
   
   output$ntc_plotu <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     plotOutput("ntc_plotu_chart", height=400
     )
   })
@@ -527,6 +572,7 @@ shinyServer(function(input, output, session) {
   ### >> User results ####
   
   output$spr_selectStudent <- renderUI({
+    if(is.null(dfImport())) return(NULL)
     if(is.null(tabNStudents())) 
       return(selectInput("ns_student", "Select a student...", c("No data available")))
     else {
@@ -534,29 +580,32 @@ shinyServer(function(input, output, session) {
     }})
   
   
+
   output$numStudActions <- renderValueBox({
-     df1 <-dfImport() %>%  select(Alumno)
-     df1$stu <-dfImport()$Alumno == input$ns_student
-     
-     
-     df1$sol <- factor(ifelse(dfImport()$Alumno == input$ns_student,"YES",
-                                      NA))
-     
-     df1<- df1 %>% select(Alumno,sol)%>% filter(complete.cases(.))
-     
-     
-     df1 <- df1 %>% summarise(Act=length(sol))
-     
-     
-     
+    df1 <-dfImport() %>%  select(Alumno)
+    df1$stu <-dfImport()$Alumno == input$ns_student
+    
+    
+    df1$sol <- factor(ifelse(dfImport()$Alumno == input$ns_student,"YES",
+                             NA))
+    
+    df1<- df1 %>% select(Alumno,sol)%>% filter(complete.cases(.))
+    
+    
+    df1 <- df1 %>% summarise(Act=length(sol))
+    
+    
+    
     valueBox(
       
       ifelse(is.null(df1),"--",
              format(df1$Act,format="d",big.mark="")), 
-      "Actions", icon = icon("cubes"), color = "green")
-
+      "Actions",color = "blue")
+    
   })
   
+  
+
   output$timstud <- renderValueBox({
     
     df2 <-dfStudTime() %>%  select(Alumno,TotalTime)
@@ -568,14 +617,14 @@ shinyServer(function(input, output, session) {
     
     df2<- df2 %>% select(Alumno,TotalTime,co)%>% filter(complete.cases(.))
     
-    
-    valueBox(
-      
-      ifelse(is.null(df2),"--",
-             format(df2$TotalTime,format="d",big.mark="")), 
-      "Total Time (Minutes)", icon = icon("hourglass-half"), color = "green")
-    
-  })
+
+  valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",df2$TotalTime),
+                          style = "font-size: 90%;"),width = 4, 
+           "Total Time (in h)", color = "blue")
+}) 
+
+  
+  
   
   output$numcircuit <- renderValueBox({
     
@@ -591,9 +640,9 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(df3),"--",
+      ifelse(is.null(dfImport()),"--",
              format(df3$NumCircu,format="d",big.mark="")), 
-      "Circuits", icon = icon("wrench"), color = "green")
+      "Circuits", color = "blue")
     
   })  
   
@@ -611,9 +660,9 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(df4),"--",
+      ifelse(is.null(dfImport()),"--",
              format(df4$NumCircu,format="d",big.mark="")), 
-      "Normalized Circuits", icon = icon("wrench"), color = "green")
+      "Normalized Circuits",color = "blue")
     
   })
   
@@ -637,9 +686,9 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(df7),"--",
+      ifelse(is.null(dfImport()),"--",
              format(df7$resis,format="d",big.mark="")), 
-      "Resistance Circuits", icon = icon("wrench"), color = "green")
+      "Resistance Measurement",color = "blue")
     
   })  
   
@@ -663,9 +712,9 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(df8),"--",
+      ifelse(is.null(dfImport()),"--",
              format(df8$curr,format="d",big.mark="")), 
-      "Current Circuits", icon = icon("wrench"), color = "green")
+      "Current Measurement",color = "blue")
     
   })  
   
@@ -689,9 +738,9 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(df9),"--",
+      ifelse(is.null(dfImport()),"--",
              format(df9$voltag,format="d",big.mark="")), 
-      "Voltage Circuits", icon = icon("wrench"), color = "green")
+      "Voltage Measurement",color = "blue")
     
   })  
   
@@ -715,9 +764,9 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(dfx),"--",
+      ifelse(is.null(dfImport()),"--",
              format(dfx$error,format="d",big.mark="")), 
-      "Errors", icon = icon("wrench"), color = "green")
+      "Measures not evaluated",color = "blue")
     
   })  
   
@@ -725,6 +774,7 @@ shinyServer(function(input, output, session) {
   
   
   output$lcn_circuits <- renderDataTable({
+    if(is.null(dfImport())) return(NULL)
     
     df5 <-dfActionCircuit() %>%  select(Alumno,CircuitoNormalizado)
     
@@ -747,6 +797,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$hc_circuits <- renderDataTable({
+    if(is.null(dfImport())) return(NULL)
     
     df6 <-dfActionCircuit() %>%  select(Alumno,Time,FechaHoraEnvio,Circuito)
     
