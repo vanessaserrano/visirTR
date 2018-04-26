@@ -210,8 +210,8 @@ shinyServer(function(input, output, session) {
                       addDist = TRUE)
     
     response <- unique(as.character(res$ids))
-    responsec <- unique(as.numeric(res$nAc))
-    responset <- unique(as.numeric(res$toT))
+    responsec <- unique(as.factor(res$nAc))
+    responset <- unique(as.factor(res$toT))
     if(length(response)==0)
       return ("Place your mouse over a data point to see the number of circuits.") 
     else
@@ -553,7 +553,7 @@ shinyServer(function(input, output, session) {
     }
         
     g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
-      geom_bar(stat="identity",fill="steelblue") +
+      geom_bar(stat="identity",width = 0.7,fill="steelblue") +
       theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) + labs(x = "Student", y= "Number of Circuits")
     g
   })
