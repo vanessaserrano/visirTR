@@ -6,7 +6,7 @@ pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/")}
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
-
+library(cat)
 if (!require("rCharts")) {
   install_github('ramnathv/rCharts', force= TRUE)
   #library("rCharts")
@@ -17,10 +17,14 @@ source("dashboard_functiVISIR.R")
 theme = "bootstrap.css"
 ui <- dashboardPage( 
   skin="yellow",
+  
   dashboardHeader(
     title="VISIR DASHBOARD"
     
-  ),
+
+    
+        ),
+  
   dashboardSidebar(
     sidebarMenu(
         tags$head(tags$style(HTML('
@@ -41,7 +45,10 @@ ui <- dashboardPage(
       menuItem("Circuit-based Analysis",icon = icon("folder"), startExpanded  = TRUE,
         menuSubItem("Common Circuits",tabName = "common-circuits")),
       menuItem("Users-specific Results",icon = icon("folder"), startExpanded  = TRUE,
-        menuSubItem("Users Results",tabName = "usresults"))  
+        menuSubItem("Users Results",tabName = "usresults")),
+      selectInput("Help", "Help", c(Choose = "", "Dashboard Information", "layout", "docs"), selectize = TRUE)
+      
+      
       
   )),
   dashboardBody(tags$head(
@@ -255,11 +262,9 @@ ui <- dashboardPage(
   
   
   )
-          
-          
+
   
-                   
-          
+
           
   
 

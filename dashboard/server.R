@@ -812,8 +812,39 @@ shinyServer(function(input, output, session) {
     datatable(df6)
   })
   
+  tasks <-  reactive({
+    b <- input$bonus
+    list(
+      code = list(id = "Dashboard Information", value = 15 + b, color = "aqua", text = "Information about the Dashboard",
+                  description = paste("Before start using the Dashboard read this information: this
+                                      dashboard has been created to evaluate and obtain a global visualization
+                                      of the traces obtained by the 
+                                      users in the laboratory remote VISIR")),
+                                      
+      
+      layout = list(id = "layout", value = 40 + b, color = "green", text = "Design new layout",
+                    description = paste(rep("Design new layout", 30), collapse = "!! ")),
+      
+      docs = list(id = "docs", value = 37 + b, color = "red", text = "Write documentation",
+                  description = paste(rep("Write documentation", 30), collapse = "!! "))
+    )
+  })
   
-  
+  observeEvent(req(input$Help), {
+    # match input$todo to the right task from the reactive tasks() (by id)
+    # (I'm sure there's a simpler way of doing this)
+    task <- lapply(tasks(), function(el) {
+      if (el$id == input$Help) el
+      else NULL
+    }) %>% shiny:::dropNulls() %>% `[[`(1)
+    
+    # show a custom-made modal for the task (input$todo) that was just clicked
+    showModal(modalDialog(title = task$text,
+                          task$description,
+                          easyClose = TRUE, footer = NULL
+    ))
+  })
+
   
   
 })
