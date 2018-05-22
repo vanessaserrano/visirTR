@@ -54,7 +54,7 @@ shinyServer(function(input, output, session) {
     valueBox(
       ifelse(is.null(dfImport()),"--",
              format(length(unique(dfImport()$Alumno)),format="d",big.mark="")), 
-      "Students", color = "blue")
+      "Users", color = "blue")
   })
   output$numActions <- renderValueBox({
     valueBox(
@@ -65,12 +65,12 @@ shinyServer(function(input, output, session) {
   output$maxdate <- renderValueBox({
       valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",max(dfImport()$Dates)),
                               style = "font-size: 90%;"), width = 4, 
-        "Last logged day", color = "blue")
+        "Last logged date", color = "blue")
   })
   output$mindate <- renderValueBox({
     valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",min(dfImport()$Dates)),
                             style = "font-size: 90%;"),width = 4, 
-      "First logged day", color = "blue")
+      "First logged date", color = "blue")
   })
 
   
@@ -103,7 +103,7 @@ shinyServer(function(input, output, session) {
     valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxMeT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
-      "Mean Time/Student (in h)",color = "blue")
+      "Mean Time/User (in h)",color = "blue")
   })
   
 
@@ -128,13 +128,13 @@ shinyServer(function(input, output, session) {
 
   output$timstu <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-    plotDistribution(dfOrderTime()$TotalTime/60, xlabel="Time(in h) per Student")
+    plotDistribution(dfOrderTime()$TotalTime/60, xlabel="Time (in h) per User")
   })
   
 ## Time on task vs User per Date HeatMap ####
   output$timeheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
-    ggplot(data = dftimeuserdate(), aes(x = Student, y = Dates)) + theme_bw() +
+    ggplot(data = dftimeuserdate(), aes(x = User, y = Dates)) + theme_bw() +
       geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
       scale_fill_viridis(direction=-1)
   })
@@ -152,7 +152,7 @@ shinyServer(function(input, output, session) {
   output$plot_poin <- renderText({
     if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dftimeuserdate()$Time)
-    dat$toT <- dftimeuserdate()$Student
+    dat$toT <- dftimeuserdate()$User
     dat$nAc <- dftimeuserdate()$Dates
     dat <- as.data.frame(dat)
     
@@ -167,7 +167,7 @@ shinyServer(function(input, output, session) {
     if(length(response)==0)
       return ("Place your mouse over a data point to see the time dedicated.") 
     else
-      return (paste("Student Id:",responset[1],"\n",
+      return (paste("User Id:",responset[1],"\n",
                    "Date:",responsec[1],"\n",
                    "Time (in h):",response[1]))
     
@@ -182,7 +182,7 @@ shinyServer(function(input, output, session) {
 ## Circuits vs User heat map ####
   output$circsuserheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
-    ggplot(data = dfcircuser(), aes(x = Student, y = Dates)) + theme_bw() +
+    ggplot(data = dfcircuser(), aes(x = User, y = Dates)) + theme_bw() +
       geom_tile(aes(fill=Circuits)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
       scale_fill_viridis(direction=-1)
   })
@@ -200,7 +200,7 @@ shinyServer(function(input, output, session) {
   output$plot_points <- renderText({
     if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dfcircuser()$Circuits)
-    dat$toT <- dfcircuser()$Student
+    dat$toT <- dfcircuser()$User
     dat$nAc <- dfcircuser()$Dates
     dat <- as.data.frame(dat)
     
@@ -215,7 +215,7 @@ shinyServer(function(input, output, session) {
     if(length(response)==0)
       return ("Place your mouse over a data point to see the number of circuits.") 
     else
-      return (paste("Student Id:",responset[1],"\n",
+      return (paste("User Id:",responset[1],"\n",
                     "Date:",responsec[1],"\n",
                     "Circuits:",response[1]))
   })
@@ -231,11 +231,8 @@ shinyServer(function(input, output, session) {
       geom_point(size = 4, alpha = 0.5) +
       scale_color_manual(values = gra) +
       scale_shape_manual(values= c(95,95,95,1)) + 
-      theme_few() +
-      theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
-            axis.ticks.x=element_blank(), legend.text = element_text(size=8),
-            legend.key.size=unit(5,"points")) +
-      guides(color = guide_legend(override.aes = list(size=8)))
+      theme_few()  + theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+      guides(color = guide_legend(override.aes = list(size=8)))+ labs(x = "User")
     if(input$timeline_facet) g <- g + facet_wrap(~Measure,nrow=2)
     g
   })
@@ -266,9 +263,9 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("In the non-facetted chart, place your mouse over a data point to identify the student.") 
+      return ("In the non-facetted chart, place your mouse over a data point to identify the user.") 
     else
-      return (paste("Student:",response[1]))
+      return (paste("User:",response[1]))
   }) 
   
 ## Circuits distribution ####
@@ -288,7 +285,7 @@ shinyServer(function(input, output, session) {
     valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxMNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Mean Number Circuits per Student",color = "blue")
+      "Mean Number Circuits per User",color = "blue")
   })
   
 
@@ -333,7 +330,7 @@ shinyServer(function(input, output, session) {
     valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxMNNC(dfActionCircuit())),style = "font-size: 70%;"),width = 4, 
-      "Mean Number Circuits per Student",color = "blue")
+      "Mean Number Circuits per User",color = "blue")
   })
 
   #Low bound 
@@ -371,7 +368,7 @@ shinyServer(function(input, output, session) {
     if(is.null(dfImport())) return(NULL)
     ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu))  +  geom_point(size = I(3), alpha = I(0.4)) + 
       labs(x = "Time (in h)", y = "Number of Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
-      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$NumCircu),digits = 2),hjust = -25.5))+
+      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$NumCircu),digits = 2),hjust = -15.5))+
       geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$TotalTime),digits = 2),vjust = -7.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   })
 
@@ -401,9 +398,9 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to identify the student.\n\n") 
+      return ("Place your mouse over a data point to identify the user.\n\n") 
     else
-      return (paste("Student Id:",response[1],"\n",
+      return (paste("User Id:",response[1],"\n",
                     "Number of circuts:",responsec[1],"\n",
                     "Time (in h):",responset[1]))
   })
@@ -413,7 +410,7 @@ shinyServer(function(input, output, session) {
     if(is.null(dfImport())) return(NULL)
     ggplot(dfStudTimeNorm(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) + 
       labs(x = "Time (in h)", y = "Number of Normalized Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTimeNorm()$NumCircu), color="#fbada7")+
-      geom_vline(xintercept = mean(dfStudTimeNorm()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$NumCircu),digits = 2),hjust = -25.5))+
+      geom_vline(xintercept = mean(dfStudTimeNorm()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$NumCircu),digits = 2),hjust = -15.5))+
       geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$TotalTime),digits = 2),vjust = -3.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   })
 
@@ -443,9 +440,9 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to identify the student.\n\n") 
+      return ("Place your mouse over a data point to identify the user.\n\n") 
     else
-      return (paste("Student Id:",response[1],"\n",
+      return (paste("User Id:",response[1],"\n",
                     "Number of Normalized Circuits:",responsec[1],"\n",
                     "Time (in h):",responset[1]))
   })
@@ -514,9 +511,9 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to identify the student.") 
+      return ("Place your mouse over a data point to identify the user.") 
     else
-      return (paste("Student:",response[1]))
+      return (paste("User:",response[1]))
   })
   
   ## Number of Circuits vs User
@@ -554,7 +551,7 @@ shinyServer(function(input, output, session) {
         
     g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
       geom_bar(stat="identity",width = 0.7,fill="steelblue") +
-      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) + labs(x = "Student", y= "Number of Circuits")
+      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) + labs(x = "User", y= "Number of Circuits")
     g
   })
   
@@ -574,14 +571,20 @@ shinyServer(function(input, output, session) {
   output$spr_selectStudent <- renderUI({
     if(is.null(dfImport())) return(NULL)
     if(is.null(tabNStudents())) 
-      return(selectInput("ns_student", "Select a student...", c("No data available")))
+      return(selectInput("ns_student", "Select a user...", c("No data available")))
     else {
-      return(selectInput("ns_student", "Select a student...", tabNStudents()$Student))
+      return(selectInput("ns_student", "Select a user...", tabNStudents()$Student))
     }})
   
   
 
   output$numStudActions <- renderValueBox({
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Actions",color = "blue"))
+    else {  
+    
     df1 <-dfImport() %>%  select(Alumno)
     df1$stu <-dfImport()$Alumno == input$ns_student
     
@@ -595,38 +598,48 @@ shinyServer(function(input, output, session) {
     df1 <- df1 %>% summarise(Act=length(sol))
     
     
+       valueBox(
+        
+        value = df1$Act, 
+        "Actions",color = "blue")
+   
     
-    valueBox(
-      
-      ifelse(is.null(df1),"--",
-             format(df1$Act,format="d",big.mark="")), 
-      "Actions",color = "blue")
-    
-  })
+    }
+  }
+  )
   
   
-
   output$timstud <- renderValueBox({
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Total Time (in h)",color = "blue"))
+    else { 
     
     df2 <-dfStudTime() %>%  select(Alumno,TotalTime)
     df2$st <-dfStudTime()$Alumno == input$ns_student
     
     
     df2$co <- factor(ifelse(dfStudTime()$Alumno == input$ns_student,"YES",
-                             NA))
+                            NA))
     
     df2<- df2 %>% select(Alumno,TotalTime,co)%>% filter(complete.cases(.))
     
+    valueBox(
+      
+      value = df2$TotalTime, 
+      "Total Time (in h)",color = "blue")
+    }
 
-  valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",df2$TotalTime),
-                          style = "font-size: 90%;"),width = 4, 
-           "Total Time (in h)", color = "blue")
-}) 
-
-  
-  
+  }) 
   
   output$numcircuit <- renderValueBox({
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Circuits",color = "blue"))
+    else { 
+    
     
     df3 <-dfStudTime() %>%  select(Alumno,NumCircu)
     df3$st <-dfStudTime()$Alumno == input$ns_student
@@ -640,13 +653,19 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(dfImport()),"--",
-             format(df3$NumCircu,format="d",big.mark="")), 
-      "Circuits", color = "blue")
-    
+      value = df3$NumCircu, 
+      "Circuits",color = "blue")
+    }
   })  
   
+
   output$numnormcircuit <- renderValueBox({
+    
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Normalized Circuits",color = "blue"))
+    else { 
     
     df4 <-dfStudTimeNorm() %>%  select(Alumno,NumCircu)
     df4$st <-dfStudTimeNorm()$Alumno == input$ns_student
@@ -660,13 +679,20 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(dfImport()),"--",
-             format(df4$NumCircu,format="d",big.mark="")), 
+      value = df4$NumCircu, 
       "Normalized Circuits",color = "blue")
+    }
     
   })
   
+  
   output$numresist <- renderValueBox({
+    
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Resistance Measurement",color = "blue"))
+    else { 
     
     df7 <-dfActionCircuit() %>%  select(Alumno,Measure)
     df7$st <-dfActionCircuit()$Alumno == input$ns_student
@@ -676,23 +702,29 @@ shinyServer(function(input, output, session) {
     
     df7$res <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
                              NA))
-      
-   
- 
+    
+    
+    
     df7<- df7 %>% select(Alumno,res,sest) %>%  filter(complete.cases(.))
-
-
+    
+    
     df7 <- df7 %>% group_by(Alumno,res) %>% summarise(resis=sum(sest))
     
     valueBox(
       
-      ifelse(is.null(dfImport()),"--",
-             format(df7$resis,format="d",big.mark="")), 
+      value = df7$resis, 
       "Resistance Measurement",color = "blue")
+    }
     
-  })  
+  })    
   
   output$numcurr <- renderValueBox({
+    
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Current Measurement",color = "blue"))
+    else { 
     
     df8 <-dfActionCircuit() %>%  select(Alumno,Measure)
     df8$st <-dfActionCircuit()$Alumno == input$ns_student
@@ -712,13 +744,21 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(dfImport()),"--",
-             format(df8$curr,format="d",big.mark="")), 
+      value = df8$curr, 
       "Current Measurement",color = "blue")
+    }
     
   })  
+
   
   output$numvoltag <- renderValueBox({
+    
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Voltage Measurement",color = "blue"))
+    else { 
+      
     
     df9 <-dfActionCircuit() %>%  select(Alumno,Measure)
     df9$st <-dfActionCircuit()$Alumno == input$ns_student
@@ -738,13 +778,19 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(dfImport()),"--",
-             format(df9$voltag,format="d",big.mark="")), 
+      value = df9$voltag, 
       "Voltage Measurement",color = "blue")
+    }
     
   })  
   
   output$numerror <- renderValueBox({
+    
+    if(is.null(dfImport())) return( valueBox(
+      
+      "--", 
+      "Measures not evaluated",color = "blue"))
+    else { 
     
     dfx <-dfActionCircuit() %>%  select(Alumno,Measure)
     dfx$st <-dfActionCircuit()$Alumno == input$ns_student
@@ -764,12 +810,35 @@ shinyServer(function(input, output, session) {
     
     valueBox(
       
-      ifelse(is.null(dfImport()),"--",
-             format(dfx$error,format="d",big.mark="")), 
-      "Measures not evaluated",color = "blue")
-    
+      value = dfx$error, 
+      "Voltage Measurement",color = "blue")
+    }
   })  
   
+  
+  output$lcn_circuits <- renderDataTable({
+    if(is.null(dfImport())) return(NULL)
+    
+    df5 <-dfActionCircuit() %>%  select(Alumno,CircuitoNormalizado)
+    
+    df5$scl <-dfActionCircuit()$Alumno == input$ns_student
+    
+    df5$co <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
+                            NA))
+    
+    df5<- df5 %>% select(Alumno,CircuitoNormalizado,co)%>% filter(complete.cases(.))
+    
+    df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>% summarise(TimTes=length(CircuitoNormalizado)) 
+    
+    df5 <- df5 %>%arrange(desc(TimTes)) %>%
+      ungroup(Alumno,CircuitoNormalizado) %>%select(CircuitoNormalizado,TimTes)
+    
+    names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuits'
+    names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+    
+    datatable(df5)
+  })
+
   
   
   
@@ -812,38 +881,52 @@ shinyServer(function(input, output, session) {
     datatable(df6)
   })
   
-  tasks <-  reactive({
-    b <- input$bonus
-    list(
-      code = list(id = "Dashboard Information", value = 15 + b, color = "aqua", text = "Information about the Dashboard",
-                  description = paste("Before start using the Dashboard read this information: this
-                                      dashboard has been created to evaluate and obtain a global visualization
-                                      of the traces obtained by the 
-                                      users in the laboratory remote VISIR")),
-                                      
-      
-      layout = list(id = "layout", value = 40 + b, color = "green", text = "Design new layout",
-                    description = paste(rep("Design new layout", 30), collapse = "!! ")),
-      
-      docs = list(id = "docs", value = 37 + b, color = "red", text = "Write documentation",
-                  description = paste(rep("Write documentation", 30), collapse = "!! "))
-    )
-  })
+
   
-  observeEvent(req(input$Help), {
+  observeEvent(input$"StrucInfo", {
     # match input$todo to the right task from the reactive tasks() (by id)
     # (I'm sure there's a simpler way of doing this)
-    task <- lapply(tasks(), function(el) {
-      if (el$id == input$Help) el
-      else NULL
-    }) %>% shiny:::dropNulls() %>% `[[`(1)
+ 
+    # show a custom-made modal for the task (input$todo) that was just clicked
+    showModal(modalDialog(title = "Structure of the Dashboard",
+                          HTML("This Dashboard is divided in 4 folders: <br/> <b> Data input </b> <br/> Data loading and
+                                      main information <br/> <b> Global Results </b> <br/>
+                                     Global information about the time spent and the circuits performed by users <br/>
+                                    <b> Circuit-based Analysis </b> <br/> Detailed information about each of the circuits
+                                    performed <br/> <b> User-specific Results </b> <br/> Detailed information about the actions performed
+                                    by each of the users
+                                     "),
+                           footer = tagList(actionButton("close", "OK"))
+    ))
+    observeEvent(input$close, {
+      removeModal()
+      
+    })
+  })
+  
+  observeEvent(input$"Glossary", {
+    # match input$todo to the right task from the reactive tasks() (by id)
+    # (I'm sure there's a simpler way of doing this)
     
     # show a custom-made modal for the task (input$todo) that was just clicked
-    showModal(modalDialog(title = task$text,
-                          task$description,
-                          easyClose = TRUE, footer = NULL
+    showModal(modalDialog(title = "Glossary of terms",
+                          HTML(" <b> User:</b> A person who uses VISIR, can be a student or not <br/>
+                                         <b> Action:</b> User interactions with the client that generate a message on the server <br/>
+                               <b> Normalized Circuit:</b> Standardization of the circuits to achieve an independent representation of the components in the breadboard <br/>
+                               <b> Timeline:</b> Sequence of actions distributed over time <br/>
+                               <b> Measurement:</b> Each of the posible actions performed in a circuit <br/>
+                               <b> Time:</b> The indefinite continued progress of the user in each of his interactions with VISIR, time events with gaps of 900 minutes or more per user have been neglected  <br/>
+                               <b> Circuit:</b> Path designed in the breadboard in which electrons from a voltage or current source flow <br/>
+                               <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
+                               "),
+                           footer = tagList(actionButton("close", "OK"))
     ))
-  })
+    observeEvent(input$close, {
+      removeModal()
+      
+    })
+  }) 
+  
 
   
   

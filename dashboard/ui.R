@@ -35,6 +35,13 @@ ui <- dashboardPage(
           z-index: -99999;
         }
       '))),
+        tags$head(
+          tags$style(HTML('#StrucInfo{background-color:orange}'))
+        ),
+        tags$head(
+          tags$style(HTML('#Glossary{background-color:orange}'))
+        ),
+       
 
         menuItem("Data Input",icon = icon("folder"), startExpanded = TRUE,
             menuSubItem("Log Files", tabName = "browsedata")),
@@ -44,9 +51,13 @@ ui <- dashboardPage(
         menuSubItem("Circuits vs Time", tabName = "circvstim")),
       menuItem("Circuit-based Analysis",icon = icon("folder"), startExpanded  = TRUE,
         menuSubItem("Common Circuits",tabName = "common-circuits")),
-      menuItem("Users-specific Results",icon = icon("folder"), startExpanded  = TRUE,
-        menuSubItem("Users Results",tabName = "usresults")),
-      selectInput("Help", "Help", c(Choose = "", "Dashboard Information", "layout", "docs"), selectize = TRUE)
+      menuItem("User-specific Results",icon = icon("folder"), startExpanded  = TRUE,
+        menuSubItem("User Results",tabName = "usresults")),
+      menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
+     
+               actionButton("StrucInfo", "Dashboard structure",icon = icon("play-circle"),style='width:175px'),
+               actionButton("Glossary", "Glossary of terms",icon = icon("play-circle"),style='padding-right: 35px;')
+               )
       
       
       
@@ -57,16 +68,7 @@ ui <- dashboardPage(
           background: #1e282c;
           border-left-color: #1e282c;
           }
-          @media (min-width: 1500px)
-.col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
-                    float: left;
-                    }          
-             @media (min-width: 1500px)
-.col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
-                    float: left;
-                    }       
-                    
-                    
+     
                     
                     
                     ')),
@@ -74,7 +76,7 @@ ui <- dashboardPage(
       
     tags$head(tags$style(
       "body{
-      min-width: 1300px;
+      
       margin: auto;
       
       
@@ -93,7 +95,7 @@ ui <- dashboardPage(
           ),
           box(
             title = "Information", width = 4, solidHeader = TRUE,
-            "To start press button Browse and load user traces"
+            "To start, load user traces by pressing button Browse"
           )
           
           ),
