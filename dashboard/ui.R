@@ -1,12 +1,12 @@
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","wordcloud","tm","slam","diptest","DT","gplots",
          "googleVis","devtools","xts","dygraphs","scales",
-         "formattable","treemap","Rcpp","plotly","yaml","viridis")
+         "formattable","treemap","Rcpp","plotly","yaml","viridis","cat")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/")}
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
-library(cat)
+
 if (!require("rCharts")) {
   install_github('ramnathv/rCharts', force= TRUE)
   #library("rCharts")
