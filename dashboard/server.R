@@ -329,7 +329,7 @@ shinyServer(function(input, output, session) {
   output$Meannumuniqnormcircst<-  renderValueBox({
     valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxMNNC(dfActionCircuit())),style = "font-size: 70%;"),width = 4, 
+                          InfovalueBoxMNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
       "Mean Number Circuits per User",color = "blue")
   })
 
@@ -811,7 +811,7 @@ shinyServer(function(input, output, session) {
     valueBox(
       
       value = dfx$error, 
-      "Voltage Measurement",color = "blue")
+      "Error",color = "blue")
     }
   })  
   
@@ -888,7 +888,7 @@ shinyServer(function(input, output, session) {
     # (I'm sure there's a simpler way of doing this)
  
     # show a custom-made modal for the task (input$todo) that was just clicked
-    showModal(modalDialog(title = "Structure of the Dashboard",
+    showModal(modalDialog(title = "Dashboard Structure",
                           HTML("This Dashboard is divided in 4 folders: <br/> <b> Data input </b> <br/> Data loading and
                                       main information <br/> <b> Global Results </b> <br/>
                                      Global information about the time spent and the circuits performed by users <br/>
@@ -912,12 +912,14 @@ shinyServer(function(input, output, session) {
     showModal(modalDialog(title = "Glossary of terms",
                           HTML(" <b> User:</b> A person who uses VISIR, can be a student or not <br/>
                                          <b> Action:</b> User interactions with the client that generate a message on the server <br/>
+                               <b> Circuit:</b> Path designed in the breadboard in which electrons from a voltage or current source flow <br/>
                                <b> Normalized Circuit:</b> Standardization of the circuits to achieve an independent representation of the components in the breadboard <br/>
+                               <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
+                               <b> Time:</b> The indefinite continued progress of the user in each of his interactions with VISIR, time events with large gaps of time have been neglected  <br/>
                                <b> Timeline:</b> Sequence of actions distributed over time <br/>
                                <b> Measurement:</b> Each of the posible actions performed in a circuit <br/>
-                               <b> Time:</b> The indefinite continued progress of the user in each of his interactions with VISIR, time events with gaps of 900 minutes or more per user have been neglected  <br/>
-                               <b> Circuit:</b> Path designed in the breadboard in which electrons from a voltage or current source flow <br/>
-                               <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
+                               
+                               
                                "),
                            footer = tagList(actionButton("close", "OK"))
     ))
