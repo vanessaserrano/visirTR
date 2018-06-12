@@ -889,16 +889,16 @@ shinyServer(function(input, output, session) {
  
     # show a custom-made modal for the task (input$todo) that was just clicked
     showModal(modalDialog(title = "Dashboard Structure",
-                          HTML("This Dashboard is divided in 4 folders: <br/> <b> Data input </b> <br/> Data loading and
+                          HTML("This dashboard is divided in 4 folders: <br/> <b> Data Input </b> <br/> Data loading and
                                       main information <br/> <b> Global Results </b> <br/>
                                      Global information about the time spent and the circuits performed by users <br/>
                                     <b> Circuit-based Analysis </b> <br/> Detailed information about each of the circuits
                                     performed <br/> <b> User-specific Results </b> <br/> Detailed information about the actions performed
                                     by each of the users
                                      "),
-                           footer = tagList(actionButton("close", "OK"))
+                           footer = tagList(actionButton("closeDS", "OK"))
     ))
-    observeEvent(input$close, {
+    observeEvent(input$closeDS, {
       removeModal()
       
     })
@@ -909,11 +909,11 @@ shinyServer(function(input, output, session) {
     # (I'm sure there's a simpler way of doing this)
     
     # show a custom-made modal for the task (input$todo) that was just clicked
-    showModal(modalDialog(title = "Glossary of terms",
+    showModal(modalDialog(title = "Glossary of Terms",
                           HTML(" <b> User:</b> A person who uses VISIR, can be a student or not <br/>
                                          <b> Action:</b> User interactions with the client that generate a message on the server <br/>
-                               <b> Circuit:</b> Path designed in the breadboard in which electrons from a voltage or current source flow <br/>
-                               <b> Normalized Circuit:</b> Standardization of the circuits to achieve an independent representation of the components in the breadboard <br/>
+                               <b> Circuit:</b> Set of electrical components as placed and connected in the breadboard <br/>
+                               <b> Normalized Circuit:</b> Standardization of the circuits to achieve a representation independent of the position in the breadboard <br/>
                                <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
                                <b> Time:</b> The indefinite continued progress of the user in each of his interactions with VISIR, time events with large gaps of time have been neglected  <br/>
                                <b> Timeline:</b> Sequence of actions distributed over time <br/>
@@ -921,9 +921,9 @@ shinyServer(function(input, output, session) {
                                
                                
                                "),
-                           footer = tagList(actionButton("close", "OK"))
+                           footer = tagList(actionButton("closeG", "OK"))
     ))
-    observeEvent(input$close, {
+    observeEvent(input$closeG, {
       removeModal()
       
     })

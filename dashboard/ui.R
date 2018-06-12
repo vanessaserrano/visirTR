@@ -55,8 +55,8 @@ ui <- dashboardPage(
         menuSubItem("User Results",tabName = "usresults")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
      
-               actionButton("StrucInfo", "Dashboard Structure",icon = icon("play-circle"),style='width:175px'),
-               actionButton("Glossary", "Glossary of terms",icon = icon("play-circle"),style='padding-right: 35px;')
+               actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
+               actionButton("Glossary", "Glossary of Terms",icon =  NULL, style='width:175px')
                )
       
       
