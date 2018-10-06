@@ -229,7 +229,7 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
   
   tempCircuitos <- gsub("[\n\r]","", tempCircuitos)
   
-  tempMMConectado<-grepl("DMM_",dfVISIR_accionesCircuito$DatosEnviadosXML)
+  tempMMConectado<-grepl("(?:DMM_)|(?:IPROBE_)",dfVISIR_accionesCircuito$DatosEnviadosXML)
   tempMMOperativo<-grepl("<dmm_function value=",dfVISIR_accionesCircuito$DatosEnviadosXML)
   tempHayMedida<-tempMMConectado & tempMMOperativo
   
