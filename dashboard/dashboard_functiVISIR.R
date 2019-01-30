@@ -57,7 +57,7 @@ normalizarCircuito<-function(x) {
   circuito <- gsub("([^A-Z0-9_])S$", "\\1A92", circuito)
   circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
   circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
-    
+  
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
