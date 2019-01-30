@@ -49,7 +49,15 @@ normalizarCircuito<-function(x) {
   circuito <- gsub("F2([0-9])", "A7\\1", circuito)
   circuito <- gsub("F3([0-9])", "A8\\1", circuito)
   circuito <- gsub("F([0-9])", "A5\\1", circuito)
-  
+  circuito <- gsub("([^A-Z0-9_])X([^A-Z0-9_])", "\\1A90\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])X$", "\\1A90", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y([^A-Z0-9_])", "\\1A91\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y$", "\\1A91", circuito)
+  circuito <- gsub("([^A-Z0-9_])S([^A-Z0-9_])", "\\1A92\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])S$", "\\1A92", circuito)
+  circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
+    
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
@@ -134,14 +142,14 @@ esCircuitoCerrado <- function(x) {
   circuito <- gsub("F2([0-9])", "A7\\1", circuito)
   circuito <- gsub("F3([0-9])", "A8\\1", circuito)
   circuito <- gsub("F([0-9])", "A5\\1", circuito)
-  circuito <- gsub("([^A-Z0-9])X([^A-Z0-9])", "\\1A90\\2", circuito)
-  circuito <- gsub("([^A-Z0-9])X$", "\\1A90", circuito)
-  circuito <- gsub("([^A-Z0-9])Y([^A-Z0-9])", "\\1A91\\2", circuito)
-  circuito <- gsub("([^A-Z0-9])Y$", "\\1A91", circuito)
-  circuito <- gsub("([^A-Z0-9])S([^A-Z0-9])", "\\1A92\\2", circuito)
-  circuito <- gsub("([^A-Z0-9])S$", "\\1A92", circuito)
-  circuito <- gsub("([^A-Z0-9])T([^A-Z0-9])", "\\1A93\\2", circuito)
-  circuito <- gsub("([^A-Z0-9])T$", "\\1A93", circuito)
+  circuito <- gsub("([^A-Z0-9_])X([^A-Z0-9_])", "\\1A90\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])X$", "\\1A90", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y([^A-Z0-9_])", "\\1A91\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y$", "\\1A91", circuito)
+  circuito <- gsub("([^A-Z0-9_])S([^A-Z0-9_])", "\\1A92\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])S$", "\\1A92", circuito)
+  circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
   circuito <- gsub("/", " ", circuito)
   
   codigos <- strsplit(circuito," ",fixed=TRUE)[[1]]
