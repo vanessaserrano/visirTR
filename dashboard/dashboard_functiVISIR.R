@@ -49,6 +49,14 @@ normalizarCircuito<-function(x) {
   circuito <- gsub("F2([0-9])", "A7\\1", circuito)
   circuito <- gsub("F3([0-9])", "A8\\1", circuito)
   circuito <- gsub("F([0-9])", "A5\\1", circuito)
+  circuito <- gsub("([^A-Z0-9_])X([^A-Z0-9_])", "\\1A90\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])X$", "\\1A90", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y([^A-Z0-9_])", "\\1A91\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y$", "\\1A91", circuito)
+  circuito <- gsub("([^A-Z0-9_])S([^A-Z0-9_])", "\\1A92\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])S$", "\\1A92", circuito)
+  circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
   
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
@@ -91,13 +99,13 @@ normalizarCircuito<-function(x) {
   
   # unificar nodos
   nodos <- gregexpr("A[0-9][0-9]",circuito)[[1]]
-  if(nodos[[1]]==-1)
+  if(nodos[[1]]==-1) {
     nodos <- character(0)
-  else {
+  } else {
     nodos <- sapply(nodos, function(x) {substr(circuito,x,x+2)})
     nodos <- unique(nodos)
   }
-  if(length(nodos)>0) {
+  if(length(nodos)>0 & length(nodos)<9) {
     nodosUnif <- c(paste("P0",1:9,sep=""),paste("P",10:99,sep=""))
     nodosUnif <- nodosUnif[1:length(nodos)]
     matNodosUnif <- perm(nodosUnif)
@@ -115,6 +123,7 @@ normalizarCircuitos<-function(x) {
   y <- character(length(x))
   for (i in 1:length(x)) {
     y[i]<-normalizarCircuito(x[i])
+    # print(i)
   }
   return(y)
 }
@@ -133,6 +142,14 @@ esCircuitoCerrado <- function(x) {
   circuito <- gsub("F2([0-9])", "A7\\1", circuito)
   circuito <- gsub("F3([0-9])", "A8\\1", circuito)
   circuito <- gsub("F([0-9])", "A5\\1", circuito)
+  circuito <- gsub("([^A-Z0-9_])X([^A-Z0-9_])", "\\1A90\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])X$", "\\1A90", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y([^A-Z0-9_])", "\\1A91\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])Y$", "\\1A91", circuito)
+  circuito <- gsub("([^A-Z0-9_])S([^A-Z0-9_])", "\\1A92\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])S$", "\\1A92", circuito)
+  circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
+  circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
   circuito <- gsub("/", " ", circuito)
   
   codigos <- strsplit(circuito," ",fixed=TRUE)[[1]]
@@ -220,7 +237,7 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
   
   tempCircuitos <- gsub("[\n\r]","", tempCircuitos)
   
-  tempMMConectado<-grepl("DMM_",dfVISIR_accionesCircuito$DatosEnviadosXML)
+  tempMMConectado<-grepl("(?:DMM_)|(?:IPROBE_)",dfVISIR_accionesCircuito$DatosEnviadosXML)
   tempMMOperativo<-grepl("<dmm_function value=",dfVISIR_accionesCircuito$DatosEnviadosXML)
   tempHayMedida<-tempMMConectado & tempMMOperativo
   
@@ -243,6 +260,24 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
                                   EsMedida = tempHayMedida,
                                   Medida = tempMedidas)
   
+  # Para version HTML5
+  dfVISIR_accionesCircuito$Circuito<-gsub("DMM_1 DMM_1_1 DMM_1_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("DMM_2 DMM_2_1 DMM_2_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC+6V_1 VDC+6V_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC+6V_2 VDC+6V_2_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC+25V_1 VDC+25V_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC+25V_2 VDC+25V_2_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("IPROBE_1 IPROBE_1_1 IPROBE_1_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("IPROBE_2 IPROBE_2_1 IPROBE_2_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDCCOM_1 VDCCOM_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDCCOM_2 VDCCOM_2_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC-25V_1 VDC-25V_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC-25V_2 VDC-25V_2_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC-6V_1 VDC-6V_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC-6V_2 VDC-6V_2_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("PROBE1_1 PROBE1_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  dfVISIR_accionesCircuito$Circuito<-gsub("PROBE1_2 PROBE1_2_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
+  
   dfVISIR_accionesCircuito$Circuito<-gsub("W_X","/W_X",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
   dfVISIR_accionesCircuito$Circuito<-gsub("R_X","/R_X",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
   dfVISIR_accionesCircuito$Circuito<-substring(dfVISIR_accionesCircuito$Circuito,2)
@@ -254,11 +289,11 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
   vecCircuitoCerrado <- sapply(dfVISIR_accionesCircuito$Circuito, esCircuitoCerrado)
   dfVISIR_accionesCircuito$EsCircuitoCerrado <- vecCircuitoCerrado
 
-  vecMMMal <- grepl("(DMM_V.*DMM_A)|(DMM_A.*DMM_V)",
+  vecMMMal <- grepl("(?:DMM_V.*DMM_A)|(?:DMM_A.*DMM_V)",
                     dfVISIR_accionesCircuito$CircuitoNormalizado)  
-  vecMMOKV <- !vecMMMal & grepl("(DMM_V.*DMM_V)",
+  vecMMOKV <- !vecMMMal & grepl("(?:DMM_V.*DMM_V)|(?:DMM_1_.*DMM_1_)|(?:DMM_2_.*DMM_2_)",
                                 dfVISIR_accionesCircuito$CircuitoNormalizado) 
-  vecMMOKA <- !vecMMMal & grepl("(DMM_A.*DMM_A)",
+  vecMMOKA <- !vecMMMal & grepl("(?:DMM_A.*DMM_A)|(?:IPROBE_1_.*IPROBE_1_)|(?:IPROBE_2_.*IPROBE_2_)",
                                 dfVISIR_accionesCircuito$CircuitoNormalizado) 
   dfVISIR_accionesCircuito$MultimetroMal <- !vecMMOKV & !vecMMOKA  #No hay multimetro o estÃ¡ mal conectado
   dfVISIR_accionesCircuito$MultimetroV <- vecMMOKV
@@ -290,62 +325,37 @@ funOrderTime <- function (dfVISIR_accionesOrdenado) {
   return(ordenAlumno)
 }
 
-
-
 FunctionSSA <- function (dfVISIR_acciones) {
-  
-  
-  
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
-  
-  
-  
   dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
   dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
   
   Acciones <- dfVISIR_accionesOrdenado %>% select(Dates,Sesion,Alumno) %>%group_by(Dates) %>% 
     summarise(Sesion=length(unique(Sesion)),Alumnos=length(unique(Alumno)),Acciones=length(Dates))
   
-  
-  
   return(Acciones)
-  
 }
 
 FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
-  
   numAcciones<-nrow(dfVISIR_acciones)
-  
-  
-  
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
   
-  
-  
-  
   #Parte Tiempo
-  
   TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
     summarise(TotalTime=max(Time))
-  
   TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
-  
   TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
 
-
   #Parte Circuitos
-  
   CircuTimebyStud <- dfActionCircuit %>% select(Alumno,Circuito) %>%  group_by(Alumno) %>% 
     summarise(NumCircu=length(Circuito))
   
-  
   # Mix Both Data Frames (Student Circuits Time)
   zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
-  
   zz$TotalTime <- as.numeric(zz$TotalTime)
   
   MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
@@ -353,112 +363,76 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
   MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
   
   zz$NumCircu <- as.numeric(zz$NumCircu)
-  
   zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
-  
   zz$Evaluation <- as.factor(zz$Evaluation)
   
-  
   return(zz)
-
-  
 }
 
+
 FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
-  
   numAcciones<-nrow(dfVISIR_acciones)
-  
-  
-  
+
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
   
-  
-  
-  
   #Parte Tiempo
-  
   TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
     summarise(TotalTime=max(Time))
-  
   TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
-  
   TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
 
-  
   #Parte Circuitos
-  
   CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%  group_by(Alumno) %>% 
     summarise(NumCircu=length(unique(CircuitoNormalizado)))
   
-  
   # Mix Both Data Frames (Student Circuits Time)
   zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
-  
   zz$TotalTime <- as.numeric(zz$TotalTime)
-  
   MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
   MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
   
   zz$NumCircu <- as.numeric(zz$NumCircu)
-  
   zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
-  
   zz$Evaluation <- as.factor(zz$Evaluation)
   
-  
   return(zz)
-  
-  
 }
 
 
 FunctionMTS <- function (dfVISIR_acciones) {
-  
-  
-  
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
   
-  
-  
   dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
-  
   dfVISIR_accionesOrdenado$ConnectionIni <- grepl("@@@initial::request@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
-  
   dfVISIR_accionesOrdenado$ConnectionFina <- grepl("@@@finish@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
-  
   dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
                                                       ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
                                                              "NA")))
-  
-  
   X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,FechaHoraEnvio,Connection)
-  
   X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
                                               format="%Y-%m-%d %H:%M:%S"))
-  
   Totaltimebydate <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
     group_by(Alumno,Dates,seqid) %>% summarise(TimeSpent=sum(diff(FechaHoraEnvio))) %>% 
     group_by(Alumno,Dates) %>% summarise(TimeSpent=sum(TimeSpent)) %>%
     mutate(TimeSpent=TimeSpent/3600) %>% mutate(TimeSpent=round(TimeSpent,digits = 2))
-  
-  
   return(Totaltimebydate)
   
 }
 
 distnumcirc <- function(dfActionCircuit){
-  CircByStudentD <- dfActionCircuit %>% select(Alumno,Circuito,FechaHoraEnvio)%>%
+  print(str(dfActionCircuit))
+  CircByStudentD <- dfActionCircuit %>% select(Alumno,Circuito,FechaHoraEnvio) %>%
     filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Circuito =length(Circuito))
   return(CircByStudentD)
 }
 
 distnumcircN <- function(dfActionCircuit){
-  CircByStudentDN <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado)%>%
+  CircByStudentDN <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%
     filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)))
   return(CircByStudentDN)
 }
@@ -529,8 +503,6 @@ Dygraphfunc2 <- function(dfActionCircuit) {
   dygraph(Totcircu)%>% dyAxis("y",rangePad=c(-0.05),label = "Circuits") %>%  dySeries("ses", label = "Total Circuits",axis="y") %>% 
     dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
 }
-
-
 
 
 plotDistribution <- function(values=NA,maxValues=NULL,xlabel="") {
