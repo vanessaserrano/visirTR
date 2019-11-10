@@ -105,16 +105,18 @@ normalizarCircuito<-function(x) {
     nodos <- sapply(nodos, function(x) {substr(circuito,x,x+2)})
     nodos <- unique(nodos)
   }
-  if(length(nodos)>0 & length(nodos)<9) {
+  # if(length(nodos)>0 & length(nodos)<9) {
+  if(length(nodos)>0) {
     nodosUnif <- c(paste("P0",1:9,sep=""),paste("P",10:99,sep=""))
     nodosUnif <- nodosUnif[1:length(nodos)]
-    matNodosUnif <- perm(nodosUnif)
+    # matNodosUnif <- perm(nodosUnif)
+    # 
+    # r_circuitos <- character(nrow(matNodosUnif))
+    # for(i in 1:nrow(matNodosUnif))
+    #   r_circuitos[i] <- replaceMany(circuito, nodos, matNodosUnif[i,])
+    # circuito <- min(r_circuitos)
     
-    r_circuitos <- character(nrow(matNodosUnif))
-    for(i in 1:nrow(matNodosUnif))
-      r_circuitos <- replaceMany(circuito, nodos, matNodosUnif[i,])
-    #print(r_circuitos)
-    circuito <- min(r_circuitos)
+    circuito <- replaceMany(circuito, nodos, nodosUnif)
   }
   return(circuito)
 }
