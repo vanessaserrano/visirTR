@@ -10,6 +10,13 @@ for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project
                                              quiet=TRUE, type="binary")}
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 
+replaceMany <- function(x, find, replace) {
+  for(i in 1:length(find)) {
+    x <- gsub(find[i], replace[i], x, fixed=T)
+  }
+  x
+}
+
 # source("dashboard/dashboard_functiVISIR.R")
 inFile <- list(datapath="data/an2014sm.csv")
 
