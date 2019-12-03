@@ -36,14 +36,18 @@ perm <- function (vec, duplicates = FALSE)
 }
 
 normalizarCircuito<-function(x) {
+  ## Comprobación de la cadena
   # x es una cadena
   if(is.null(x)) return(NA)
   if(is.na(x)) return(NA)
   if(x=="") return(NA)
   
+  ## Substitución del 0 por GND
   circuito <- as.character(x)
   circuito <- gsub("([^A-Z0-9])0([^A-Z0-9])", "\\1GND\\2", circuito)
   circuito <- gsub("([^A-Z0-9])0$", "\\1GND", circuito)
+  
+  ## Cambio de codificaciones en los nodos
   circuito <- gsub("A([0-9][^0-9])", "A0\\1", circuito)
   circuito <- gsub("F1([0-9])", "A6\\1", circuito)
   circuito <- gsub("F2([0-9])", "A7\\1", circuito)
@@ -58,6 +62,7 @@ normalizarCircuito<-function(x) {
   circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
   circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
   
+  ## Creación de los listados y eliminación de los cables innecesarios
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
@@ -76,12 +81,15 @@ normalizarCircuito<-function(x) {
     }
   }
   componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
+  
+  ## Unificación de los componentes
   circuito <- paste(componentes, collapse="/")  
   circuito <- gsub("^/*","",circuito)
   
   if(is.na(circuito)) return(NA)
   if(circuito=="") return(NA)
   
+  ## Reordenación de los componentes
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
@@ -97,7 +105,7 @@ normalizarCircuito<-function(x) {
   componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
   circuito <- paste(componentes, collapse="/")  
   
-  # unificar nodos
+  ## Unificación de los nodos
   nodos <- gregexpr("A[0-9][0-9]",circuito)[[1]]
   if(nodos[[1]]==-1) {
     nodos <- character(0)
