@@ -113,18 +113,18 @@ normalizarCircuito<-function(x) {
     nodos <- sapply(nodos, function(x) {substr(circuito,x,x+2)})
     nodos <- unique(nodos)
   }
-  # if(length(nodos)>0 & length(nodos)<9) {
-  if(length(nodos)>0) {
+  if(length(nodos)>0 & length(nodos)<9) {
+  # if(length(nodos)>0) {
     nodosUnif <- c(paste("P0",1:9,sep=""),paste("P",10:99,sep=""))
     nodosUnif <- nodosUnif[1:length(nodos)]
-    # matNodosUnif <- perm(nodosUnif)
-    # 
-    # r_circuitos <- character(nrow(matNodosUnif))
-    # for(i in 1:nrow(matNodosUnif))
-    #   r_circuitos[i] <- replaceMany(circuito, nodos, matNodosUnif[i,])
-    # circuito <- min(r_circuitos)
+    matNodosUnif <- perm(nodosUnif)
+     
+    r_circuitos <- character(nrow(matNodosUnif))
+    for(i in 1:nrow(matNodosUnif))
+       r_circuitos[i] <- replaceMany(circuito, nodos, matNodosUnif[i,])
+    circuito <- min(r_circuitos)
     
-    circuito <- replaceMany(circuito, nodos, nodosUnif)
+    # circuito <- replaceMany(circuito, nodos, nodosUnif)
   }
   return(circuito)
 }
@@ -324,6 +324,7 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
   
   names(dfVISIR_accionesOrdenado)[names(dfVISIR_accionesOrdenado) == 'TiempoAcumuladoCorregido'] <- 'Time'
   
+  # dfA <<- dfVISIR_accionesCircuito
   return(dfVISIR_accionesCircuito)
 }
 
