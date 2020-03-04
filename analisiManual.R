@@ -128,6 +128,7 @@ dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
                                 EsMedida = tempHayMedida,
                                 Medida = tempMedidas)
 
+
 # Para version HTML5
 dfVISIR_accionesCircuito$Circuito<-gsub("DMM_1 DMM_1_1 DMM_1_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
 dfVISIR_accionesCircuito$Circuito<-gsub("DMM_2 DMM_2_1 DMM_2_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
@@ -383,3 +384,36 @@ names(dfVISIR_accionesOrdenado)[names(dfVISIR_accionesOrdenado) == 'TiempoAcumul
 dfVISIR_accionesCircuito
 
 
+
+#### Ampliació Francesc ####
+
+## Valor Resolución
+tempResolucion<-as.character(rep(NA,numCircuitos))
+for(i in 1:numCircuitos){
+  tempRegExpResolucion <-regexec("<dmm_resolution value=([^<]*)",
+                                 as.character(dfVISIR_accionesCircuito$DatosRecibidosXML[i]))
+  tempResolucion[i]<-substr(dfVISIR_accionesCircuito$DatosRecibidosXML[i],tempRegExpResolucion[[1]][2],
+                            tempRegExpResolucion[[1]][2]+
+                              attr(tempRegExpResolucion[[1]],"match.length")[2]-1)
+}
+
+tempResolucion <- gsub("[\n\">/]","", tempResolucion)
+
+
+## Valor Resultado
+tempResultado<-as.character(rep(NA,numCircuitos))
+for(i in 1:numCircuitos){
+  tempRegExpResultado <-regexec("<dmm_result value=([^<]*)",
+                                 as.character(dfVISIR_accionesCircuito$DatosRecibidosXML[i]))
+  tempResultado[i]<-substr(dfVISIR_accionesCircuito$DatosRecibidosXML[i],tempRegExpResultado[[1]][2],
+                            tempRegExpResultado[[1]][2]+
+                              attr(tempRegExpResultado[[1]],"match.length")[2]-1)
+}
+
+tempResultado <- gsub("[\n\">/]","", tempResultado)
+
+
+## Adición de columnas en la tabla
+dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
+                                Resultado = tempResultado,
+                                Resolucion = tempResolucion)
