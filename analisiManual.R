@@ -128,7 +128,6 @@ dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
                                 EsMedida = tempHayMedida,
                                 Medida = tempMedidas)
 
-
 # Para version HTML5
 dfVISIR_accionesCircuito$Circuito<-gsub("DMM_1 DMM_1_1 DMM_1_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
 dfVISIR_accionesCircuito$Circuito<-gsub("DMM_2 DMM_2_1 DMM_2_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
