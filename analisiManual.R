@@ -416,3 +416,11 @@ tempResultado <- gsub("[\n\">/]","", tempResultado)
 dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
                                 Resultado = tempResultado,
                                 Resolucion = tempResolucion)
+
+
+## Histograma
+aaa <- data.frame(Normalizado=dfVISIR_accionesCircuito$CircuitoNormalizado[1:6])
+aaa$Resultado <- as.numeric(dfVISIR_accionesCircuito$Resultado[1:6])
+
+ggplot(aaa, aes(Resultado)) +
+  geom_histogram() + facet_grid(Normalizado ~ .)
