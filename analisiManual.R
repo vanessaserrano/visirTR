@@ -418,9 +418,42 @@ dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
                                 Resolucion = tempResolucion)
 
 
-## Histograma
-aaa <- data.frame(Normalizado=dfVISIR_accionesCircuito$CircuitoNormalizado[1:6])
-aaa$Resultado <- as.numeric(dfVISIR_accionesCircuito$Resultado[1:6])
 
+## 22 circuitos normalizados
+circ_norm <- c("R_X DC_+25V DMM_AHI 1k/R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 10k/W_X DC_COM GND",
+               "R_X DC_+25V DMM_VHI 10k/R_X DC_+25V DMM_VHI 1k/R_X DMM_VHI DMM_VLO 1k/W_X DC_COM GND/W_X DMM_VLO GND",
+               "R_X DC_+25V DMM_VHI 1k/R_X DMM_VHI DMM_VLO 10k/R_X DMM_VHI DMM_VLO 10k/R_X DMM_VLO GND 1k/W_X DC_COM GND",
+               "R_X DC_+25V DMM_VLO 10k/R_X DC_+25V DMM_VLO 1k/R_X DMM_VLO GND 1k/W_X DC_+25V DMM_VHI",
+               "R_X DC_+25V DMM_VLO 10k/W_X DC_+25V DMM_VHI/W_X DMM_VLO GND",
+               "R_X DC_+25V DMM_VLO 1k/R_X DC_+25V GND 1k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",
+               "R_X DC_+25V GND 10k/R_X DC_+25V GND 10k/W_X DC_+25V DMM_VHI/W_X DMM_VLO GND",
+               "R_X P01 DC_+25V 10k/R_X P01 DMM_ALO 1k/R_X DC_+25V DMM_ALO 1k/W_X DC_COM GND/W_X DMM_AHI GND",
+               "R_X P01 DC_+25V 10k/R_X P02 DC_+25V 1k/R_X P01 GND 10k/R_X P02 GND 1k/W_X DC_+25V DMM_VHI/W_X DC_COM GND/W_X DMM_VLO GND",
+               "R_X P01 DC_+25V 1k/R_X P01 DMM_VLO 10k/R_X P01 DMM_VLO 10k/R_X DMM_VLO GND 1k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",
+               "R_X P01 DC_+25V 1k/R_X P01 GND 1k/R_X DC_+25V DMM_VLO 10k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",
+               "R_X P01 DMM_ALO 10k/R_X P02 DMM_ALO 1k/R_X P01 GND 10k/R_X P02 GND 1k/W_X DC_+25V DMM_AHI/W_X DC_COM GND",
+               "R_X P01 DMM_VHI 10k/R_X P01 DMM_VHI 10k/R_X P01 GND 1k/R_X DC_+25V DMM_VHI 1k/W_X DC_+25V DMM_VLO/W_X DC_COM GND",
+               "R_X P01 DMM_VHI 10k/R_X P01 DMM_VLO 10k",
+               "R_X P01 DMM_VHI 10k/R_X P02 DMM_VHI 1k/R_X P02 DMM_VLO 10k/R_X P01 DMM_VLO 1k",
+               "R_X P01 DMM_VHI 1k/R_X P01 DMM_VHI 1k/R_X P02 DMM_VLO 10k/R_X P02 DMM_VLO 10k",
+               "R_X P01 DMM_VLO 1k/R_X DMM_VHI DMM_VLO 1k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",
+               "R_X P01 GND 1k/R_X DMM_ALO GND 10k/R_X DMM_ALO GND 1k/W_X DC_+25V DMM_AHI",
+               "R_X P01 P02 10k/R_X P01 DMM_VLO 1k/R_X P02 GND 10k/R_X DMM_VHI DMM_VLO 1k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",
+               "R_X P01 P02 10k/R_X P01 P02 10k/R_X P01 DC_+25V 1k/R_X P02 DMM_ALO 1k/W_X DC_COM GND/W_X DMM_AHI GND",
+               "R_X P01 P02 1k/R_X P01 DMM_VHI 1k",
+               "W_X DC_+25V DMM_VHI/W_X DC_COM GND/W_X DMM_VLO GND")
+
+
+## Histograma
+
+aaa <- data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
+                  Resultado = as.numeric(dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]]))
+
+
+for (i in 2:length(circ_norm)) {
+  aaa <- rbind(aaa, data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
+                               Resultado = as.numeric(dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]])))
+}
+  
 ggplot(aaa, aes(Resultado)) +
   geom_histogram() + facet_grid(Normalizado ~ .)
