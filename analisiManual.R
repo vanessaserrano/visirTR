@@ -18,7 +18,8 @@ replaceMany <- function(x, find, replace) {
 }
 
 # source("dashboard/dashboard_functiVISIR.R")
-inFile <- list(datapath="data/an2014sm.csv")
+#inFile <- list(datapath="data/an2014sm.csv")
+inFile <- list(datapath="data/VISIR_logs/an2014.txt")
 
 df <- read.table(inFile$datapath, header=F, sep=",", quote="\"",
                  stringsAsFactors = FALSE)
@@ -446,14 +447,16 @@ circ_norm <- c("R_X DC_+25V DMM_AHI 1k/R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 10
 
 ## Histograma
 
-aaa <- data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
+dfHISTO <- data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
                   Resultado = as.numeric(dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]]))
 
 
 for (i in 2:length(circ_norm)) {
-  aaa <- rbind(aaa, data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
+  dfHISTO <- rbind(dfHISTO, data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
                                Resultado = as.numeric(dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]])))
 }
   
-ggplot(aaa, aes(Resultado)) +
-  geom_histogram() + facet_grid(Normalizado ~ .)
+ggplot(dfHISTO, aes(Resultado)) +
+  geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"))
+
+                                
