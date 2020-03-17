@@ -254,14 +254,18 @@ normr[6] <- circuito
 #################################
 
 normalizarCircuito<-function(x) {
+  ## Comprobación de la cadena
   # x es una cadena
   if(is.null(x)) return(NA)
   if(is.na(x)) return(NA)
   if(x=="") return(NA)
   
+  ## Substitución del 0 por GND
   circuito <- as.character(x)
   circuito <- gsub("([^A-Z0-9])0([^A-Z0-9])", "\\1GND\\2", circuito)
   circuito <- gsub("([^A-Z0-9])0$", "\\1GND", circuito)
+  
+  ## Cambio de codificaciones en los nodos
   circuito <- gsub("A([0-9][^0-9])", "A0\\1", circuito)
   circuito <- gsub("F1([0-9])", "A6\\1", circuito)
   circuito <- gsub("F2([0-9])", "A7\\1", circuito)
@@ -276,6 +280,7 @@ normalizarCircuito<-function(x) {
   circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
   circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
   
+  ## Creación de los listados y eliminación de los cables innecesarios
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
@@ -294,12 +299,15 @@ normalizarCircuito<-function(x) {
     }
   }
   componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
+  
+  ## Unificación de los componentes
   circuito <- paste(componentes, collapse="/")  
   circuito <- gsub("^/*","",circuito)
   
   if(is.na(circuito)) return(NA)
   if(circuito=="") return(NA)
   
+  ## Reordenación de los componentes
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
@@ -315,7 +323,7 @@ normalizarCircuito<-function(x) {
   componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
   circuito <- paste(componentes, collapse="/")  
   
-  # unificar nodos
+  ## Unificación de los nodos
   nodos <- gregexpr("A[0-9][0-9]",circuito)[[1]]
   if(nodos[[1]]==-1) {
     nodos <- character(0)
@@ -324,18 +332,21 @@ normalizarCircuito<-function(x) {
     nodos <- unique(nodos)
   }
   if(length(nodos)>0 & length(nodos)<9) {
+    # if(length(nodos)>0) {
     nodosUnif <- c(paste("P0",1:9,sep=""),paste("P",10:99,sep=""))
     nodosUnif <- nodosUnif[1:length(nodos)]
     matNodosUnif <- perm(nodosUnif)
     
     r_circuitos <- character(nrow(matNodosUnif))
     for(i in 1:nrow(matNodosUnif))
-      r_circuitos <- replaceMany(circuito, nodos, matNodosUnif[i,])
-    #print(r_circuitos)
+      r_circuitos[i] <- replaceMany(circuito, nodos, matNodosUnif[i,])
     circuito <- min(r_circuitos)
+    
+    # circuito <- replaceMany(circuito, nodos, nodosUnif)
   }
   return(circuito)
 }
+
 
 normalizarCircuitos<-function(x) {
   y <- character(length(x))
@@ -413,14 +424,23 @@ for(i in 1:numCircuitos){
 tempResultado <- gsub("[\n\">/]","", tempResultado)
 
 
-## Adición de columnas en la tabla
+## Valor Voltaje
+tempVoltaje<-as.character(rep(NA,numCircuitos))
+for(i in 1:numCircuitos){
+  tempRegExpVoltaje <-regexec('dc_output channel="25V.*?<dc_voltage_actual value="([^"]*)',
+                              as.character(dfVISIR_accionesCircuito$DatosRecibidosXML[i]))
+  tempVoltaje[i]<-substr(dfVISIR_accionesCircuito$DatosRecibidosXML[i],tempRegExpVoltaje[[1]][2],
+                           tempRegExpVoltaje[[1]][2]+
+                             attr(tempRegExpVoltaje[[1]],"match.length")[2]-1)
+}
+
+## Adición de columnas en dfVISIR_accionesCircuito
 dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
                                 Resultado = as.numeric(as.character(tempResultado)),
-                                Resolucion = as.numeric(as.character(tempResolucion)))
+                                Resolucion = as.numeric(as.character(tempResolucion)),
+                                Voltaje = as.numeric(as.character(tempVoltaje)))
 
-
-
-## 22 circuitos normalizados
+## Vector con los 22 circuitos normalizados
 circ_norm <- c("R_X DC_+25V DMM_AHI 1k/R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 10k/W_X DC_COM GND",
                "R_X DC_+25V DMM_VHI 10k/R_X DC_+25V DMM_VHI 1k/R_X DMM_VHI DMM_VLO 1k/W_X DC_COM GND/W_X DMM_VLO GND",
                "R_X DC_+25V DMM_VHI 1k/R_X DMM_VHI DMM_VLO 10k/R_X DMM_VHI DMM_VLO 10k/R_X DMM_VLO GND 1k/W_X DC_COM GND",
@@ -445,17 +465,22 @@ circ_norm <- c("R_X DC_+25V DMM_AHI 1k/R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 10
                "W_X DC_+25V DMM_VHI/W_X DC_COM GND/W_X DMM_VLO GND")
 
 
-## Histograma
-
+## Histograma de los 22 circuitos normalizados
 dfHISTO <- data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
-                  Resultado = (dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]]))
-
+                  Resultado = dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
+                  Voltaje = dfVISIR_accionesCircuito$Voltaje[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
+                  Resolucion = dfVISIR_accionesCircuito$Resolucion[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]])
 
 for (i in 2:length(circ_norm)) {
   dfHISTO <- rbind(dfHISTO, data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
-                               Resultado = (dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]])))
+                               Resultado = (dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]]),
+                   Voltaje = dfVISIR_accionesCircuito$Voltaje[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
+                   Resolucion = dfVISIR_accionesCircuito$Resolucion[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]]))
 }
   
+#table(dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado %in% circ_norm])
+#sort(unique(dfVISIR_accionesCircuito$CircuitoNormalizado))[1001:2000]
+
 ggplot(dfHISTO, aes(Resultado)) +
   geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"))
 
