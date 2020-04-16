@@ -484,4 +484,12 @@ for (i in 2:length(circ_norm)) {
 ggplot(dfHISTO, aes(Resultado)) +
   geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"))
 
+
+
+## Adición del fragmento más significativo (función dentro del archivo "Fragment mes significatiu.R")
+
+for (i in 1:nrow(dfVISIR_accionesCircuito)){
+  dfVISIR_accionesCircuito$Significativo[i] <- fragmentoSignificativo(as.character(dfVISIR_accionesCircuito$CircuitoNormalizado[i]))
+}
+
                                 
