@@ -440,6 +440,8 @@ dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
                                 Resolucion = as.numeric(as.character(tempResolucion)),
                                 Voltaje = as.numeric(as.character(tempVoltaje)))
 
+dfVISIR_accionesCircuito$Relación_Resultado_Voltaje <- dfVISIR_accionesCircuito$Resultado / dfVISIR_accionesCircuito$Voltaje
+
 ## Vector con los 22 circuitos normalizados
 circ_norm <- c("R_X DC_+25V DMM_AHI 1k/R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 10k/W_X DC_COM GND",
                "R_X DC_+25V DMM_VHI 10k/R_X DC_+25V DMM_VHI 1k/R_X DMM_VHI DMM_VLO 1k/W_X DC_COM GND/W_X DMM_VLO GND",
@@ -465,7 +467,7 @@ circ_norm <- c("R_X DC_+25V DMM_AHI 1k/R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 10
                "W_X DC_+25V DMM_VHI/W_X DC_COM GND/W_X DMM_VLO GND")
 
 
-## Histograma de los 22 circuitos normalizados
+## Histograma de los 22 circuitos normalizados analizados
 dfHISTO <- data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
                   Resultado = dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
                   Voltaje = dfVISIR_accionesCircuito$Voltaje[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
@@ -481,15 +483,39 @@ for (i in 2:length(circ_norm)) {
 #table(dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado %in% circ_norm])
 #sort(unique(dfVISIR_accionesCircuito$CircuitoNormalizado))[1001:2000]
 
-ggplot(dfHISTO, aes(Resultado)) +
-  geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"))
+dfHISTO$Relacion_Resultado_Voltaje <- dfHISTO$Resultado / dfHISTO$Voltaje
+dfHISTO <- dfHISTO[!is.na(dfHISTO$Normalizado),]
+
+nombres <- c("Circuito 1.1","Circuito 1.2","Circuito 1.3","Circuito 1.4","Circuito 1.5","Circuito 1.6",
+             "Circuito 1.7","Circuito 1.8","Circuito 1.9","Circuito 1.10","Circuito 1.11","Circuito 1.12","Circuito 1.13",
+             "Circuito 1.14","Circuito 1.15","Circuito 1.16","Circuito 1.17","Circuito 1.18","Circuito 1.19","Circuito 1.20",
+             "Circuito 1.21","Circuito 1.22")
+names(nombres) <- circ_norm
+
+# Histogramas Resultado y Relación resultado-voltaje
+ggplot(dfHISTO, aes(Resultado)) + labs(x = "Resultat", y = "Frequència") + theme(legend.position="none") +
+  geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"), labeller=labeller(Normalizado = nombres))
+
+ggplot(dfHISTO, aes(Relacion_Resultado_Voltaje)) +  labs(x = "Resultat", y = "Frequència") +
+  geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"), labeller=labeller(Normalizado = nombres))
 
 
 
 ## Adición del fragmento más significativo (función dentro del archivo "Fragment mes significatiu.R")
-
 for (i in 1:nrow(dfVISIR_accionesCircuito)){
-  dfVISIR_accionesCircuito$Significativo[i] <- fragmentoSignificativo(as.character(dfVISIR_accionesCircuito$CircuitoNormalizado[i]))
+  dfVISIR_accionesCircuito$CircuitoSignificativo[i] <- fragmentoSignificativo(as.character(dfVISIR_accionesCircuito$CircuitoNormalizado[i]))
 }
 
-                                
+
+
+## Duda para enviar a Javier (DEUSTO) ##
+# aaa <- dfHISTO[dfHISTO$Normalizado=="R_X DC_+25V DMM_VLO 1k/R_X DC_+25V GND 1k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",]
+
+df_2 <- dfVISIR_accionesCircuito[dfVISIR_accionesCircuito$CircuitoNormalizado=="R_X DC_+25V DMM_VLO 1k/R_X DC_+25V GND 1k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",]
+df_Circ6 <- data.frame(Circuito=df_2$Circuito, CircuitoNormalizado=df_2$CircuitoNormalizado, Resultado=df_2$Resultado,
+                       Voltaje=df_2$Voltaje, Resolución=df_2$Resolucion)
+df_Circ6$Relación_Resulrado_Voltaje <- df_Circ6$Resultado / df_Circ6$Voltaje
+df_Circ6 <- df_Circ6[!is.na(df_Circ6$Circuito),]
+
+write.csv(df_Circ6, file="Circ_6.csv")
+

@@ -12,11 +12,14 @@ for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 
 
-
 #### FUNCIÓN FRAGMENTO MÁS SIGNIFICATIVO ####
 fragmentoSignificativo <- function(circuito){
   
   circuito_prin <- NA
+  
+  if (is.na(circuito)==TRUE){
+    return(NA)
+  }
   
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   conectores <- strsplit(componentes, " ")
@@ -98,7 +101,10 @@ fragmentoSignificativo <- function(circuito){
     }
 }
 
+
 # Prueba
-#for (i in 1:4){
+#for (i in 1:3){
 #  circuito$B[i] <- fragmentoSignificativo(as.character(circuito$A[i]))
 #}
+
+#fragmentoSignificativo("R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 1k/W_X DC_+25V DMM_AHI/W_X DC_COM GND")
