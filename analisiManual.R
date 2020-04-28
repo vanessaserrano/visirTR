@@ -486,18 +486,21 @@ for (i in 2:length(circ_norm)) {
 dfHISTO$Relacion_Resultado_Voltaje <- dfHISTO$Resultado / dfHISTO$Voltaje
 dfHISTO <- dfHISTO[!is.na(dfHISTO$Normalizado),]
 
-nombres <- c("Circuito 1.1","Circuito 1.2","Circuito 1.3","Circuito 1.4","Circuito 1.5","Circuito 1.6",
-             "Circuito 1.7","Circuito 1.8","Circuito 1.9","Circuito 1.10","Circuito 1.11","Circuito 1.12","Circuito 1.13",
-             "Circuito 1.14","Circuito 1.15","Circuito 1.16","Circuito 1.17","Circuito 1.18","Circuito 1.19","Circuito 1.20",
-             "Circuito 1.21","Circuito 1.22")
+nombres <- c("Circuit 1.1","Circuit 1.2","Circuit 1.3","Circuit 1.4","Circuit 1.5","Circuit 1.6",
+             "Circuit 1.7","Circuit 1.8","Circuit 1.9","Circuit 1.10","Circuit 1.11","Circuit 1.12","Circuit 1.13",
+             "Circuit 1.14","Circuit 1.15","Circuit 1.16","Circuit 1.17","Circuit 1.18","Circuit 1.19","Circuit 1.20",
+             "Circuit 1.21","Circuit 1.22")
 names(nombres) <- circ_norm
+
 
 # Histogramas Resultado y Relación resultado-voltaje
 ggplot(dfHISTO, aes(Resultado)) + labs(x = "Resultat", y = "Frequència") + theme(legend.position="none") +
-  geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"), labeller=labeller(Normalizado = nombres))
+  geom_histogram(fill="#0099CC") + facet_wrap(~ Normalizado, ncol=4, scales = ("free"), labeller=labeller(Normalizado = nombres)) +
+  theme_bw() + theme(legend.position='none')
 
 ggplot(dfHISTO, aes(Relacion_Resultado_Voltaje)) +  labs(x = "Resultat", y = "Frequència") +
-  geom_histogram() + facet_wrap(~ Normalizado, ncol=4, scales = ("free"), labeller=labeller(Normalizado = nombres))
+  geom_histogram(fill="#0099CC") + facet_wrap(~ Normalizado, ncol=4, scales = ("free"), labeller=labeller(Normalizado = nombres)) +
+  theme_bw() + theme(legend.position='none')
 
 
 
