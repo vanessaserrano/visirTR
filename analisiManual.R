@@ -510,6 +510,12 @@ for (i in 1:nrow(dfVISIR_accionesCircuito)){
 }
 
 
+## Data frame para milestones ##
+df_milestone <- data.frame(CircuitoNormalizado=dfVISIR_accionesCircuito$CircuitoNormalizado,
+                           CircuitoSignificativo=dfVISIR_accionesCircuito$CircuitoSignificativo,
+                           Resultado=dfVISIR_accionesCircuito$Resultado,
+                           Voltaje=dfVISIR_accionesCircuito$Voltaje)
+
 
 ## Duda para enviar a Javier (DEUSTO) ##
 # aaa <- dfHISTO[dfHISTO$Normalizado=="R_X DC_+25V DMM_VLO 1k/R_X DC_+25V GND 1k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",]
