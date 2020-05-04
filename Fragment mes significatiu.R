@@ -45,6 +45,13 @@ fragmentoSignificativo <- function(circuito){
   df$V3 <- as.character(V3)
   df$V4 <- as.character(V4)
 
+  ## CAMBIO: el circuito debe tener los dos cables del multimetro, sino devuelve un NA ##
+  mult <- length(unique(unlist(strapply(circuito, "DMM_[A-Z]{3}"))))
+  if (mult < 2){
+    return(NA)
+  }
+  ##
+  
   nodesf1 <- as.character(data.frame(strapply(circuito, "DMM_[A-Z]{3}"))[1,1])
   
   if (length(nodesf1)==1) {
