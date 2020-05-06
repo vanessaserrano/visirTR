@@ -57,7 +57,8 @@ fragmentoSignificativo <- function(circuito){
   if (length(nodesf1)==1) {
   
     df <- rbind(df,c("DMM_VHI","DMM_VLO"),c("DMM_VLO","DMM_VHI"),c("DMM_AHI","DMM_ALO"),
-                c("DMM_ALO","DMM_AHI"))
+                c("DMM_ALO","DMM_AHI"), c("DC_+25V","DC_COM"), c("DC_-25V","DC_COM"),
+                c("DC_+6V","DC_COM"))
     nodes <- unique(c(df$V3,df$V4))
     multimetre <- nodesf1
     nodes <- gsub(nodesf1,"", nodes)
