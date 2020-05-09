@@ -514,7 +514,26 @@ for (i in 1:nrow(dfVISIR_accionesCircuito)){
 df_milestone <- data.frame(CircuitoNormalizado=dfVISIR_accionesCircuito$CircuitoNormalizado,
                            CircuitoSignificativo=dfVISIR_accionesCircuito$CircuitoSignificativo,
                            Resultado=dfVISIR_accionesCircuito$Resultado,
-                           Voltaje=dfVISIR_accionesCircuito$Voltaje)
+                           Voltaje=dfVISIR_accionesCircuito$Voltaje,
+                           Circuito=dfVISIR_accionesCircuito$Circuito,
+                           Medida=dfVISIR_accionesCircuito$Medida)
+
+df_milestone$XML <- paste("<circuito>", df_milestone$Circuito,"</circuito>",
+                          "<circuitoNormalizado>", df_milestone$CircuitoNormalizado, "</circuitoNormalizado>",
+                          "<circuitoSignificativo>", df_milestone$CircuitoSignificativo, "</circuitoSignificativo>",
+                          "<resultado>",df_milestone$Resultado,"</resultado",
+                          "<voltaje>", df_milestone$Voltaje, "</voltaje>",
+                          "<medida>", df_milestone$Medida, "</medida>", sep="")
+
+milestone <- paste("<circuito>", df_milestone$Circuito,"</circuito>",
+                   "<circuitoNormalizado>", df_milestone$CircuitoNormalizado, "</circuitoNormalizado>",
+                   "<circuitoSignificativo>", df_milestone$CircuitoSignificativo, "</circuitoSignificativo>",
+                   "<resultado>",df_milestone$Resultado,"</resultado",
+                   "<voltaje>", df_milestone$Voltaje, "</voltaje>",
+                   "<medida>", df_milestone$Medida, "</medida>", sep="")
+
+write.csv(milestone, file="milestone.csv")
+
 
 
 ## Duda para enviar a Javier (DEUSTO) ##
