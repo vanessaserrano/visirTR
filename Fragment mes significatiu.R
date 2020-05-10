@@ -102,6 +102,19 @@ fragmentoSignificativo <- function(circuito){
       }
 
       circuito_prin <- paste(componentes, collapse = "/")
+      
+      componentes <- strsplit(circuito_prin,"/",fixed=TRUE)[[1]]
+      for(i in 1:length(componentes)) {
+        conectores <- strsplit(componentes[i], " ")[[1]]
+        
+        if(conectores[2]==conectores[3]) {
+          componentes[i] <- ""
+        }
+      }
+      componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
+      circuito_prin <- paste(componentes, collapse="/")  
+      circuito_prin <- gsub("^/*","",circuito_prin)
+      
       return(circuito_prin)
       
   } else {
@@ -110,9 +123,19 @@ fragmentoSignificativo <- function(circuito){
 }
 
 
+
 # Prueba
 #for (i in 1:3){
 #  circuito$B[i] <- fragmentoSignificativo(as.character(circuito$A[i]))
 #}
 
-#fragmentoSignificativo("R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 1k/W_X DC_+25V DMM_AHI/W_X DC_COM GND")
+#fragmentoSignificativo("R_X DC_+25V DMM_ALO 1k/R_X GND GND 1k/W_X DC_+25V DMM_AHI/W_X DC_COM GND")
+
+#inFile <- list(datapath="CircNorm_1o2R_val.txt")
+#df <- read.table(inFile$datapath, header=T, sep=",", quote="\"", stringsAsFactors = FALSE)
+
+#df$Simpl[1] <- fragmentoSignificativo(df$CircuitoNormalizado[1])
+
+#for (i in 2:nrow(df)){
+#  df$Simpl[i] <- fragmentoSignificativo(df$CircuitoNormalizado[i])
+#}
