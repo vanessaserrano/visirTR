@@ -471,20 +471,26 @@ circ_norm <- c("R_X DC_+25V DMM_AHI 1k/R_X DC_+25V DMM_ALO 1k/R_X DMM_ALO GND 10
 dfHISTO <- data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
                   Resultado = dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
                   Voltaje = dfVISIR_accionesCircuito$Voltaje[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
-                  Resolucion = dfVISIR_accionesCircuito$Resolucion[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]])
+                  Resolucion = dfVISIR_accionesCircuito$Resolucion[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]],
+                  Medida = dfVISIR_accionesCircuito$Medida[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[1]])
 
 for (i in 2:length(circ_norm)) {
   dfHISTO <- rbind(dfHISTO, data.frame(Normalizado = dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
                                Resultado = (dfVISIR_accionesCircuito$Resultado[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]]),
                    Voltaje = dfVISIR_accionesCircuito$Voltaje[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
-                   Resolucion = dfVISIR_accionesCircuito$Resolucion[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]]))
+                   Resolucion = dfVISIR_accionesCircuito$Resolucion[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]],
+                   Medida = dfVISIR_accionesCircuito$Medida[dfVISIR_accionesCircuito$CircuitoNormalizado==circ_norm[i]]))
 }
   
+
 #table(dfVISIR_accionesCircuito$CircuitoNormalizado[dfVISIR_accionesCircuito$CircuitoNormalizado %in% circ_norm])
 #sort(unique(dfVISIR_accionesCircuito$CircuitoNormalizado))[1001:2000]
 
 dfHISTO$Relacion_Resultado_Voltaje <- dfHISTO$Resultado / dfHISTO$Voltaje
 dfHISTO <- dfHISTO[!is.na(dfHISTO$Normalizado),]
+dfHISTO_R <- dfHISTO[dfHISTO$Medida=="resis",]
+dfHISTO_A <- dfHISTO[dfHISTO$Medida=="dc cu",]
+dfHISTO_V <- dfHISTO[dfHISTO$Medida=="dc vo",]
 
 nombres <- c("Circuit 1.1","Circuit 1.2","Circuit 1.3","Circuit 1.4","Circuit 1.5","Circuit 1.6",
              "Circuit 1.7","Circuit 1.8","Circuit 1.9","Circuit 1.10","Circuit 1.11","Circuit 1.12","Circuit 1.13",
