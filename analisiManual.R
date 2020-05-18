@@ -524,32 +524,32 @@ df_milestone <- data.frame(CircuitoNormalizado=dfVISIR_accionesCircuito$Circuito
                            Circuito=dfVISIR_accionesCircuito$Circuito,
                            Medida=dfVISIR_accionesCircuito$Medida)
 
-df_milestone$XML <- paste("<circuito>", df_milestone$Circuito,"</circuito>",
-                          "<circuitoNormalizado>", df_milestone$CircuitoNormalizado, "</circuitoNormalizado>",
-                          "<circuitoSignificativo>", df_milestone$CircuitoSignificativo, "</circuitoSignificativo>",
-                          "<resultado>",df_milestone$Resultado,"</resultado",
-                          "<voltaje>", df_milestone$Voltaje, "</voltaje>",
-                          "<medida>", df_milestone$Medida, "</medida>", sep="")
+df_milestone$XML <- paste("<circuit>", df_milestone$Circuito,"</circuit>",
+                          "<normalizedCircuit>", df_milestone$CircuitoNormalizado, "</normalizedCircuit>",
+                          "<simplifiedCircuit>", df_milestone$CircuitoSignificativo, "</simplifiedCircuit>",
+                          "<result>",df_milestone$Resultado,"</result>",
+                          "<voltage>", df_milestone$Voltaje, "</voltage>",
+                          "<measure>", df_milestone$Medida, "</measure>", sep="")
 
-milestone <- paste("<circuito>", df_milestone$Circuito,"</circuito>",
-                   "<circuitoNormalizado>", df_milestone$CircuitoNormalizado, "</circuitoNormalizado>",
-                   "<circuitoSignificativo>", df_milestone$CircuitoSignificativo, "</circuitoSignificativo>",
-                   "<resultado>",df_milestone$Resultado,"</resultado",
-                   "<voltaje>", df_milestone$Voltaje, "</voltaje>",
-                   "<medida>", df_milestone$Medida, "</medida>", sep="")
+milestone <- paste("<circuit>", df_milestone$Circuito,"</circuit>",
+                   "<normalizedCircuit>", df_milestone$CircuitoNormalizado, "</normalizedCircuit>",
+                   "<simplifiedCircuit>", df_milestone$CircuitoSignificativo, "</simplifiedCircuit>",
+                   "<result>",df_milestone$Resultado,"</result>",
+                   "<voltage>", df_milestone$Voltaje, "</voltage>",
+                   "<measure>", df_milestone$Medida, "</measure>", sep="")
 
-write.csv(milestone, file="milestone.csv")
+#write.csv(milestone, file="milestone.csv")
 
 
 
 ## Duda para enviar a Javier (DEUSTO) ##
 # aaa <- dfHISTO[dfHISTO$Normalizado=="R_X DC_+25V DMM_VLO 1k/R_X DC_+25V GND 1k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",]
 
-df_2 <- dfVISIR_accionesCircuito[dfVISIR_accionesCircuito$CircuitoNormalizado=="R_X DC_+25V DMM_VLO 1k/R_X DC_+25V GND 1k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",]
-df_Circ6 <- data.frame(Circuito=df_2$Circuito, CircuitoNormalizado=df_2$CircuitoNormalizado, Resultado=df_2$Resultado,
-                       Voltaje=df_2$Voltaje, Resolución=df_2$Resolucion)
-df_Circ6$Relación_Resulrado_Voltaje <- df_Circ6$Resultado / df_Circ6$Voltaje
-df_Circ6 <- df_Circ6[!is.na(df_Circ6$Circuito),]
+#df_2 <- dfVISIR_accionesCircuito[dfVISIR_accionesCircuito$CircuitoNormalizado=="R_X DC_+25V DMM_VLO 1k/R_X DC_+25V GND 1k/R_X DMM_VLO GND 10k/W_X DC_+25V DMM_VHI/W_X DC_COM GND",]
+#df_Circ6 <- data.frame(Circuito=df_2$Circuito, CircuitoNormalizado=df_2$CircuitoNormalizado, Resultado=df_2$Resultado,
+#                       Voltaje=df_2$Voltaje, Resolución=df_2$Resolucion)
+#df_Circ6$Relación_Resulrado_Voltaje <- df_Circ6$Resultado / df_Circ6$Voltaje
+#df_Circ6 <- df_Circ6[!is.na(df_Circ6$Circuito),]
 
-write.csv(df_Circ6, file="Circ_6.csv")
+#write.csv(df_Circ6, file="Circ_6.csv")
 
