@@ -48,6 +48,9 @@ ui <- dashboardPage(
         menuSubItem("Common Circuits",tabName = "common-circuits")),
       menuItem("User-specific Results",icon = icon("folder"), startExpanded  = TRUE,
         menuSubItem("User Results",tabName = "usresults")),
+      menuItem("Milestones",icon = icon("folder"), startExpanded  = TRUE,
+               menuSubItem("Obs_milestones",tabName = "obs_mil"),
+               menuSubItem("Ev_milestones",tabName = "ev_mil")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
      
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
@@ -78,7 +81,7 @@ ui <- dashboardPage(
       
       }")
     ),
-    
+  
     
     #boxes to be put in a row (or column)
     tabItems(
@@ -93,8 +96,11 @@ ui <- dashboardPage(
           box(
             title = "Information", width = 4, solidHeader = TRUE,
             "To start, load user traces by pressing button Browse"
+          ),
+          mainPanel(
+            verbatimTextOutput("milestonesData",placeholder=TRUE),
+            verbatimTextOutput("evmilestonesData",placeholder=TRUE)
           )
-          
           ),
           fluidRow(
           valueBoxOutput("numStudents",width = 3),

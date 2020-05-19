@@ -74,6 +74,90 @@ shinyServer(function(input, output, session) {
   })
 
   
+  
+  #Yes Milestones
+  dfMilestonesDef<-reactive({
+    inFile <- input$obsMilestonesImport
+    if (is.null(inFile)) return(NULL) else
+      return(read.table(inFile$datapath, header=TRUE, sep="\t", quote=""))
+  })
+  
+  dfActionsMilestones <- reactive({
+    inFile <- input$obsMilestonesImport
+    if (is.null(inFile)) return(NULL) else
+      generatedfActionsMilestones(dfActions(), dfMilestonesDef())
+  })
+  
+  dfStudentsMilestones <- reactive({
+    inFile <- input$obsMilestonesImport
+    if (is.null(inFile)) return(NULL) else
+      if(input$checkbox) {
+        generatedfUsersMilestones(dfActionsMilestones(), dfMilestonesDef())
+      } else {
+        generatedfFilesMilestones(dfActionsMilestones(), dfMilestonesDef())
+      }
+  })
+  
+  dfMilestonesEvDef<-reactive({
+    inFile <- input$evMilestonesImport
+    if (is.null(inFile)) return(NULL) else
+      return(read.table(inFile$datapath, header=TRUE, sep="\t", quote=""))
+  })
+  
+  dfStudentsMilestonesEv <- reactive({
+    generatedStudentsMilestonesEv(dfStudentsMilestones(),dfMilestonesEvDef())
+  })
+  
+  dfOIColors <- reactive({
+    getdfOIColors(dfMilestonesDef(),dfMilestonesEvDef())
+  })
+  
+  dfObsItemsLong <- reactive({
+    dfObsLong <- dfActionsMilestones()
+    if(is.null(dfObsLong)) return(NULL)
+    
+    if(input$checkbox) 
+      dfObsLong <- rename(dfObsLong,student=user) %>% select(-filename)
+    else
+      dfObsLong <- rename(dfObsLong,student=filename) %>% select(-user)
+    
+    dfObsLong <- dfObsLong %>% 
+      select(-application,-action,-session,-type,-param_name,-xml,
+             -param_value,-diff_time,-xml_cum) %>% 
+      gather("milestone","check",-(1:5)) %>% filter(check==TRUE) %>% 
+      select(-check)
+    dfObsLong <- dfObsLong %>% arrange(student,number)
+    
+    dfObsLong$numMil <- 1
+    for(i in 2:nrow(dfObsLong)) {
+      dfObsLong$numMil[i] <- 
+        ifelse(dfObsLong$student[i]==dfObsLong$student[i-1],
+               dfObsLong$numMil[i-1]+1,1)
+    }
+    dfObsLong
+  })
+  
+  
+## Data input milestones ##
+  output$milestonesData <- renderText({
+    if(is.null(dfMilestonesDef())) {
+      "Observation milestones definition not yet loaded!"
+    } else {
+      paste("Read observation milestones: ",nrow(dfMilestonesDef()),
+            " milestones (", paste(dfMilestonesDef()[,1],collapse = ", ") ,")", sep="")
+    }
+  })
+  output$evmilestonesData <- renderText({
+    if(is.null(dfMilestonesEvDef())) {
+      "Evaluation milestones not loaded. Observation milestones will be used for evaluation."
+    } else {
+      paste("Read evaluation milestones: ",nrow(dfMilestonesEvDef()),
+            " milestones (", paste(dfMilestonesEvDef()[,1],collapse = ", ") ,")", sep="")
+    }
+  })
+  
+  
+  
 #### GLOBAL RESULTS ####
 ### >> TIME ####
 ## Total Time vs Date (Dygraph) ####
@@ -869,3 +953,4 @@ shinyServer(function(input, output, session) {
   
   
 })
+
