@@ -3,7 +3,7 @@ options(install.packages.check.source = "no")
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","DT","gplots",
          "xts","dygraphs","scales",
-         "formattable","treemap","viridis","cat")
+         "formattable","treemap","viridis","cat","gsubfn")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/",
