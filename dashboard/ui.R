@@ -86,7 +86,9 @@ ui <- dashboardPage(
               fluidRow(
           box(title = "Data Input", status = "warning", solidHeader = TRUE,width = 4,
               collapsible = TRUE,
-              fileInput('logsImport', 'Log Files')
+              fileInput('logsImport', 'Log Files'),
+              fileInput('obsMilestonesImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
+              fileInput('evMilestonesImport', 'Evaluation Items (optional)', accept = c('text/plain','.txt'))
           ),
           box(
             title = "Information", width = 4, solidHeader = TRUE,
