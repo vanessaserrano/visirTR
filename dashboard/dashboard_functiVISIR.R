@@ -376,7 +376,7 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
   
   # Datos XML para ser analizados con milestones
   dfVISIR_accionesCircuito$XML <- paste("<circuit>", dfVISIR_accionesCircuito$Circuito,"</circuit>",
-                            "<normalizedCircuit>", dfVISIR_accionesCircuitoe$CircuitoNormalizado, "</normalizedCircuit>",
+                            "<normalizedCircuit>", dfVISIR_accionesCircuito$CircuitoNormalizado, "</normalizedCircuit>",
                             "<simplifiedCircuit>", dfVISIR_accionesCircuito$CircuitoSimplificado, "</simplifiedCircuit>",
                             "<result>",dfVISIR_accionesCircuito$Resultado,"</result>",
                             "<voltage>", dfVISIR_accionesCircuito$Voltaje, "</voltage>",
