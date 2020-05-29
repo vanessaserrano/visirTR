@@ -49,8 +49,8 @@ ui <- dashboardPage(
       menuItem("User-specific Results",icon = icon("folder"), startExpanded  = TRUE,
         menuSubItem("User Results",tabName = "usresults")),
       menuItem("Milestones",icon = icon("folder"), startExpanded  = TRUE,
-               menuSubItem("Obs_milestones",tabName = "obs_mil"),
-               menuSubItem("Ev_milestones",tabName = "ev_mil")),
+               menuSubItem("Observation Items",tabName = "obs_items"),
+               menuSubItem("Evaluation Milestones",tabName = "ev_mil")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
      
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
@@ -90,8 +90,8 @@ ui <- dashboardPage(
           box(title = "Data Input", status = "warning", solidHeader = TRUE,width = 4,
               collapsible = TRUE,
               fileInput('logsImport', 'Log Files'),
-              fileInput('obsMilestonesImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
-              fileInput('evMilestonesImport', 'Evaluation Items (optional)', accept = c('text/plain','.txt'))
+              fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
+              fileInput('evMilestonesImport', 'Evaluation Milestones (optional)', accept = c('text/plain','.txt'))
           ),
           box(
             title = "Information", width = 4, solidHeader = TRUE,
