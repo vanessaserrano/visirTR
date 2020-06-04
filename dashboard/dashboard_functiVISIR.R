@@ -576,6 +576,36 @@ FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
   return(zz)
 }
 
+FunctionTimeStudSimpl <- function (dfVISIR_acciones,dfActionCircuit) {
+  numAcciones<-nrow(dfVISIR_acciones)
+  
+  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+    order(dfVISIR_acciones$Alumno,
+          dfVISIR_acciones$FechaHoraEnvio),]
+  
+  #Parte Tiempo
+  TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
+    summarise(TotalTime=max(Time))
+  TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
+  TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
+  
+  #Parte Circuitos
+  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%  group_by(Alumno) %>% 
+    summarise(NumCircu=length(unique(CircuitoSimplificado)))
+  
+  # Mix Both Data Frames (Student Circuits Time)
+  zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
+  zz$TotalTime <- as.numeric(zz$TotalTime)
+  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
+  MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
+  
+  zz$NumCircu <- as.numeric(zz$NumCircu)
+  zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
+  zz$Evaluation <- as.factor(zz$Evaluation)
+  
+  return(zz)
+}
 
 FunctionMTS <- function (dfVISIR_acciones) {
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[

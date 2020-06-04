@@ -27,6 +27,7 @@ shinyServer(function(input, output, session) {
   dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
   dftimeuserdate <- reactive({fplotlyfunc3(dfMTS())})
   dfStudTimeNorm <- reactive({FunctionTimeStudNorm(dfImport(),dfActionCircuit())})
+  dfStudTimeSimpl <- reactive({FunctionTimeStudSimpl(dfImport(),dfActionCircuit())})
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
     tab <- tab[order(-tab)]
@@ -524,11 +525,18 @@ shinyServer(function(input, output, session) {
 ### >> NUMBER OF NORMALIZED CIRCUITS VS TIME ON TASK ####
   output$nActionsVStoTnorm <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-    ggplot(dfStudTimeNorm(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) + 
+    g <- ggplot(dfStudTimeNorm(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) + 
       labs(x = "Time (in h)", y = "Number of Normalized Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTimeNorm()$NumCircu), color="#fbada7")+
       geom_vline(xintercept = mean(dfStudTimeNorm()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$NumCircu),digits = 2),hjust = -15.5))+
       geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$TotalTime),digits = 2),vjust = -3.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
-  })
+  
+    if(input$simplified_time) g <- ggplot(dfStudTimeSimpl(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) + 
+      labs(x = "Time (in h)", y = "Number of Simplified Normalized Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTimeNorm()$NumCircu), color="#fbada7")+
+      geom_vline(xintercept = mean(dfStudTimeSimpl()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTimeSimpl()$TotalTime), y= mean(dfStudTimeSimpl()$NumCircu), label=round(mean(dfStudTimeSimpl()$NumCircu),digits = 2),hjust = -15.5))+
+      geom_text(aes(x = mean(dfStudTimeSimpl()$TotalTime), y= mean(dfStudTimeSimpl()$NumCircu), label=round(mean(dfStudTimeSimpl()$TotalTime),digits = 2),vjust = -3.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+    g
+    })
+  
 
   output$plotuinActnorm <- renderUI({
     if(is.null(dfImport())) return(NULL)
@@ -546,6 +554,14 @@ shinyServer(function(input, output, session) {
     dat$toT <- dfStudTimeNorm()$TotalTime
     dat$nAc <- dfStudTimeNorm()$NumCircu
     dat <- as.data.frame(dat)
+    g <- "Number of Normalized Circuits:"
+    
+    if(input$simplified_time) {dat <- data.frame(ids=dfStudTimeSimpl()$Alumno)
+    dat$toT <- dfStudTimeSimpl()$TotalTime
+    dat$nAc <- dfStudTimeSimpl()$NumCircu
+    dat <- as.data.frame(dat)
+    g <- "Number of Simplified Normalized Circuits:"
+    }
     
     res <- nearPoints(dat, input$plot_hovernAct, 
                       xvar = "toT", yvar = "nAc",
@@ -559,7 +575,7 @@ shinyServer(function(input, output, session) {
       return ("Place your mouse over a data point to identify the user.\n\n") 
     else
       return (paste("User Id:",response[1],"\n",
-                    "Number of Normalized Circuits:",responsec[1],"\n",
+                    g,responsec[1],"\n",
                     "Time (in h):",responset[1]))
   })
 
