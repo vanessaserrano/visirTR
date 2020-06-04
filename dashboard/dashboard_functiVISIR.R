@@ -612,6 +612,13 @@ distnumcircN <- function(dfActionCircuit){
   return(CircByStudentDN)
 }
 
+# Circuito Simplificado #
+distnumcircS <- function(dfActionCircuit){
+  CircByStudentDS <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
+  return(CircByStudentDS)
+}
+
 ### >> GRAPHS ####
 ## Time vs Date ####
 Dygraphfunc <- function(dfMTS) {
@@ -875,6 +882,33 @@ InfovalueBoxMinT <- function(dfOrderTime){
   return(mintime)
 }
 
+# Distribución Circuito Simplificado #
+InfovalueBoxSC <- function(dfActionCircuit){
+  Ancircu <-dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.))
+  NumncircuVC<-length(unique(Ancircu$CircuitoSimplificado))
+  return(NumncircuVC)
+}
+
+InfovalueBoxMSC <- function(dfActionCircuit){
+  MeanNNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numncirc=length(unique(CircuitoSimplificado)))
+  MeanNumNCircSV <- round(mean(MeanNNAcircu$Numncirc),digits = 2)
+  return(MeanNumNCircSV)
+}
+
+InfovalueBoxlowboundS <- function(dfActionCircuit){
+  lowboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
+  mincircunv <- min(lowboundfN$CircuitoSimplificado)
+  return(mincircunv)
+}
+
+InfovalueBoxupboundS <- function(dfActionCircuit){
+  upboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
+  maxcircnv <- max(upboundfN$CircuitoSimplificado)
+  return(maxcircnv)
+}
 
 
 

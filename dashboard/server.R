@@ -405,43 +405,72 @@ shinyServer(function(input, output, session) {
 ## Circuitos normalizados únicos ####
   # Total number of normalized circuits
   output$umuniqnormcirc<-  renderValueBox({
-    valueBox(
+    g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
       "Total Number of Circuits",color = "blue")
+    
+    if(input$simplified_distribution) g <- valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxSC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Total Number of Circuits",color = "blue")
+    g
+
   })
   
 
   #Mean number of circuits by student  
   output$Meannumuniqnormcircst<-  renderValueBox({
-    valueBox(
+    g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxMNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
       "Mean Number Circuits per User",color = "blue")
+    
+    if(input$simplified_distribution) g <- valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxMSC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Mean Number Circuits per User",color = "blue")
+    g
   })
 
   #Low bound 
   
   output$lowboundN<-  renderValueBox({
-    valueBox(
+    g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxlowboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
       "Minimum circuits performed",color = "blue")
+    
+    if(input$simplified_distribution) g <- valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxlowboundS(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Minimum circuits performed",color = "blue")
+    g
   })
   
   #Upper bound 
   
   output$upboundN<-  renderValueBox({
-    valueBox(
+    g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxupboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
       "Maximum circuits performed",color = "blue")
+    
+    if(input$simplified_distribution) g <- valueBox(
+      value=tags$p(ifelse(is.null(dfImport()),"--",
+                          InfovalueBoxupboundS(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
+      "Maximum circuits performed",color = "blue")
+    g
   })
 
   
   output$circdistN <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-    plotDistribution(distnumcircN(dfActionCircuit())$CircuitoNormalizado, xlabel="Normalized Circuits per User")
+    g <- plotDistribution(distnumcircN(dfActionCircuit())$CircuitoNormalizado, xlabel="Normalized Circuits per User")
+    
+    if(input$simplified_distribution) g <- plotDistribution(distnumcircS(dfActionCircuit())$CircuitoSimplificado, 
+                                                            xlabel="Simplified Normalized Circuits per User")
+    g
   })
   
 ## Circuits per date ####
