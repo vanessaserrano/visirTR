@@ -49,6 +49,11 @@ shinyServer(function(input, output, session) {
     data.frame(Student = names(tab), TimesTested = as.integer(tab), stringsAsFactors = FALSE) 
   }) 
   
+  tabSCircuits <- reactive({
+    tab <- table(na.omit(dfActionCircuit()$CircuitoSimplificado))
+    tab <- tab[order(-tab)]
+    data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
+  })
 
 #### DATA INPUT ####
   output$numStudents <- renderValueBox({
@@ -584,7 +589,10 @@ shinyServer(function(input, output, session) {
 ## Common circuits ####
   output$cc_circuits <- renderDataTable({
     if(is.null(dfImport())) return(NULL)
-    datatable(tabNCircuits())
+    g <- datatable(tabNCircuits())
+    
+    if(input$simplified_common) g <- datatable(tabSCircuits())
+    g
   })
 
 ## Circuit in timeline ####
