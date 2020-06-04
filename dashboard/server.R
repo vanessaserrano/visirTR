@@ -536,7 +536,7 @@ shinyServer(function(input, output, session) {
       geom_text(aes(x = mean(dfStudTimeNorm()$TotalTime), y= mean(dfStudTimeNorm()$NumCircu), label=round(mean(dfStudTimeNorm()$TotalTime),digits = 2),vjust = -3.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   
     if(input$simplified_time) g <- ggplot(dfStudTimeSimpl(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) + 
-      labs(x = "Time (in h)", y = "Number of Simplified Normalized Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTimeNorm()$NumCircu), color="#fbada7")+
+      labs(x = "Time (in h)", y = "Number of Simplified Normalized Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTimeSimpl()$NumCircu), color="#fbada7")+
       geom_vline(xintercept = mean(dfStudTimeSimpl()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTimeSimpl()$TotalTime), y= mean(dfStudTimeSimpl()$NumCircu), label=round(mean(dfStudTimeSimpl()$NumCircu),digits = 2),hjust = -15.5))+
       geom_text(aes(x = mean(dfStudTimeSimpl()$TotalTime), y= mean(dfStudTimeSimpl()$NumCircu), label=round(mean(dfStudTimeSimpl()$TotalTime),digits = 2),vjust = -3.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
     g
@@ -781,6 +781,7 @@ shinyServer(function(input, output, session) {
       g,color = "blue"))
     else { 
       df4 <-dfStudTimeNorm() %>%  select(Alumno,NumCircu)
+      
       if(input$simplified_summary) {df4 <- dfStudTimeSimpl() %>%  select(Alumno,NumCircu)
       g <- "Simplified Normalized Circuits"
       }
