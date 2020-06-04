@@ -775,12 +775,15 @@ shinyServer(function(input, output, session) {
   
 
   output$numnormcircuit <- renderValueBox({
+    g <- "Normalized Circuits"
     if(is.null(dfImport())) return( valueBox(
       "--", 
-      "Normalized Circuits",color = "blue"))
+      g,color = "blue"))
     else { 
       df4 <-dfStudTimeNorm() %>%  select(Alumno,NumCircu)
-    
+      if(input$simplified_summary) {df4 <- dfStudTimeSimpl() %>%  select(Alumno,NumCircu)
+      g <- "Simplified Normalized Circuits"
+      }
       df4$co <- "YES"  
       df4$co[df4$Alumno != input$ns_student] <- NA
       
@@ -788,9 +791,10 @@ shinyServer(function(input, output, session) {
       
       valueBox(
         value = df4$NumCircu, 
-        "Normalized Circuits",color = "blue")
+        g,color = "blue")
     }
   })
+
   
   
   output$numresist <- renderValueBox({
