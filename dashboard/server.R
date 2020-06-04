@@ -938,6 +938,26 @@ shinyServer(function(input, output, session) {
     
     names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuits'
     names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+    
+    if(input$simplified_list) {
+      
+      df5 <-dfActionCircuit() %>%  select(Alumno,CircuitoSimplificado)
+      
+      df5$scl <-dfActionCircuit()$Alumno == input$ns_student
+      
+      df5$co <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
+                              NA))
+      
+      df5<- df5 %>% select(Alumno,CircuitoSimplificado,co)%>% filter(complete.cases(.))
+      
+      df5 <- df5 %>% group_by(Alumno,CircuitoSimplificado) %>% summarise(TimTes=length(CircuitoSimplificado)) 
+      
+      df5 <- df5 %>%arrange(desc(TimTes)) %>%
+        ungroup(Alumno,CircuitoSimplificado) %>% select(CircuitoSimplificado,TimTes)
+      
+      names(df5)[names(df5) == 'CircuitoSimplificado'] <- 'Simplified Normalized Circuits'
+      names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+    }
    
     datatable(df5)
   })
