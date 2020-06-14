@@ -54,6 +54,12 @@ shinyServer(function(input, output, session) {
     tab <- tab[order(-tab)]
     data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
   })
+  
+  tabS1Circuits <- reactive({
+    tab <- table(na.omit(dfActionCircuit()$CircuitoSimplificado))
+    tab <- tab[order(-tab)]
+    data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
+  })
 
 #### DATA INPUT ####
   output$numStudents <- renderValueBox({
@@ -414,12 +420,12 @@ shinyServer(function(input, output, session) {
     g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Total Number of Circuits",color = "blue")
+      "Total",color = "blue")
     
     if(input$simplified_distribution) g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxSC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Total Number of Circuits",color = "blue")
+      "Total",color = "blue")
     g
 
   })
@@ -430,12 +436,12 @@ shinyServer(function(input, output, session) {
     g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxMNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Mean Number Circuits per User",color = "blue")
+      "Mean",color = "blue")
     
     if(input$simplified_distribution) g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxMSC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Mean Number Circuits per User",color = "blue")
+      "Mean",color = "blue")
     g
   })
 
@@ -445,12 +451,12 @@ shinyServer(function(input, output, session) {
     g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxlowboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Minimum circuits performed",color = "blue")
+      "Minimum",color = "blue")
     
     if(input$simplified_distribution) g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxlowboundS(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Minimum circuits performed",color = "blue")
+      "Minimum",color = "blue")
     g
   })
   
@@ -460,12 +466,12 @@ shinyServer(function(input, output, session) {
     g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxupboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Maximum circuits performed",color = "blue")
+      "Maximum",color = "blue")
     
     if(input$simplified_distribution) g <- valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxupboundS(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Maximum circuits performed",color = "blue")
+      "Maximum",color = "blue")
     g
   })
 
@@ -598,10 +604,10 @@ shinyServer(function(input, output, session) {
 ## Circuit in timeline ####
   output$ct_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
-    if(is.null(tabNCircuits())) 
+    if(is.null(tabSCircuits())) 
       return(selectInput("ct_circuit", "Select a circuit...", c("No data available")))
     else {
-      return(selectInput("ct_circuit", "Select a circuit...", tabNCircuits()$Circuit))
+      return(selectInput("ct_circuit", "Select a circuit...", tabSCircuits()$Circuit))
     }})
   
   output$ct_plotu_chart <- renderPlot({
@@ -612,7 +618,7 @@ shinyServer(function(input, output, session) {
     if(is.null(input$ct_circuit)) {
       grafdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
     } else {
-      grafdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ct_circuit
+      grafdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ct_circuit
     }
     g <- ggplot(grafdata, aes(x = Alumno, y = Time,
                                        color = sel,shape= sel)) + 
@@ -662,10 +668,10 @@ shinyServer(function(input, output, session) {
   ## Number of Circuits vs User ####
   output$ntc_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
-    if(is.null(tabN1Circuits())) 
+    if(is.null(tabS1Circuits())) 
       return(selectInput("ncu_circuit", "Select a circuit...", c("No data available")))
     else {
-      return(selectInput("ncu_circuit", "Select a circuit...", tabN1Circuits()$Circuit))
+      return(selectInput("ncu_circuit", "Select a circuit...", tabS1Circuits()$Circuit))
     }})
   
   output$ntc_plotu_chart <- renderPlot({
@@ -675,7 +681,7 @@ shinyServer(function(input, output, session) {
     if(is.null(input$ct_circuit)) {
       grafntcdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
     } else {
-      grafntcdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ncu_circuit
+      grafntcdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ncu_circuit
     
       grafntcdata <- grafntcdata %>% select(Alumno,sel)
       grafntcdata <- grafntcdata %>% group_by(Alumno) %>% summarise(Len=sum(sel,na.rm=TRUE))
@@ -782,9 +788,6 @@ shinyServer(function(input, output, session) {
     else { 
       df4 <-dfStudTimeNorm() %>%  select(Alumno,NumCircu)
       
-      if(input$simplified_summary) {df4 <- dfStudTimeSimpl() %>%  select(Alumno,NumCircu)
-      g <- "Simplified Normalized Circuits"
-      }
       df4$co <- "YES"  
       df4$co[df4$Alumno != input$ns_student] <- NA
       
@@ -796,6 +799,25 @@ shinyServer(function(input, output, session) {
     }
   })
 
+  
+  output$numsimplcircuit <- renderValueBox({
+    g <- "Simplified Normalized Circuits"
+    if(is.null(dfImport())) return( valueBox(
+      "--", 
+      g,color = "blue"))
+    else { 
+      df4 <- dfStudTimeSimpl() %>%  select(Alumno,NumCircu)
+    
+      df4$co <- "YES"  
+      df4$co[df4$Alumno != input$ns_student] <- NA
+      
+      df4 <- df4 %>% select(Alumno,NumCircu,co) %>% filter(complete.cases(.))
+      
+      valueBox(
+        value = df4$NumCircu, 
+        g,color = "blue")
+    }
+  })
   
   
   output$numresist <- renderValueBox({

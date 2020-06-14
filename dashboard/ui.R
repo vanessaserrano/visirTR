@@ -162,14 +162,17 @@ ui <- dashboardPage(
                                             height=540, width=12))),
                      tabPanel("Normalized Circuits Distribution", 
                               fluidRow(
+                                box(status="primary",checkboxInput("simplified_distribution","Simplified normalized circuit"),
+                                    width = 3)),
+                              fluidRow(
                                 valueBoxOutput("umuniqnormcirc",width = 3),
                                 valueBoxOutput("Meannumuniqnormcircst",width = 3),
                                 valueBoxOutput("lowboundN",width = 3),
                                 valueBoxOutput("upboundN",width = 3)
                               ),
                               fluidRow(
-                                box(status="primary",checkboxInput("simplified_distribution","Simplified circuit"),
-                                    plotOutput("circdistN"), height=480, width=12)
+                                box(status="primary",
+                                    plotOutput("circdistN"), height=390, width=12)
                               )  
                      )
               )
@@ -185,7 +188,7 @@ ui <- dashboardPage(
           
           tabPanel( "Normalized Circuits vs Time",
             fluidRow(
-              box(status="primary",checkboxInput("simplified_time","Simplified circuit"),
+              box(status="primary",checkboxInput("simplified_time","Simplified normalized circuit"),
                   uiOutput("plotuinActnorm"),verbatimTextOutput("plot_pointsnActnorm"), height=480, width=12)
             )
           )
@@ -197,7 +200,7 @@ ui <- dashboardPage(
           tabBox(height=480, width=12,
                  tabPanel("Common Circuits",
                           fluidRow(box(status="primary",
-                                       checkboxInput("simplified_common","Simplified circuit"),
+                                       checkboxInput("simplified_common","Simplified normalized circuit"),
                                        dataTableOutput("cc_circuits"), 
                                        height=480, width=12))
                  ),
@@ -224,19 +227,22 @@ ui <- dashboardPage(
           fluidRow(
             box( status = "primary",
                 collapsible = TRUE,
-                htmlOutput("spr_selectStudent")
+                htmlOutput("spr_selectStudent"), height=750, width=12
             
   ,
   tabBox(height=540, width=12,
          tabPanel("Summary",
-                  fluidRow(checkboxInput("simplified_summary","Simplified circuit"), width = 12,
+                  fluidRow(
   valueBoxOutput("numStudActions",width = 3),
   valueBoxOutput("timstud",width = 3),
-  valueBoxOutput("numcircuit",width = 3),
-  valueBoxOutput("numnormcircuit",width = 3)),
+  valueBoxOutput("numcircuit",width = 3)),
   
   fluidRow(
-    valueBoxOutput("numresist",width = 3),  
+    valueBoxOutput("numnormcircuit",width = 3),
+    valueBoxOutput("numsimplcircuit",width = 3),
+    valueBoxOutput("numresist",width = 3)),
+  
+  fluidRow(
     valueBoxOutput("numcurr",width = 3),
     valueBoxOutput("numvoltag",width = 3),
     valueBoxOutput("numerror",width = 3)
@@ -250,7 +256,7 @@ ui <- dashboardPage(
         tabPanel("List of Normalized Ciruits",
                  
                  fluidRow(box(status="primary",
-                              checkboxInput("simplified_list","Simplified circuit"),
+                              checkboxInput("simplified_list","Simplified normalized circuit"),
                               dataTableOutput("lcn_circuits"), 
                               height=480, width=12))),
   
