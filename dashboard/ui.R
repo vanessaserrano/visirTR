@@ -163,7 +163,7 @@ ui <- dashboardPage(
                      tabPanel("Normalized Circuits Distribution", 
                               fluidRow(
                                 box(status="primary",checkboxInput("simplified_distribution","Simplified normalized circuit"),
-                                    width = 3)),
+                                    width = 12)),
                               fluidRow(
                                 valueBoxOutput("umuniqnormcirc",width = 3),
                                 valueBoxOutput("Meannumuniqnormcircst",width = 3),
