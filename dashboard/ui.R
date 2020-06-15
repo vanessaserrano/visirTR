@@ -49,8 +49,8 @@ ui <- dashboardPage(
       menuItem("User-specific Results",icon = icon("folder"), startExpanded  = TRUE,
         menuSubItem("User Results",tabName = "usresults")),
       menuItem("Milestones",icon = icon("folder"), startExpanded  = TRUE,
-               menuSubItem("Observation Items",tabName = "obs_items"),
-               menuSubItem("Evaluation Milestones",tabName = "ev_mil")),
+               menuSubItem("Observation Items",tabName = "obsitems"),
+               menuSubItem("Evaluation Milestones",tabName = "evmil")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
      
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
@@ -276,11 +276,26 @@ ui <- dashboardPage(
   
   
   
-  )
+  ),
+  tabItem("obsitems",
+          tabBox(height=480, width=12,
+                 tabPanel("Average Items",
+                          fluidRow(box(status="primary", plotOutput("proportionbars"))
+                            
+                          )),
+                 tabPanel("Heatmap"))),
+  
+  tabItem("evmil",
+          tabBox(height=480, width=12,
+                 tabPanel("Average Milestones",
+                          fluidRow(box(status="primary")
+                                   
+                          )),
+                 tabPanel("Heatmap")))
+  
 
   
 
-          
   
 
     )

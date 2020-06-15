@@ -89,25 +89,21 @@ shinyServer(function(input, output, session) {
   
   #Yes Milestones
   dfMilestonesDef<-reactive({
-    inFile <- input$obsMilestonesImport
+    inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
       return(read.table(inFile$datapath, header=TRUE, sep="\t", quote=""))
   })
   
   dfActionsMilestones <- reactive({
-    inFile <- input$obsMilestonesImport
+    inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
-      generatedfActionsMilestones(dfActions(), dfMilestonesDef())
+      generatedfActionsMilestones(dfActionCircuit()$XML, dfMilestonesDef())
   })
   
   dfStudentsMilestones <- reactive({
-    inFile <- input$obsMilestonesImport
+    inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
-      if(input$checkbox) {
-        generatedfUsersMilestones(dfActionsMilestones(), dfMilestonesDef())
-      } else {
-        generatedfFilesMilestones(dfActionsMilestones(), dfMilestonesDef())
-      }
+      generatedfFilesMilestones(dfActionsMilestones(), dfMilestonesDef())
   })
   
   dfMilestonesEvDef<-reactive({
@@ -1001,6 +997,11 @@ shinyServer(function(input, output, session) {
     datatable(df6)
   })
   
+  # Observation Items
+  output$proportionbars <- renderPlot ({
+    if(is.null(dfStudentsMilestones())) return(NULL)
+    rcmdrtrMilestonesDifficulty(dfStudentsMilestones())
+  })
 
   
   observeEvent(input$"StrucInfo", {

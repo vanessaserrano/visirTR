@@ -963,7 +963,7 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
   postLogicEval[1:length(milestonesLogEv)]<-milestonesLogEv
   
   # Milestones per accio
-  testVector<-as.character(dfActionsSorted$xml_cum)
+  testVector<-as.character(dfActionsSorted$XML)
   regExps<-paste("(?=",regExps,")",sep="")
   
   dfRegExpsPerElement<-data.frame()
