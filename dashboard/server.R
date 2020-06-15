@@ -591,9 +591,13 @@ shinyServer(function(input, output, session) {
 ## Common circuits ####
   output$cc_circuits <- renderDataTable({
     if(is.null(dfImport())) return(NULL)
-    g <- datatable(tabNCircuits())
+    #g <- datatable(tabNCircuits())
+    g <- tabNCircuits()
+    names(g)[names(g) == 'Circuit'] <- 'Normalized Circuits'
     
-    if(input$simplified_common) g <- datatable(tabSCircuits())
+    if(input$simplified_common) {g <- tabSCircuits()
+    names(g)[names(g) == 'Circuit'] <- 'Simplified Normalized Circuits'
+    }
     g
   })
 
@@ -601,9 +605,9 @@ shinyServer(function(input, output, session) {
   output$ct_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
     if(is.null(tabSCircuits())) 
-      return(selectInput("ct_circuit", "Select a circuit...", c("No data available")))
+      return(selectInput("ct_circuit", "Select a simplified normalized circuit...", c("No data available")))
     else {
-      return(selectInput("ct_circuit", "Select a circuit...", tabSCircuits()$Circuit))
+      return(selectInput("ct_circuit", "Select a simplified normalized circuit...", tabSCircuits()$Circuit))
     }})
   
   output$ct_plotu_chart <- renderPlot({
@@ -665,9 +669,9 @@ shinyServer(function(input, output, session) {
   output$ntc_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
     if(is.null(tabS1Circuits())) 
-      return(selectInput("ncu_circuit", "Select a circuit...", c("No data available")))
+      return(selectInput("ncu_circuit", "Select a simplified normalized circuit...", c("No data available")))
     else {
-      return(selectInput("ncu_circuit", "Select a circuit...", tabS1Circuits()$Circuit))
+      return(selectInput("ncu_circuit", "Select a simplified normalized circuit...", tabS1Circuits()$Circuit))
     }})
   
   output$ntc_plotu_chart <- renderPlot({
@@ -687,7 +691,7 @@ shinyServer(function(input, output, session) {
       geom_bar(stat="identity",width = 0.7,fill="steelblue") +
       theme(axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-      labs(x = "User", y= "Number of Circuits")
+      labs(x = "User", y= "Number of Simplified Normalized Circuits")
     g
   })
   
