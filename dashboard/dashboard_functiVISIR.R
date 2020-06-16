@@ -559,7 +559,7 @@ FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
   TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
 
   #Parte Circuitos
-  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%  group_by(Alumno) %>% 
+  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
     summarise(NumCircu=length(unique(CircuitoNormalizado)))
   
   # Mix Both Data Frames (Student Circuits Time)
@@ -590,7 +590,7 @@ FunctionTimeStudSimpl <- function (dfVISIR_acciones,dfActionCircuit) {
   TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
   
   #Parte Circuitos
-  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%  group_by(Alumno) %>% 
+  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
     summarise(NumCircu=length(unique(CircuitoSimplificado)))
   
   # Mix Both Data Frames (Student Circuits Time)
