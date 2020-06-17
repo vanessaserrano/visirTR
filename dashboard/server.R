@@ -97,13 +97,13 @@ shinyServer(function(input, output, session) {
   dfActionsMilestones <- reactive({
     inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
-      generatedfActionsMilestones(dfActionCircuit()$XML, dfMilestonesDef())
+      generatedfActionsMilestones(dfActionCircuit(), dfMilestonesDef())
   })
   
   dfStudentsMilestones <- reactive({
     inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
-      generatedfFilesMilestones(dfActionsMilestones(), dfMilestonesDef())
+      generatedfUsersMilestones(dfActionsMilestones(), dfMilestonesDef())
   })
   
   dfMilestonesEvDef<-reactive({
