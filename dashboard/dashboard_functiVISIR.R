@@ -1236,9 +1236,9 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
         nrow(dfActionPerSessionMilestone)
       if(nrow(dfActionPerSessionMilestone)>0) {
         dfMilestonesPerSession[i,paste("t_",milestones[m],sep="")]<-
-          as.character(head(dfActionPerSessionMilestone,1)[,"TiempoAcumulado"])
-        dfMilestonesPerSession[i,paste("dt_",milestones[m],sep="")]<-
           as.character(head(dfActionPerSessionMilestone,1)[,"TiempoDesdeAccionAnterior"])
+        dfMilestonesPerSession[i,paste("dt_",milestones[m],sep="")]<-
+          as.character(head(dfActionPerSessionMilestone,1)[,"TiempoAcumulado"])
         dfMilestonesPerSession[i,paste("dtr_",milestones[m],sep="")]<-
           as.character(head(dfActionPerSessionMilestone,1)[,"Time"])
       }
