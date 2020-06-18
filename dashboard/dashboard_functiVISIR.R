@@ -1258,7 +1258,7 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
   dfSessions<-data.frame(vecSessions,vecUser,vecNActions,vecMinTime,
                          vecMaxTime,vecDurationSession,vecTimeOnTask,dfMilestonesPerSession)
   
-  colnames(dfSessions)<-c("session","user","n_actions",
+  colnames(dfSessions)<-c("Sesion","Alumno","n_actions",
                           "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerSession))
 
   # Muntatge de dfUsers
@@ -1282,21 +1282,21 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
 
   for (i in 1:length(vecUsers)) {
     dfActionsPerUser<-dfActionsSortedMilestones[as.character(dfActionsSortedMilestones[,"Alumno"])==vecUsers[i],]
-    dfSessionsPerUser<-dfSessions[as.character(dfSessions[,"user"])==vecUsers[i],]
+    dfSessionsPerUser<-dfSessions[as.character(dfSessions[,"Alumno"])==vecUsers[i],]
 
     #dfActionsPerUserSorted<-dfActionsPerUser[order(dfActionsPerUser[,"session"],dfActionsPerUser[,"number"]),]
-    dfActionsPerUserSorted<-dfActionsPerUser[order(dfActionsPerUser[,"session"]),]
+    dfActionsPerUserSorted<-dfActionsPerUser[order(dfActionsPerUser[,"Sesion"]),]
     
-    dfSessionsPerUserSorted<-dfSessionsPerUser[order(dfSessionsPerUser[,"session"]),]
+    dfSessionsPerUserSorted<-dfSessionsPerUser[order(dfSessionsPerUser[,"Sesion"]),]
 
     dfSessionsPerUserSorted$duration_previous<-rep(0,nrow(dfSessionsPerUserSorted))
     dfSessionsPerUserSorted$time_on_task_previous<-rep(0,nrow(dfSessionsPerUserSorted))
     if (nrow(dfSessionsPerUserSorted)>1) {
       for(s in 2:nrow(dfSessionsPerUserSorted)) {
-        dfSessionsPerUserSorted$duration_previous[s]<-sum(dfSessionsPerUserSorted[which(as.character(dfSessionsPerUserSorted[,"session"])
-                                                                                        < as.character(dfSessionsPerUserSorted[s,"session"])),"duration"])
-        dfSessionsPerUserSorted$time_on_task_previous[s]<-sum(dfSessionsPerUserSorted[which(as.character(dfSessionsPerUserSorted[,"session"])
-                                                                                            < as.character(dfSessionsPerUserSorted[s,"session"])),"time_on_task"])	
+        dfSessionsPerUserSorted$duration_previous[s]<-sum(dfSessionsPerUserSorted[which(as.character(dfSessionsPerUserSorted[,"Sesion"])
+                                                                                        < as.character(dfSessionsPerUserSorted[s,"Sesion"])),"duration"])
+        dfSessionsPerUserSorted$time_on_task_previous[s]<-sum(dfSessionsPerUserSorted[which(as.character(dfSessionsPerUserSorted[,"Sesion"])
+                                                                                            < as.character(dfSessionsPerUserSorted[s,"Sesion"])),"time_on_task"])	
       }
     }
     
@@ -1336,14 +1336,14 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
   dfUsers <- data.frame(vecUsers,vecNSessions,vecNActions,vecMinTime,
                         vecMaxTime,vecDuration,vecTimeOnTask,dfMilestonesPerUser)
   
-  colnames(dfUsers)<-c("user","n_sessions","n_files","n_actions",
+  colnames(dfUsers)<-c("Alumno","n_sessions","n_actions",
                        "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerUser))
   
-  dfUsers<-data.frame(dfUsers$user,
+  dfUsers<-data.frame(dfUsers$Alumno,
                       dfUsers[,paste("n_",milestones,sep="")]>0)
   
   rownames(dfUsers)<-1:nrow(dfUsers)
-  colnames(dfUsers)<-c("user",milestones)
+  colnames(dfUsers)<-c("Alumno",milestones)
   
   return(dfUsers)
 }
