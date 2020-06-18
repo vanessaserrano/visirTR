@@ -967,6 +967,7 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
   regExps<-paste("(?=",regExps,")",sep="")
   
   dfRegExpsPerElement<-data.frame()
+  df1 <<- dfRegExpsPerElement
   for(i in 1:length(testVector)) {
     lisRegExpsElement<-logical(length(regExps))
     for (j in 1:length(regExps)) {
@@ -999,10 +1000,12 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
       }
       lisRegExpsElement[j]<-evaluated
     }
+    lis1 <<- lisRegExpsElement
     dfRegExpsPerElement<-rbind(dfRegExpsPerElement,lisRegExpsElement)
   }
   colnames(dfRegExpsPerElement)<-milestones
   
+  df1 <<- cbind(dfActionsSorted,dfRegExpsPerElement)
   cbind(dfActionsSorted,dfRegExpsPerElement)
 }  
 
@@ -1212,14 +1215,14 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
     dfActionsPerSessionSorted<-dfActionsPerSession[order(dfActionsPerSession[,"number"]),]
     primer<-head(dfActionsPerSessionSorted,1)
     darrer<-tail(dfActionsPerSessionSorted,1)
-    vecMinId[i]<-primer[,"number"]
-    vecMaxId[i]<-darrer[,"number"]
-    vecMinTime[i]<-as.character(primer[,"time"])
-    vecMaxTime[i]<-as.character(darrer[,"time"])
+    #vecMinId[i]<-primer[,"number"]
+    #vecMaxId[i]<-darrer[,"number"]
+    vecMinTime[i]<-as.character(primer[,"FechaHoraEnvio"])
+    vecMaxTime[i]<-as.character(darrer[,"FechaHoraRespuesta"])
     vecNActions[i]<-nrow(dfActionsPerSessionSorted)
-    vecFile[i]<-as.character(primer[,"filename"])
-    vecUser[i]<-as.character(primer[,"user"])
-    vecNSeq[i]<-max(table(dfActionsPerSessionSorted[,"number"]))
+    #vecFile[i]<-as.character(primer[,"filename"])
+    vecUser[i]<-as.character(primer[,"Alumno"])
+    #vecNSeq[i]<-max(table(dfActionsPerSessionSorted[,"number"]))
     vecTimeOnTask[i]<-darrer[,"diff_time_cum_real"]/60
     
     
