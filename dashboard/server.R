@@ -1006,6 +1006,12 @@ dfImport<-reactive({
     if(is.null(dfStudentsMilestones())) return(NULL)
     rcmdrtrMilestonesDifficulty(dfStudentsMilestones())
   })
+  
+  #Heatmap
+  output$heatmap <- renderPlot({
+    if(is.null(dfStudentsMilestones())) return(NULL)
+    rcmdrtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
+  })
 
 #### HELP ####  
   observeEvent(input$"StrucInfo", {

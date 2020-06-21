@@ -48,7 +48,7 @@ ui <- dashboardPage(
         menuSubItem("Common Circuits",tabName = "common-circuits")),
       menuItem("User-specific Results",icon = icon("folder"), startExpanded  = TRUE,
         menuSubItem("User Results",tabName = "usresults")),
-      menuItem("Milestones",icon = icon("folder"), startExpanded  = TRUE,
+      menuItem("Work Indicators",icon = icon("folder"), startExpanded  = TRUE,
                menuSubItem("Observation Items",tabName = "obsitems"),
                menuSubItem("Evaluation Milestones",tabName = "evmil")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
@@ -276,10 +276,11 @@ ui <- dashboardPage(
   tabItem("obsitems",
           tabBox(height=480, width=12,
                  tabPanel("Average Items",
-                          fluidRow(box(status="primary", plotOutput("proportionbars"))
+                          fluidRow(box(status="primary", plotOutput("proportionbars"),height=480, width=12)
                             
                           )),
-                 tabPanel("Heatmap"))),
+                 tabPanel("Heatmap",fluidRow(box(status="primary", plotOutput("heatmap"),
+                                                 height=480, width=12))))),
   
   tabItem("evmil",
           tabBox(height=480, width=12,
