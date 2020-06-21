@@ -967,7 +967,6 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
   regExps<-paste("(?=",regExps,")",sep="")
   
   dfRegExpsPerElement<-data.frame()
-  df1 <<- dfRegExpsPerElement
   for(i in 1:length(testVector)) {
     lisRegExpsElement<-logical(length(regExps))
     for (j in 1:length(regExps)) {
@@ -993,19 +992,19 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
           }
         }
         evaluated<-evaluated | (postLogicEval[j]=="" & result[1]!=-1)
-        plj <<- postLogicEval
+        #plj <<- postLogicEval
         if(postLogicEval[j]!="" & result[1]!=-1) {
           evaluated<-evaluated | as.logical(eval(parse(text=postLogicEval[j])))
         }			
       }
       lisRegExpsElement[j]<-evaluated
     }
-    lis1 <<- lisRegExpsElement
+    #lis1 <<- lisRegExpsElement
     dfRegExpsPerElement<-rbind(dfRegExpsPerElement,lisRegExpsElement)
   }
   colnames(dfRegExpsPerElement)<-milestones
   
-  df1 <<- cbind(dfActionsSorted,dfRegExpsPerElement)
+  #df1 <<- cbind(dfActionsSorted,dfRegExpsPerElement)
   cbind(dfActionsSorted,dfRegExpsPerElement)
 }  
 
@@ -1175,6 +1174,9 @@ generatedfFilesMilestones <- function (actionsMilestones, dfMilestones) {
 generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
   
   dfActionsSortedMilestones<-actionsMilestones
+  df1 <<- actionsMilestones
+  df2 <<- dfMilestones
+  
   ## Creación de ID y filename
   dfActionsSortedMilestones$number <- seq(1,nrow(dfActionsSortedMilestones),1)
   dfActionsSortedMilestones$filename <- 1
@@ -1283,6 +1285,8 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
                                    paste("dt_",milestones,sep=""),
                                    paste("dtr_",milestones,sep=""))
   
+  # El problema està en aquest for !!!!!!!!!!!!!!!####
+  i <- 1
   for (i in 1:length(vecUsers)) {
     dfActionsPerUser<-dfActionsSortedMilestones[as.character(dfActionsSortedMilestones[,"Alumno"])==vecUsers[i],]
     dfSessionsPerUser<-dfSessions[as.character(dfSessions[,"Alumno"])==vecUsers[i],]
@@ -1305,8 +1309,8 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
     
     primer<-head(dfActionsPerUserSorted,1)
     darrer<-tail(dfActionsPerUserSorted,1)
-    vecMinTime[i]<-as.character(primer[,"min_time"])
-    vecMaxTime[i]<-as.character(darrer[,"max_time"])
+    vecMinTime[i]<-as.character(primer[,"FechaHoraEnvio"])
+    vecMaxTime[i]<-as.character(darrer[,"FechaHoraRespuesta"])
     vecNActions[i]<-nrow(dfActionsPerUserSorted)
     vecNSessions[i]<-nrow(dfSessionsPerUserSorted)
     vecNFiles[i]<-length(unique(dfActionsPerUserSorted[,"filename"]))
@@ -1515,7 +1519,7 @@ drawPlotActionPoints <- function (punts, linea, maxTime) {
 drawCommandsWordCloud <- function(xmls) {
   if(is.null(xmls)) return(NULL)
   
-  xmls <<- xmls
+  #xmls <<- xmls
   xmls1<-gsub("value='with(?:[(]|%28)[^,%]*(?:,|%2C)%20","value='",xmls)
   regs<-regexec("name='Command' value='([a-zA-Z.0-9_]*)(?:[(]|%28)",xmls1)
   start<-sapply(regs,function(x){x[2]})

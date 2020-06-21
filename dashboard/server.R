@@ -6,20 +6,8 @@ shinyServer(function(input, output, session) {
   })
   
 #### DEFINITIONS & CALCULATIONS ####
-  dfImport<-reactive({
-    inFile <- input$logsImport
-    if (is.null(inFile)) return(NULL)
-    
-    df <- read.table(inFile$datapath, header=F, sep=",", quote="\"",
-                     stringsAsFactors = FALSE)
-    colnames(df) <- c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
-        "DatosEnviadosXML","DatosRecibidosXML","Tarea")
-    df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-   
-    return(df)
-  })
-
-  dfActionCircuit<- reactive({funActionCircuit(dfImport())})
+## Action & Student data ####
+    dfActionCircuit<- reactive({funActionCircuit(dfImport())})
   dfOrderTime <- reactive({funOrderTime(dfActionCircuit())})
   dfSSA <- reactive({FunctionSSA(dfImport())})
   dfStudTime <- reactive({FunctionTimeStud(dfImport(),dfActionCircuit())})
@@ -28,6 +16,9 @@ shinyServer(function(input, output, session) {
   dftimeuserdate <- reactive({fplotlyfunc3(dfMTS())})
   dfStudTimeNorm <- reactive({FunctionTimeStudNorm(dfImport(),dfActionCircuit())})
   dfStudTimeSimpl <- reactive({FunctionTimeStudSimpl(dfImport(),dfActionCircuit())})
+
+  
+  ## Normalized Circuits ####  
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
     tab <- tab[order(-tab)]
@@ -39,9 +30,6 @@ shinyServer(function(input, output, session) {
     tab <- tab[order(-tab)]
     data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
   })
-  
-  
-  
   
   tabNStudents <- reactive({
     tab <- table(na.omit(dfActionCircuit()$Alumno))
@@ -61,33 +49,7 @@ shinyServer(function(input, output, session) {
     data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
   })
 
-#### DATA INPUT ####
-  output$numStudents <- renderValueBox({
-    valueBox(
-      ifelse(is.null(dfImport()),"--",
-             format(length(unique(dfImport()$Alumno)),format="d",big.mark="")), 
-      "Users", color = "blue")
-  })
-  output$numActions <- renderValueBox({
-    valueBox(
-      ifelse(is.null(dfImport()),"--",
-             format(length(dfImport()$Alumno),format="d",big.mark="")), 
-      "Actions", color = "blue")
-  })
-  output$maxdate <- renderValueBox({
-      valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",max(dfImport()$Dates)),
-                              style = "font-size: 90%;"), width = 4, 
-        "Last logged date", color = "blue")
-  })
-  output$mindate <- renderValueBox({
-    valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",min(dfImport()$Dates)),
-                            style = "font-size: 90%;"),width = 4, 
-      "First logged date", color = "blue")
-  })
-
-  
-  
-  #Yes Milestones
+  ## Work Indicators ####
   dfMilestonesDef<-reactive({
     inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
@@ -145,11 +107,27 @@ shinyServer(function(input, output, session) {
     dfObsLong
   })
   
+
+#### DATA INPUT ####
+### >> LOGS & WORK INDICATORS ####
+## Logs ####
+dfImport<-reactive({
+    inFile <- input$logsImport
+    if (is.null(inFile)) return(NULL)
+    
+    df <- read.table(inFile$datapath, header=F, sep=",", quote="\"",
+                     stringsAsFactors = FALSE)
+    colnames(df) <- c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                      "DatosEnviadosXML","DatosRecibidosXML","Tarea")
+    df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+    
+    return(df)
+  })
   
-## Data input milestones ##
+## Work Indicators ####
   output$milestonesData <- renderText({
     if(is.null(dfMilestonesDef())) {
-      "Observation milestones definition not yet loaded!"
+      "Observation items definition not yet loaded!"
     } else {
       paste("Read observation milestones: ",nrow(dfMilestonesDef()),
             " milestones (", paste(dfMilestonesDef()[,1],collapse = ", ") ,")", sep="")
@@ -163,7 +141,31 @@ shinyServer(function(input, output, session) {
             " milestones (", paste(dfMilestonesEvDef()[,1],collapse = ", ") ,")", sep="")
     }
   })
-  
+
+## Values ####  
+
+  output$numStudents <- renderValueBox({
+    valueBox(
+      ifelse(is.null(dfImport()),"--",
+             format(length(unique(dfImport()$Alumno)),format="d",big.mark="")), 
+      "Users", color = "blue")
+  })
+  output$numActions <- renderValueBox({
+    valueBox(
+      ifelse(is.null(dfImport()),"--",
+             format(length(dfImport()$Alumno),format="d",big.mark="")), 
+      "Actions", color = "blue")
+  })
+  output$maxdate <- renderValueBox({
+    valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",max(dfImport()$Dates)),
+                            style = "font-size: 90%;"), width = 4, 
+             "Last logged date", color = "blue")
+  })
+  output$mindate <- renderValueBox({
+    valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",min(dfImport()$Dates)),
+                            style = "font-size: 90%;"),width = 4, 
+             "First logged date", color = "blue")
+  })
   
   
 #### GLOBAL RESULTS ####
@@ -175,10 +177,6 @@ shinyServer(function(input, output, session) {
   })
 
 
-  
-  
-  
-  
 ## Distribution of time on task ####
   # Total time spend
   output$totaltimespend <-  renderValueBox({
@@ -488,7 +486,8 @@ shinyServer(function(input, output, session) {
   })
   
 ### >> NUMBER OF CIRCUITS VS TIME ON TASK ####
-  output$nActionsVStoT <- renderPlot({
+## Number of circuits vs time ####
+    output$nActionsVStoT <- renderPlot({
     if(is.null(dfImport())) return(NULL)
     ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu))  +  geom_point(size = I(3), alpha = I(0.4)) + 
       labs(x = "Time (in h)", y = "Number of Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
@@ -529,7 +528,7 @@ shinyServer(function(input, output, session) {
                     "Time (in h):",responset[1]))
   })
   
-### >> NUMBER OF NORMALIZED CIRCUITS VS TIME ON TASK ####
+## Number of normalized circuits vs time ####
   output$nActionsVStoTnorm <- renderPlot({
     if(is.null(dfImport())) return(NULL)
     g <- ggplot(dfStudTimeNorm(), aes(x=TotalTime, y=NumCircu)) +  geom_point(size = I(3), alpha = I(0.4)) + 
@@ -705,7 +704,7 @@ shinyServer(function(input, output, session) {
   
   
   
-  #### STUDENT-SPECIFIC RESULTS ####
+  #### USER-SPECIFIC RESULTS ####
   ### >> USER RESULTS ####
   
   output$spr_selectStudent <- renderUI({
@@ -1000,14 +999,15 @@ shinyServer(function(input, output, session) {
  
     datatable(df6)
   })
-  
-  # Observation Items
+
+#### MILESTONES ####  
+### >> OBSERVATION ITEMS ####
   output$proportionbars <- renderPlot ({
     if(is.null(dfStudentsMilestones())) return(NULL)
     rcmdrtrMilestonesDifficulty(dfStudentsMilestones())
   })
 
-  
+#### HELP ####  
   observeEvent(input$"StrucInfo", {
     # match input$todo to the right task from the reactive tasks() (by id)
     # (I'm sure there's a simpler way of doing this)

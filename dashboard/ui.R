@@ -39,7 +39,7 @@ ui <- dashboardPage(
        
 
         menuItem("Data Input",icon = icon("folder"), startExpanded = TRUE,
-            menuSubItem("Log Files", tabName = "browsedata")),
+            menuSubItem("Logs & Work Indicators", tabName = "browsedata")),
       menuItem("Global Results",icon = icon("folder"), startExpanded = TRUE,
         menuSubItem("Time", tabName = "timeana"),
         menuSubItem("Circuits", tabName = "numcircu"),
@@ -86,27 +86,23 @@ ui <- dashboardPage(
     #boxes to be put in a row (or column)
     tabItems(
       tabItem("browsedata", 
-              fluidRow(
+        fluidRow(
           box(title = "Data Input", status = "warning", solidHeader = TRUE,width = 4,
               collapsible = TRUE,
               fileInput('logsImport', 'Log Files'),
               fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
               fileInput('evMilestonesImport', 'Evaluation Milestones (optional)', accept = c('text/plain','.txt'))
           ),
-          box(
-            title = "Information", width = 4, solidHeader = TRUE,
-            "To start, load user traces by pressing button Browse"
-          ),
+          box(solidHeader = TRUE,
+              "To start, load user traces by pressing button Browse"),
           mainPanel(
             verbatimTextOutput("milestonesData",placeholder=TRUE),
             verbatimTextOutput("evmilestonesData",placeholder=TRUE)
           )
-          ),
-          fluidRow(
+        ),
+        fluidRow(
           valueBoxOutput("numStudents",width = 3),
-          valueBoxOutput("numActions",width = 3)),
-          
-          fluidRow( 
+          valueBoxOutput("numActions",width = 3),
           valueBoxOutput("mindate",width = 3),
           valueBoxOutput("maxdate",width = 3)
         )
