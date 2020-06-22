@@ -1,4 +1,4 @@
 milNames	evTests
 EVP01	om['P02M01']|om['P02M02']
 EVP02	om['P02M04']&om['P02M07']
-EVP03	om['P02M03']!om['P02M07']
+EVP03	om['P02M02']&om['P02M03']
