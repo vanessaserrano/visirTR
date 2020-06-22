@@ -285,10 +285,11 @@ ui <- dashboardPage(
   tabItem("evmil",
           tabBox(height=480, width=12,
                  tabPanel("Average Milestones",
-                          fluidRow(box(status="primary")
+                          fluidRow(box(status="primary", plotOutput("evproportionbars"),height=480, width=12)
                                    
                           )),
-                 tabPanel("Heatmap")))
+                 tabPanel("Heatmap",fluidRow(box(status="primary", plotOutput("evheatmap"),
+                                                 height=480, width=12)))))
   
 
   

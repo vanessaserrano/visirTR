@@ -1000,7 +1000,7 @@ dfImport<-reactive({
     datatable(df6)
   })
 
-#### MILESTONES ####  
+#### WORK INDICATORS ####  
 ### >> OBSERVATION ITEMS ####
   output$proportionbars <- renderPlot ({
     if(is.null(dfStudentsMilestones())) return(NULL)
@@ -1012,6 +1012,19 @@ dfImport<-reactive({
     if(is.null(dfStudentsMilestones())) return(NULL)
     rcmdrtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
   })
+  
+### >> EVALUATION MILESTONES ####
+  output$evproportionbars <- renderPlot ({
+    if(is.null(dfStudentsMilestonesEv())) return(NULL)
+    rcmdrtrMilestonesDifficulty(dfStudentsMilestonesEv())
+  })
+  
+  #Heatmap
+  output$evheatmap <- renderPlot({
+    if(is.null(dfStudentsMilestonesEv())) return(NULL)
+    rcmdrtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL)
+  })
+  
 
 #### HELP ####  
   observeEvent(input$"StrucInfo", {
