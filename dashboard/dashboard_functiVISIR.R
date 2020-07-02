@@ -942,7 +942,7 @@ InfovalueBoxupboundS <- function(dfActionCircuit){
 
 
 
-#### Modificación para milestones (copiado del rcmdrDB) ####
+#### WORK INDICATORS ####
 
 #With Milestones
 generatedfActionsMilestones <- function (actions, dfMilestones) {
@@ -1007,169 +1007,6 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
   #df1 <<- cbind(dfActionsSorted,dfRegExpsPerElement)
   cbind(dfActionsSorted,dfRegExpsPerElement)
 }  
-
-
-generatedfFilesMilestones <- function (actionsMilestones, dfMilestones) {
-  
-  dfActionsSortedMilestones<-actionsMilestones
-  
-  milestones <- as.character(dfMilestones$milNames)
-  regExps <- as.character(dfMilestones$regExps)
-  postLogicEval <- as.character(dfMilestones$logTests)
-  
-  milestonesRegExp <- regExps
-  milestonesName <- milestones
-  milestonesLogEv <- postLogicEval
-  
-  milestones <- regExps
-  milestones[1:length(milestonesName)]<-milestonesName
-  postLogicEval<-rep("",length(regExps))
-  postLogicEval[1:length(milestonesLogEv)]<-milestonesLogEv
-  
-  # Muntatge de dfSessions
-  vecSessions<-unique(as.character(dfActionsSortedMilestones[,"session"]))
-  
-  vecMinId<-character(length(vecSessions))
-  vecMaxId<-character(length(vecSessions))
-  vecMinTime<-character(length(vecSessions))
-  vecMaxTime<-character(length(vecSessions))
-  vecNActions<-numeric(length(vecSessions))
-  vecUser<-character(length(vecSessions))
-  vecFile<-character(length(vecSessions))
-  vecNSeq<-numeric(length(vecSessions))
-  vecTimeOnTask<-numeric(length(vecSessions))
-  
-  
-  dfMilestonesPerSession<-data.frame(matrix(nrow=length(vecSessions),
-                                            ncol=length(milestones)*4),row.names=as.character(vecSessions))
-  
-  colnames(dfMilestonesPerSession)<-c(paste("n_",milestones,sep=""),paste("t_",milestones,sep=""),
-                                      paste("dt_",milestones,sep=""),
-                                      paste("dtr_",milestones,sep="")) 
-  
-  for (i in 1:length(vecSessions)) {
-    dfActionsPerSession<-dfActionsSortedMilestones[as.character(dfActionsSortedMilestones[,"session"])==vecSessions[i],]
-    dfActionsPerSessionSorted<-dfActionsPerSession[order(dfActionsPerSession[,"number"]),]
-    primer<-head(dfActionsPerSessionSorted,1)
-    darrer<-tail(dfActionsPerSessionSorted,1)
-    vecMinId[i]<-primer[,"number"]
-    vecMaxId[i]<-darrer[,"number"]
-    vecMinTime[i]<-as.character(primer[,"time"])
-    vecMaxTime[i]<-as.character(darrer[,"time"])
-    vecNActions[i]<-nrow(dfActionsPerSessionSorted)
-    vecFile[i]<-as.character(primer[,"filename"])
-    vecUser[i]<-as.character(primer[,"user"])
-    vecNSeq[i]<-max(table(dfActionsPerSessionSorted[,"number"]))
-    vecTimeOnTask[i]<-darrer[,"diff_time_cum_real"]/60
-    
-    for(m in 1:length(milestones)) {
-      dfActionPerSessionMilestone<-dfActionsPerSessionSorted[
-        dfActionsPerSessionSorted[,milestones[m]]==TRUE,]
-      dfMilestonesPerSession[i,paste("n_",milestones[m],sep="")]<-
-        nrow(dfActionPerSessionMilestone)
-      if(nrow(dfActionPerSessionMilestone)>0) {
-        dfMilestonesPerSession[i,paste("t_",milestones[m],sep="")]<-
-          as.character(head(dfActionPerSessionMilestone,1)[,"time"])
-        dfMilestonesPerSession[i,paste("dt_",milestones[m],sep="")]<-
-          as.character(head(dfActionPerSessionMilestone,1)[,"diff_time_cum"])
-        dfMilestonesPerSession[i,paste("dtr_",milestones[m],sep="")]<-
-          as.character(head(dfActionPerSessionMilestone,1)[,"diff_time_cum_real"])
-      }
-    }
-  }
-  
-  
-  vecSessionStart<-strptime(vecMinTime, "%Y%m%d%H%M%OS")
-  vecSessionEnd<-strptime(vecMaxTime, "%Y%m%d%H%M%OS")
-  vecDurationSession<-as.numeric(difftime(vecSessionEnd,vecSessionStart,units="mins"))
-  
-  
-  dfSessions<-data.frame(vecSessions,vecFile,vecUser,vecNActions,vecNSeq,vecMinId,vecMaxId,vecMinTime,
-                         vecMaxTime,vecDurationSession,vecTimeOnTask,dfMilestonesPerSession)
-  colnames(dfSessions)<-c("session","filename","user","n_actions","n_seq","min_number","max_number",
-                          "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerSession))
-  
-  
-  vecFiles<-unique(as.character(dfActionsSortedMilestones[,"filename"]))
-  
-  vecMinTime<-character(length(vecFiles))
-  vecMaxTime<-character(length(vecFiles))
-  vecNActions<-numeric(length(vecFiles))
-  vecNSessions<-numeric(length(vecFiles))
-  vecNUsers<-numeric(length(vecFiles))
-  vecNSeq<-numeric(length(vecFiles))
-  vecDuration<-numeric(length(vecFiles))
-  vecTimeOnTask<-numeric(length(vecFiles))
-  
-  dfMilestonesPerFile<-data.frame(matrix(nrow=length(vecFiles),
-                                         ncol=length(milestones)*4),row.names=as.character(vecFiles))
-  colnames(dfMilestonesPerFile)<-c(paste("n_",milestones,sep=""),paste("t_",milestones,sep=""),
-                                   paste("dt_",milestones,sep=""),
-                                   paste("dtr_",milestones,sep=""))
-  
-  for (i in 1:length(vecFiles)) {
-    dfActionsPerFile<-dfActionsSortedMilestones[as.character(dfActionsSortedMilestones[,"filename"])==vecFiles[i],]
-    dfSessionsPerFile<-dfSessions[as.character(dfSessions[,"filename"])==vecFiles[i],]
-    
-    dfActionsPerFileSorted<-dfActionsPerFile[order(dfActionsPerFile[,"session"],dfActionsPerFile[,"number"]),]
-    dfSessionsPerFileSorted<-dfSessionsPerFile[order(dfSessionsPerFile[,"session"]),]
-    
-    dfSessionsPerFileSorted$duration_previous<-rep(0,nrow(dfSessionsPerFileSorted))
-    dfSessionsPerFileSorted$time_on_task_previous<-rep(0,nrow(dfSessionsPerFileSorted))
-    if (nrow(dfSessionsPerFileSorted)>1) {
-      for(s in 2:nrow(dfSessionsPerFileSorted)) {
-        dfSessionsPerFileSorted$duration_previous[s]<-sum(dfSessionsPerFileSorted[which(as.character(dfSessionsPerFileSorted[,"session"])
-                                                                                        < as.character(dfSessionsPerFileSorted[s,"session"])),"duration"])
-        dfSessionsPerFileSorted$time_on_task_previous[s]<-sum(dfSessionsPerFileSorted[which(as.character(dfSessionsPerFileSorted[,"session"])
-                                                                                            < as.character(dfSessionsPerFileSorted[s,"session"])),"time_on_task"])	
-      }
-    }
-    
-    primer<-head(dfActionsPerFileSorted,1)
-    darrer<-tail(dfActionsPerFileSorted,1)
-    vecMinTime[i]<-as.character(primer[,"time"])
-    vecMaxTime[i]<-as.character(darrer[,"time"])
-    vecNActions[i]<-nrow(dfActionsPerFileSorted)
-    vecNSessions[i]<-nrow(dfSessionsPerFileSorted)
-    vecNUsers[i]<-length(unique(dfActionsPerFileSorted[,"user"]))
-    
-    # com a suma de sessions, en minuts
-    vecDuration[i]<-sum(dfSessionsPerFileSorted[,"duration"])
-    vecTimeOnTask[i]<-sum(dfSessionsPerFileSorted[,"time_on_task"])
-    
-    for(m in 1:length(milestones)) {
-      dfMilestonesPerFile[i,paste("n_",milestones[m],sep="")]<-
-        sum(dfSessionsPerFileSorted[,paste("n_",milestones[m],sep="")],
-            na.rm=TRUE)
-      if(dfMilestonesPerFile[i,paste("n_",milestones[m],sep="")] > 0) {
-        dfMilestonesPerFile[i,paste("t_",milestones[m],sep="")]<-
-          min(dfSessionsPerFileSorted[,paste("t_",milestones[m],sep="")],
-              na.rm=TRUE)
-        dfMilestonesPerFile[i,paste("dt_",milestones[m],sep="")]<-
-          min(as.numeric(dfSessionsPerFileSorted[,paste("dt_",milestones[m],sep="")])+
-                dfSessionsPerFileSorted[,"duration_previous"]*60,na.rm=TRUE)
-        dfMilestonesPerFile[i,paste("dtr_",milestones[m],sep="")]<-
-          min(as.numeric(dfSessionsPerFileSorted[,paste("dtr_",milestones[m],sep="")])+
-                dfSessionsPerFileSorted[,"time_on_task_previous"]*60,na.rm=TRUE)
-      }
-    }	
-  }
-  
-  
-  dfFiles<-data.frame(vecFiles,vecNSessions,vecNUsers,vecNActions,vecMinTime,
-                      vecMaxTime,vecDuration,vecTimeOnTask,dfMilestonesPerFile)
-  colnames(dfFiles)<-c("filename","n_sessions","n_users","n_actions",
-                       "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerFile))
-  
-  
-  dfFiles<-data.frame(dfFiles$filename,
-                      dfFiles[,paste("n_",milestones,sep="")]>0)
-  
-  rownames(dfFiles)<-1:nrow(dfFiles)
-  colnames(dfFiles)<-c("filename",milestones)
-  
-  return(dfFiles)
-}
 
 generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
   
@@ -1340,8 +1177,6 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
 
   dfUsers <- data.frame(vecUsers,vecNSessions,vecNFiles,vecNActions,vecMinTime,
                        vecMaxTime,vecDuration,vecTimeOnTask,dfMilestonesPerUser)
-  #dfUsers <- data.frame(vecUsers,vecNSessions,vecNActions,vecMinTime,
-  #                      vecMaxTime,vecDuration,vecTimeOnTask,dfMilestonesPerUser)
   
   colnames(dfUsers)<-c("Alumno","n_sessions","n_files","n_actions",
                        "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerUser))
@@ -1414,128 +1249,9 @@ getdfOIColors <- function(dfObsItems, dfEVMil) {
   dfObsItemsEvMilest
 }
 
-#GRAPHS.
-#without milestones.
-plotDistribution <- function(time=NA,maxTime=NULL,xlabel="") {
-  if(is.null(time)) return(NULL)
-  
-  if (is.null(maxTime)) {
-    maxTime<-max(time,na.rm=TRUE)
-    maxTime<-ceiling(maxTime/10^floor(log(maxTime)/log(10)-1))*10^floor(log(maxTime)/log(10)-1)
-  }
-  
-  # Freedman-Diaconis rule
-  bw <- maxTime / (2 * IQR(time) / length(time)^(1/3))
-  
-  bw2 <- floor(bw/10^floor(log(bw)/log(10)))
-  bw2<-ifelse(bw2>=5,5,ifelse(bw2>=2,2,1))
-  bw2<-bw2*10^floor(log(bw)/log(10))
-  
-  nbins<-ceiling(diff(range(time))/bw2)
-  bw2<-ifelse(nbins>=7,bw2,bw2/2+.Machine$double.eps)
-  bw2 <- floor(bw2/10^floor(log(bw2)/log(10)))*10^floor(log(bw2)/log(10))
-  
-  ggmaxTime<-ceiling(maxTime/bw2)*bw2
-  
-  dense<-density(time,adjust=1,bw="SJ")
-  df_density=data.frame(x=dense$x,y=dense$y/sum(dense$y)*bw2*
-                          length(time)/mean(diff(dense$x)))
-  theme_remove_all <- theme(
-    axis.text.x = element_text(margin=margin(0,0,0,0,"lines")),
-    axis.ticks.length = unit(0, "cm"))
-  
-  ghist<-ggplot(data=NULL,aes(x=time)) +
-    geom_histogram(color="black", alpha=.2, fill="skyblue",
-                   breaks=seq(0,ggmaxTime, by=bw2))+ 
-    geom_area(data=df_density,aes(x=x,y=y),
-              alpha=.2, fill="#FFFF00", color="#CC6600", size=1) + 
-    geom_vline(aes(xintercept=mean(time)), linetype="dashed", size=1)+
-    geom_rug(alpha=.5) +
-    labs(x=xlabel, y="Frequency")+
-    coord_cartesian(xlim= c(0, ggmaxTime)) +
-    theme_bw() + theme_remove_all +
-    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"))
-  
-  ghist
-}
-
-rcmdrtrTimeEventsPerId <- function(time=NA,ids=NA,sessions=NA,colorsScale=NULL) {
-  if(is.null(time)|is.null(ids)|is.null(sessions)) return(NULL)
-  
-  uniqueIds<-unique(as.character(ids))
-  ordering<-order(as.character(ids),as.character(sessions),as.character(time))
-  
-  time<-time[ordering]
-  sessions <- sessions[ordering]
-  ids<-ids[ordering]
-  
-  RealTime<-rep(0,length(time))
-  
-  for(i in 2:length(time)) {
-    if(as.character(ids[i])==as.character(ids[i-1])) {
-      thisTime<-as.numeric(as.POSIXct(as.character(time[i]),
-                                      format="%Y%m%d%H%M%OS"))
-      previousTime<-as.numeric(as.POSIXct(as.character(time[i-1]),
-                                          format="%Y%m%d%H%M%OS"))
-      diffTime <- thisTime-previousTime
-      
-      RealTime[i]<-ifelse(diffTime > timeLimit |
-                            as.character(sessions[i])!=as.character(sessions[i-1]), 0, diffTime/60) +
-        RealTime[i-1]
-    } else {
-      diffTime<-NA
-      RealTime[i] <- 0
-    }
-  }
-  
-  maxTime<-numeric(length(uniqueIds))
-  for (i in 1:length(uniqueIds)) {
-    maxTime[i]<-max(RealTime[as.character(ids[])==as.character(uniqueIds[i])],na.rm=TRUE)
-  }
-  uniqueIdsSorted<-as.character(uniqueIds[order(maxTime)])
-  
-  #Plot
-  linea <- as.data.frame(cbind(1:length(maxTime), maxTime[order(maxTime)]))
-  colnames(linea) <- c("position", "RealTime")
-  
-  idsWithPositions <- merge(data.frame(ids),data.frame(ids=uniqueIdsSorted,
-                                                       position=1:length(uniqueIdsSorted)),
-                            by=c("ids","ids"), incomparables=NA)
-  
-  punts <- as.data.frame(cbind(idsWithPositions, RealTime))
-  return (list(punts, linea, maxTime))
-}
-
-drawPlotActionPoints <- function (punts, linea, maxTime) {
-  
-  ggplot(punts, aes(x = position, y = RealTime)) + 
-    geom_point(size = 2, alpha = 0.2) + geom_line(data = linea, aes(x = position, y = RealTime)) +
-    labs(y="Time (in minutes)") + ylim(c(0,max(maxTime,na.rm=TRUE))) + theme_bw() +
-    theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())
-  
-}
-
-drawCommandsWordCloud <- function(xmls) {
-  if(is.null(xmls)) return(NULL)
-  
-  #xmls <<- xmls
-  xmls1<-gsub("value='with(?:[(]|%28)[^,%]*(?:,|%2C)%20","value='",xmls)
-  regs<-regexec("name='Command' value='([a-zA-Z.0-9_]*)(?:[(]|%28)",xmls1)
-  start<-sapply(regs,function(x){x[2]})
-  length<-sapply(regs,function(x){attr(x,"match.length")[2]})
-  cmd<-sapply(substr(xmls1,start,start+length-1),function(x) {URLdecode(x)})
-  names(cmd)<-NULL
-  
-  corpus_cmd<-VCorpus(VectorSource(cmd[!is.na(cmd)]))
-  tdm<-TermDocumentMatrix(corpus_cmd)
-  return(wordcloud(Terms(tdm),row_sums(tdm),min.freq=1,
-                   max.words=50,rot.per=0,fixed.asp=FALSE, 
-                   random.order=F, colors=brewer.pal(8, "Dark2")))
-}
-
+#GRAPHS
 #With milestones.
-rcmdrtrMilestonesDifficulty <- function(bMilestones=NULL) {
+visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
   if (is.null(bMilestones)) return(NULL) 
   
   vecExits<-100*apply(bMilestones[,-1],2,sum)
@@ -1552,7 +1268,7 @@ rcmdrtrMilestonesDifficulty <- function(bMilestones=NULL) {
   
 }
 
-rcmdrtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
+visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
   if (!is.null(bMilestones)) {
     require(gplots)
     
@@ -1576,6 +1292,7 @@ rcmdrtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
   }	
 }
 
+## Functions not yet used
 gradeDistribution <- function(dfStudentsMilestonesEv=NA) {
   if(is.null(dfStudentsMilestonesEv)) return(NULL)
   

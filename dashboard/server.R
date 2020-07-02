@@ -129,7 +129,7 @@ dfImport<-reactive({
     if(is.null(dfMilestonesDef())) {
       "Observation items definition not yet loaded!"
     } else {
-      paste("Read observation milestones: ",nrow(dfMilestonesDef()),
+      paste("Read observation items: ",nrow(dfMilestonesDef()),
             " milestones (", paste(dfMilestonesDef()[,1],collapse = ", ") ,")", sep="")
     }
   })
@@ -1004,25 +1004,25 @@ dfImport<-reactive({
 ### >> OBSERVATION ITEMS ####
   output$proportionbars <- renderPlot ({
     if(is.null(dfStudentsMilestones())) return(NULL)
-    rcmdrtrMilestonesDifficulty(dfStudentsMilestones())
+    visirtrMilestonesDifficulty(dfStudentsMilestones())
   })
   
   #Heatmap
   output$heatmap <- renderPlot({
     if(is.null(dfStudentsMilestones())) return(NULL)
-    rcmdrtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
+    visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
   })
   
 ### >> EVALUATION MILESTONES ####
   output$evproportionbars <- renderPlot ({
     if(is.null(dfStudentsMilestonesEv())) return(NULL)
-    rcmdrtrMilestonesDifficulty(dfStudentsMilestonesEv())
+    visirtrMilestonesDifficulty(dfStudentsMilestonesEv())
   })
   
   #Heatmap
   output$evheatmap <- renderPlot({
     if(is.null(dfStudentsMilestonesEv())) return(NULL)
-    rcmdrtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL)
+    visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL)
   })
   
 
