@@ -36,14 +36,18 @@ perm <- function (vec, duplicates = FALSE)
 }
 
 normalizarCircuito<-function(x) {
+  ## Comprobación de la cadena
   # x es una cadena
   if(is.null(x)) return(NA)
   if(is.na(x)) return(NA)
   if(x=="") return(NA)
   
+  ## Substitución del 0 por GND
   circuito <- as.character(x)
   circuito <- gsub("([^A-Z0-9])0([^A-Z0-9])", "\\1GND\\2", circuito)
   circuito <- gsub("([^A-Z0-9])0$", "\\1GND", circuito)
+  
+  ## Cambio de codificaciones en los nodos
   circuito <- gsub("A([0-9][^0-9])", "A0\\1", circuito)
   circuito <- gsub("F1([0-9])", "A6\\1", circuito)
   circuito <- gsub("F2([0-9])", "A7\\1", circuito)
@@ -58,6 +62,7 @@ normalizarCircuito<-function(x) {
   circuito <- gsub("([^A-Z0-9_])T([^A-Z0-9_])", "\\1A93\\2", circuito)
   circuito <- gsub("([^A-Z0-9_])T$", "\\1A93", circuito)
   
+  ## Creación de los listados y eliminación de los cables innecesarios
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
@@ -76,12 +81,15 @@ normalizarCircuito<-function(x) {
     }
   }
   componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
+  
+  ## Unificación de los componentes
   circuito <- paste(componentes, collapse="/")  
   circuito <- gsub("^/*","",circuito)
   
   if(is.na(circuito)) return(NA)
   if(circuito=="") return(NA)
   
+  ## Reordenación de los componentes
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
@@ -97,7 +105,7 @@ normalizarCircuito<-function(x) {
   componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
   circuito <- paste(componentes, collapse="/")  
   
-  # unificar nodos
+  ## Unificación de los nodos
   nodos <- gregexpr("A[0-9][0-9]",circuito)[[1]]
   if(nodos[[1]]==-1) {
     nodos <- character(0)
@@ -105,18 +113,16 @@ normalizarCircuito<-function(x) {
     nodos <- sapply(nodos, function(x) {substr(circuito,x,x+2)})
     nodos <- unique(nodos)
   }
-  # if(length(nodos)>0 & length(nodos)<9) {
-  if(length(nodos)>0) {
+  if(length(nodos)>0 & length(nodos)<9) {
+  # if(length(nodos)>0) {
     nodosUnif <- c(paste("P0",1:9,sep=""),paste("P",10:99,sep=""))
     nodosUnif <- nodosUnif[1:length(nodos)]
-    # matNodosUnif <- perm(nodosUnif)
-    # 
-    # r_circuitos <- character(nrow(matNodosUnif))
-    # for(i in 1:nrow(matNodosUnif))
-    #   r_circuitos[i] <- replaceMany(circuito, nodos, matNodosUnif[i,])
-    # circuito <- min(r_circuitos)
-    
-    circuito <- replaceMany(circuito, nodos, nodosUnif)
+    matNodosUnif <- perm(nodosUnif)
+     
+    r_circuitos <- character(nrow(matNodosUnif))
+    for(i in 1:nrow(matNodosUnif))
+       r_circuitos[i] <- replaceMany(circuito, nodos, matNodosUnif[i,])
+    circuito <- min(r_circuitos)
   }
   return(circuito)
 }
@@ -163,6 +169,112 @@ esCircuitoCerrado <- function(x) {
   codigos[codigos==""] <- NA
   !any(table(codigos)<2)
 }
+
+
+#### Ampliación Francesc (codi Dr. Jordi Cuadros) ####
+# simplificarCircuito = circuito con multimetro
+simplificarCircuito <- function(circuito){
+  if (is.na(circuito)) return(NA)
+  if (circuito=="") return(NA)
+  
+  # print(circuito)
+  circuito_prin <- NA
+  componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
+  conectores <- strsplit(componentes, " ")
+  df <- data.frame(componentes)
+  
+  for (i in 1:nrow(df)) {
+    if (substr(df[i,1],1,3) == "R_X") {
+      df[i,2] <- substr(df[i,1], 5, as.integer(nchar(componentes[i])-3))
+    } else {
+      df[i,2] <- substr(df[i,1], 5, as.integer(nchar(componentes[i])))
+    }
+    df[i,3:4] <- unlist(strsplit(df[i,2],split="[ ,.]"))
+  }
+  
+  df <- data.frame(V3=c(as.character(df$V3),as.character(df$V4)),
+                   V4=c(as.character(df$V4),as.character(df$V3)),
+                   stringsAsFactors = F)
+  
+  # el circuito debe tener los dos cables del multimetro, 
+  # sino devuelve un NA
+  valid <- (grepl("DMM_VLO", circuito) & grepl("DMM_VHI", circuito)) |
+    (grepl("DMM_ALO", circuito) & grepl("DMM_AHI", circuito)) | 
+    (grepl("DMM_1_1", circuito) & grepl("DMM_1_2", circuito)) | 
+    (grepl("IPROBE_1_1", circuito) & grepl("IPROBE_1_2", circuito)) |
+    (grepl("DMM_2_1", circuito) & grepl("DMM_2_2", circuito)) | 
+    (grepl("IPROBE_2_1", circuito) & grepl("IPROBE_2_2", circuito))
+  if (!valid) return(NA)
+  
+  nodesf1 <- NA          # nodo inicial del fragmento principal
+  if (grepl("DMM_VLO", circuito) & grepl("DMM_VHI", circuito)) nodesf1 <- "DMM_VLO"
+  if (grepl("DMM_ALO", circuito) & grepl("DMM_AHI", circuito)) nodesf1 <- "DMM_ALO"
+  if (grepl("DMM_1_1", circuito) & grepl("DMM_1_2", circuito)) nodesf1 <- "DMM_1_1"
+  if (grepl("DMM_2_1", circuito) & grepl("DMM_2_2", circuito)) nodesf1 <- "DMM_2_1"
+  if (grepl("IPROBE_1_1", circuito) & grepl("IPROBE_1_2", circuito)) nodesf1 <- "IPROBE_1_1"
+  if (grepl("IPROBE_2_1", circuito) & grepl("IPROBE_2_2", circuito)) nodesf1 <- "IPROBE_2_1"
+  
+  if(is.na(nodesf1)) return(NA)
+  
+  internal <- data.frame(
+    V3=c("DMM_VHI","DMM_AHI","DMM_1_1","DMM_2_1","IPROBE_1_1","IPROBE_2_1"),
+    V4=c("DMM_VLO","DMM_ALO","DMM_1_2","DMM_2_2","IPROBE_1_2","IPROBE_2_2"),
+    stringsAsFactors = FALSE)
+  internal <- rbind(internal, 
+                    data.frame(V3=internal$V4,
+                               V4=internal$V3,
+                               stringsAsFactors = FALSE))
+  df <- rbind(df,internal)
+  
+  nodesf1anterior <- character(0)       # nodos fragmento principal paso anterior
+  
+  a <- 1
+  while (length(nodesf1)!=length(nodesf1anterior)) {
+    nodesf1anterior <- nodesf1
+    for (i in 1:nrow(df)) {
+      if (df[i,1] %in% nodesf1) {
+        nodesf1 <- unique(c(nodesf1, df[i,2]))
+      }
+    }
+  }
+  
+  # Imprime el circuito significativo
+  #if (length(multimetre)==1) {
+  y <- 0
+  
+  for (i in 1:length(componentes)){
+    if (sum(df[i,1] %in% nodesf1)==0) {
+      componentes <- componentes[-(i-y)]
+      y <- y + 1
+    }
+  }
+  
+  circuito_prin <- paste(componentes, collapse = "/")
+  
+  # eliminar componentes cortocircuitados
+  componentes <- strsplit(circuito_prin,"/",fixed=TRUE)[[1]]
+  if(is.null(componentes)) return(NA)
+  if(length(componentes)==0) return(NA)
+  
+  for(i in 1:length(componentes)) {
+    if (!is.na(componentes[i]) & componentes[i]!="") {  
+      conectores <- strsplit(componentes[i], " ")[[1]]
+      if(is.na(conectores[2]==conectores[3]) | conectores[2]==conectores[3]) {
+        componentes[i] <- ""
+      }
+    }
+  }
+  componentes <- componentes[order(gsub("P[0-9][0-9]","Pxx",componentes))]
+  circuito_prin <- paste(componentes, collapse="/")  
+  circuito_prin <- gsub("^/*","",circuito_prin)
+  
+  circuito_prin <- gsub("P0([0-9])","A\\1",circuito_prin)
+  circuito_prin <- gsub("P([1-9][0-9])","A\\1",circuito_prin)
+  circuito_prin <- normalizarCircuito(circuito_prin)
+  
+  return(circuito_prin)
+}
+
 
 #### PUBLIC FUNCTIONS ####
 ### >> DATASETS ####
@@ -317,6 +429,65 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
   
   names(dfVISIR_accionesOrdenado)[names(dfVISIR_accionesOrdenado) == 'TiempoAcumuladoCorregido'] <- 'Time'
   
+  #### Ampliació Francesc ####
+  
+  # Valor Resolución
+  tempResolucion<-as.character(rep(NA,numCircuitos))
+  for(i in 1:numCircuitos){
+    tempRegExpResolucion <-regexec("<dmm_resolution value=([^<]*)",
+                                   as.character(dfVISIR_accionesCircuito$DatosRecibidosXML[i]))
+    tempResolucion[i]<-substr(dfVISIR_accionesCircuito$DatosRecibidosXML[i],tempRegExpResolucion[[1]][2],
+                              tempRegExpResolucion[[1]][2]+
+                                attr(tempRegExpResolucion[[1]],"match.length")[2]-1)
+  }
+  
+  tempResolucion <- gsub("[\n\">/]","", tempResolucion)
+  
+  # Valor Resultado
+  tempResultado<-as.character(rep(NA,numCircuitos))
+  for(i in 1:numCircuitos){
+    tempRegExpResultado <-regexec("<dmm_result value=([^<]*)",
+                                  as.character(dfVISIR_accionesCircuito$DatosRecibidosXML[i]))
+    tempResultado[i]<-substr(dfVISIR_accionesCircuito$DatosRecibidosXML[i],tempRegExpResultado[[1]][2],
+                             tempRegExpResultado[[1]][2]+
+                               attr(tempRegExpResultado[[1]],"match.length")[2]-1)
+  }
+  
+  tempResultado <- gsub("[\n\">/]","", tempResultado)
+  
+  # Valor Voltaje
+  tempVoltaje<-as.character(rep(NA,numCircuitos))
+  for(i in 1:numCircuitos){
+    tempRegExpVoltaje <-regexec('dc_output channel="25V.*?<dc_voltage_actual value="([^"]*)',
+                                as.character(dfVISIR_accionesCircuito$DatosRecibidosXML[i]))
+    tempVoltaje[i]<-substr(dfVISIR_accionesCircuito$DatosRecibidosXML[i],tempRegExpVoltaje[[1]][2],
+                           tempRegExpVoltaje[[1]][2]+
+                             attr(tempRegExpVoltaje[[1]],"match.length")[2]-1)
+  }
+  
+  # Adición de columnas en dfVISIR_accionesCircuito
+  dfVISIR_accionesCircuito<-cbind(dfVISIR_accionesCircuito,
+                                  Resultado = as.numeric(as.character(tempResultado)),
+                                  Resolucion = as.numeric(as.character(tempResolucion)),
+                                  Voltaje = as.numeric(as.character(tempVoltaje)))
+  
+  # Cálculo Relación
+  dfVISIR_accionesCircuito$Relación_Resultado_Voltaje <- dfVISIR_accionesCircuito$Resultado / dfVISIR_accionesCircuito$Voltaje
+  
+  # Circuito Significativo (Simplificado)
+  for (i in 1:nrow(dfVISIR_accionesCircuito)){
+    dfVISIR_accionesCircuito$CircuitoSimplificado[i] <- simplificarCircuito(as.character(dfVISIR_accionesCircuito$CircuitoNormalizado[i]))
+  }
+  
+  # Datos XML para ser analizados con milestones
+  dfVISIR_accionesCircuito$XML <- paste("<circuit>", dfVISIR_accionesCircuito$Circuito,"</circuit>",
+                            "<normalizedCircuit>", dfVISIR_accionesCircuito$CircuitoNormalizado, "</normalizedCircuit>",
+                            "<simplifiedCircuit>", dfVISIR_accionesCircuito$CircuitoSimplificado, "</simplifiedCircuit>",
+                            "<result>",dfVISIR_accionesCircuito$Resultado,"</result>",
+                            "<voltage>", dfVISIR_accionesCircuito$Voltaje, "</voltage>",
+                            "<measure>", dfVISIR_accionesCircuito$Medida, "</measure>", sep="")
+  
+  # dfA <<- dfVISIR_accionesCircuito
   return(dfVISIR_accionesCircuito)
 }
 
@@ -387,7 +558,7 @@ FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
   TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
 
   #Parte Circuitos
-  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%  group_by(Alumno) %>% 
+  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
     summarise(NumCircu=length(unique(CircuitoNormalizado)))
   
   # Mix Both Data Frames (Student Circuits Time)
@@ -404,6 +575,36 @@ FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
   return(zz)
 }
 
+FunctionTimeStudSimpl <- function (dfVISIR_acciones,dfActionCircuit) {
+  numAcciones<-nrow(dfVISIR_acciones)
+  
+  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+    order(dfVISIR_acciones$Alumno,
+          dfVISIR_acciones$FechaHoraEnvio),]
+  
+  #Parte Tiempo
+  TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
+    summarise(TotalTime=max(Time))
+  TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
+  TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
+  
+  #Parte Circuitos
+  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
+    summarise(NumCircu=length(unique(CircuitoSimplificado)))
+  
+  # Mix Both Data Frames (Student Circuits Time)
+  zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
+  zz$TotalTime <- as.numeric(zz$TotalTime)
+  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
+  MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
+  
+  zz$NumCircu <- as.numeric(zz$NumCircu)
+  zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
+  zz$Evaluation <- as.factor(zz$Evaluation)
+  
+  return(zz)
+}
 
 FunctionMTS <- function (dfVISIR_acciones) {
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
@@ -438,6 +639,13 @@ distnumcircN <- function(dfActionCircuit){
   CircByStudentDN <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%
     filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)))
   return(CircByStudentDN)
+}
+
+# Circuito Simplificado #
+distnumcircS <- function(dfActionCircuit){
+  CircByStudentDS <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
+  return(CircByStudentDS)
 }
 
 ### >> GRAPHS ####
@@ -703,4 +911,406 @@ InfovalueBoxMinT <- function(dfOrderTime){
   return(mintime)
 }
 
+# Distribución Circuito Simplificado #
+InfovalueBoxSC <- function(dfActionCircuit){
+  Ancircu <-dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.))
+  NumncircuVC<-length(unique(Ancircu$CircuitoSimplificado))
+  return(NumncircuVC)
+}
+
+InfovalueBoxMSC <- function(dfActionCircuit){
+  MeanNNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numncirc=length(unique(CircuitoSimplificado)))
+  MeanNumNCircSV <- round(mean(MeanNNAcircu$Numncirc),digits = 2)
+  return(MeanNumNCircSV)
+}
+
+InfovalueBoxlowboundS <- function(dfActionCircuit){
+  lowboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
+  mincircunv <- min(lowboundfN$CircuitoSimplificado)
+  return(mincircunv)
+}
+
+InfovalueBoxupboundS <- function(dfActionCircuit){
+  upboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
+  maxcircnv <- max(upboundfN$CircuitoSimplificado)
+  return(maxcircnv)
+}
+
+
+
+#### WORK INDICATORS ####
+
+#With Milestones
+generatedfActionsMilestones <- function (actions, dfMilestones) {
+  
+  dfActionsSorted <- actions
+  
+  milestones <- as.character(dfMilestones$milNames)
+  regExps <- as.character(dfMilestones$regExps)
+  postLogicEval <- as.character(dfMilestones$logTests)
+  
+  milestonesRegExp <- regExps
+  milestonesName <- milestones
+  milestonesLogEv <- postLogicEval
+  
+  milestones <- regExps
+  milestones[1:length(milestonesName)]<-milestonesName
+  postLogicEval<-rep("",length(regExps))
+  postLogicEval[1:length(milestonesLogEv)]<-milestonesLogEv
+  
+  # Milestones per accio
+  testVector<-as.character(dfActionsSorted$XML)
+  regExps<-paste("(?=",regExps,")",sep="")
+  
+  dfRegExpsPerElement<-data.frame()
+  for(i in 1:length(testVector)) {
+    lisRegExpsElement<-logical(length(regExps))
+    for (j in 1:length(regExps)) {
+      regexecResults<-gregexpr(regExps[j],testVector[i],perl=TRUE)
+      
+      evaluated<-FALSE
+      for(k in 1:length(regexecResults[[1]])) {
+        result<-regexecResults[[1]]
+        if(result[1]!=-1 & length(result)>0) {
+          m<-NULL
+          
+          if(!is.null(attr(regexecResults[[1]],"capture.start"))) {
+            
+            result<-as.vector(attr(regexecResults[[1]],"capture.start")[k,])
+            attr(result,"match.length")<-as.vector(attr(regexecResults[[1]],"capture.length")[k,])
+            
+            for(l in 1:length(result)) {
+              posMatch<-result[l]
+              lenMatch<-attr(result,"match.length")[l]
+              m<-c(m,substr(as.character(testVector[i]),
+                            posMatch,posMatch+lenMatch-1))
+            }
+          }
+        }
+        evaluated<-evaluated | (postLogicEval[j]=="" & result[1]!=-1)
+        #plj <<- postLogicEval
+        if(postLogicEval[j]!="" & result[1]!=-1) {
+          evaluated<-evaluated | as.logical(eval(parse(text=postLogicEval[j])))
+        }			
+      }
+      lisRegExpsElement[j]<-evaluated
+    }
+    #lis1 <<- lisRegExpsElement
+    dfRegExpsPerElement<-rbind(dfRegExpsPerElement,lisRegExpsElement)
+  }
+  colnames(dfRegExpsPerElement)<-milestones
+  
+  #df1 <<- cbind(dfActionsSorted,dfRegExpsPerElement)
+  cbind(dfActionsSorted,dfRegExpsPerElement)
+}  
+
+generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
+  
+  dfActionsSortedMilestones<-actionsMilestones
+  df1 <<- actionsMilestones
+  df2 <<- dfMilestones
+  
+  ## Creación de ID y filename
+  dfActionsSortedMilestones$number <- seq(1,nrow(dfActionsSortedMilestones),1)
+  dfActionsSortedMilestones$filename <- 1
+
+  milestones <- as.character(dfMilestones$milNames)
+  regExps <- as.character(dfMilestones$regExps)
+  postLogicEval <- as.character(dfMilestones$logTests)
+  
+  milestonesRegExp <- regExps
+  milestonesName <- milestones
+  milestonesLogEv <- postLogicEval
+  
+  milestones <- regExps
+  milestones[1:length(milestonesName)]<-milestonesName
+  postLogicEval<-rep("",length(regExps))
+  postLogicEval[1:length(milestonesLogEv)]<-milestonesLogEv
+  
+  # Muntatge de dfSessions
+  vecSessions<-unique(as.character(dfActionsSortedMilestones[,"Sesion"]))
+  
+  vecMinId<-character(length(vecSessions))
+  vecMaxId<-character(length(vecSessions))
+  vecMinTime<-character(length(vecSessions))
+  vecMaxTime<-character(length(vecSessions))
+  vecNActions<-numeric(length(vecSessions))
+  vecUser<-character(length(vecSessions))
+  vecFile<-character(length(vecSessions))
+  vecNSeq<-numeric(length(vecSessions))
+  vecTimeOnTask<-numeric(length(vecSessions))
+  
+  dfMilestonesPerSession<-data.frame(matrix(nrow=length(vecSessions),
+                                            ncol=length(milestones)*4),row.names=as.character(vecSessions))
+  
+  
+  colnames(dfMilestonesPerSession)<-c(paste("n_",milestones,sep=""),paste("t_",milestones,sep=""),
+                                      paste("dt_",milestones,sep=""),
+                                      paste("dtr_",milestones,sep="")) 
+  
+  for (i in 1:length(vecSessions)) {
+    dfActionsPerSession<-dfActionsSortedMilestones[as.character(dfActionsSortedMilestones[,"Sesion"])==vecSessions[i],]
+    dfActionsPerSessionSorted<-dfActionsPerSession[order(dfActionsPerSession[,"number"]),]
+    #dfActionsPerSessionSorted<-dfActionsPerSession
+
+    primer<-head(dfActionsPerSessionSorted,1)
+    darrer<-tail(dfActionsPerSessionSorted,1)
+    vecMinId[i]<-primer[,"number"]
+    vecMaxId[i]<-darrer[,"number"]
+    vecMinTime[i]<-as.character(primer[,"FechaHoraEnvio"])
+    vecMaxTime[i]<-as.character(darrer[,"FechaHoraRespuesta"])
+    vecNActions[i]<-nrow(dfActionsPerSessionSorted)
+    vecFile[i]<-as.character(primer[,"filename"])
+    vecUser[i]<-as.character(primer[,"Alumno"])
+    vecNSeq[i]<-max(table(dfActionsPerSessionSorted[,"number"]))
+    #vecTimeOnTask[i]<-darrer[,"diff_time_cum_real"]/60
+    vecTimeOnTask[i]<-darrer[,"Time"]/60
+    
+    
+    for(m in 1:length(milestones)) {
+      dfActionPerSessionMilestone<-dfActionsPerSessionSorted[
+        dfActionsPerSessionSorted[,milestones[m]]==TRUE,]
+      dfMilestonesPerSession[i,paste("n_",milestones[m],sep="")]<-
+        nrow(dfActionPerSessionMilestone)
+      if(nrow(dfActionPerSessionMilestone)>0) {
+        dfMilestonesPerSession[i,paste("t_",milestones[m],sep="")]<-
+          as.character(head(dfActionPerSessionMilestone,1)[,"TiempoDesdeAccionAnterior"])
+        dfMilestonesPerSession[i,paste("dt_",milestones[m],sep="")]<-
+          as.character(head(dfActionPerSessionMilestone,1)[,"TiempoAcumulado"])
+        dfMilestonesPerSession[i,paste("dtr_",milestones[m],sep="")]<-
+          as.character(head(dfActionPerSessionMilestone,1)[,"Time"])
+      }
+    }
+  }
+  
+  vecSessionStart<-strptime(vecMinTime, "%Y%m%d%H%M%OS")
+  vecSessionEnd<-strptime(vecMaxTime, "%Y%m%d%H%M%OS")
+  vecDurationSession<-as.numeric(difftime(vecSessionEnd,vecSessionStart,units="mins"))
+  
+  dfSessions<-data.frame(vecSessions,vecFile,vecUser,vecNActions,vecNSeq,vecMinId,vecMaxId,vecMinTime,
+                         vecMaxTime,vecDurationSession,vecTimeOnTask,dfMilestonesPerSession)
+  
+  #colnames(dfSessions)<-c("session","filename","user","n_actions","n_seq","min_number","max_number",
+  #                        "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerSession))
+
+  #dfSessions<-data.frame(vecSessions,vecUser,vecNActions,vecNSeq,vecMinId,vecMaxId,vecMinTime,
+  #                       vecMaxTime,vecDurationSession,vecTimeOnTask,dfMilestonesPerSession)
+  
+  colnames(dfSessions)<-c("Sesion","filename","Alumno","n_actions","n_seq","min_number","max_number",
+                         "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerSession))
+
+  # Muntatge de dfUsers
+  vecUsers<-unique(as.character(dfActionsSortedMilestones[,"Alumno"]))
+
+  vecMinTime<-character(length(vecUsers))
+  vecMaxTime<-character(length(vecUsers))
+  vecNActions<-numeric(length(vecUsers))
+  vecNSessions<-numeric(length(vecUsers))
+  vecNFiles<-numeric(length(vecUsers))
+  vecNSeq<-numeric(length(vecUsers))
+  vecDuration<-numeric(length(vecUsers))
+  vecTimeOnTask<-numeric(length(vecUsers))
+  
+  dfMilestonesPerUser<-data.frame(matrix(nrow=length(vecUsers),
+                                         ncol=length(milestones)*4),row.names=as.character(vecUsers))
+  
+  colnames(dfMilestonesPerUser)<-c(paste("n_",milestones,sep=""),paste("t_",milestones,sep=""),
+                                   paste("dt_",milestones,sep=""),
+                                   paste("dtr_",milestones,sep=""))
+  
+  # El problema està en aquest for !!!!!!!!!!!!!!!####
+  i <- 1
+  for (i in 1:length(vecUsers)) {
+    dfActionsPerUser<-dfActionsSortedMilestones[as.character(dfActionsSortedMilestones[,"Alumno"])==vecUsers[i],]
+    dfSessionsPerUser<-dfSessions[as.character(dfSessions[,"Alumno"])==vecUsers[i],]
+
+    dfActionsPerUserSorted<-dfActionsPerUser[order(dfActionsPerUser[,"Sesion"],dfActionsPerUser[,"number"]),]
+    
+    dfSessionsPerUserSorted<-dfSessionsPerUser[order(dfSessionsPerUser[,"Sesion"]),]
+    
+    dfSessionsPerUserSorted$duration_previous<-rep(0,nrow(dfSessionsPerUserSorted))
+    dfSessionsPerUserSorted$time_on_task_previous<-rep(0,nrow(dfSessionsPerUserSorted))
+    
+    if (nrow(dfSessionsPerUserSorted)>1) {
+      for(s in 2:nrow(dfSessionsPerUserSorted)) {
+        dfSessionsPerUserSorted$duration_previous[s]<-sum(dfSessionsPerUserSorted[which(as.character(dfSessionsPerUserSorted[,"Sesion"])
+                                                                                        < as.character(dfSessionsPerUserSorted[s,"Sesion"])),"duration"])
+        dfSessionsPerUserSorted$time_on_task_previous[s]<-sum(dfSessionsPerUserSorted[which(as.character(dfSessionsPerUserSorted[,"Sesion"])
+                                                                                            < as.character(dfSessionsPerUserSorted[s,"Sesion"])),"time_on_task"])	
+      }
+    }
+    
+    primer<-head(dfActionsPerUserSorted,1)
+    darrer<-tail(dfActionsPerUserSorted,1)
+    vecMinTime[i]<-as.character(primer[,"FechaHoraEnvio"])
+    vecMaxTime[i]<-as.character(darrer[,"FechaHoraRespuesta"])
+    vecNActions[i]<-nrow(dfActionsPerUserSorted)
+    vecNSessions[i]<-nrow(dfSessionsPerUserSorted)
+    vecNFiles[i]<-length(unique(dfActionsPerUserSorted[,"filename"]))
+    
+    # com a suma de sessions, en minuts
+    vecDuration[i]<-sum(dfSessionsPerUserSorted[,"duration"])
+    vecTimeOnTask[i]<-sum(dfSessionsPerUserSorted[,"time_on_task"])
+    
+    for(m in 1:length(milestones)) {
+      dfMilestonesPerUser[i,paste("n_",milestones[m],sep="")]<-
+        sum(dfSessionsPerUserSorted[,paste("n_",milestones[m],sep="")],
+            na.rm=TRUE)
+
+      if(dfMilestonesPerUser[i,paste("n_",milestones[m],sep="")] > 0) {
+        dfMilestonesPerUser[i,paste("t_",milestones[m],sep="")]<-
+          min(dfSessionsPerUserSorted[,paste("t_",milestones[m],sep="")],
+              na.rm=TRUE)
+        dfMilestonesPerUser[i,paste("dt_",milestones[m],sep="")]<-
+          min(as.numeric(dfSessionsPerUserSorted[,paste("dt_",milestones[m],sep="")])+
+                dfSessionsPerUserSorted[,"duration_previous"]*60,na.rm=TRUE)
+        dfMilestonesPerUser[i,paste("dtr_",milestones[m],sep="")]<-
+          min(as.numeric(dfSessionsPerUserSorted[,paste("dtr_",milestones[m],sep="")])+
+                dfSessionsPerUserSorted[,"time_on_task_previous"]*60,na.rm=TRUE)
+      }
+    }	
+  }
+
+  dfUsers <- data.frame(vecUsers,vecNSessions,vecNFiles,vecNActions,vecMinTime,
+                       vecMaxTime,vecDuration,vecTimeOnTask,dfMilestonesPerUser)
+  
+  colnames(dfUsers)<-c("Alumno","n_sessions","n_files","n_actions",
+                       "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerUser))
+  
+  dfUsers<-data.frame(dfUsers$Alumno,
+                      dfUsers[,paste("n_",milestones,sep="")]>0)
+  
+  rownames(dfUsers)<-1:nrow(dfUsers)
+  colnames(dfUsers)<-c("Alumno",milestones)
+
+  return(dfUsers)
+}
+
+generatedStudentsMilestonesEv <- function (studentsObsMilestones,dfMilestonesEv) {
+  if(is.null(studentsObsMilestones)) return(NULL)
+  if(is.null(dfMilestonesEv)) {
+    df<-studentsObsMilestones
+    colnames(df)[1]<-"student"
+  } else {
+    df <- data.frame(as.character(studentsObsMilestones[,1]))
+    om <- studentsObsMilestones[,-1]
+    
+    evNames <- as.character(dfMilestonesEv[,1])
+    evTests <- as.character(dfMilestonesEv[,2])
+    evTests <- gsub("om['","om[,'",evTests,fixed=TRUE)
+    
+    for(j in 1:nrow(dfMilestonesEv)) {
+      df <- cbind(df,as.logical(eval(parse(text=evTests[j]))))
+    }              
+    colnames(df)<-c("student",evNames)
+  }
+  
+  df$grades <- (rowSums(df[,2:length(df)])/(length(df)-1))*100
+  df
+}
+
+generatedfObs <- function(actionsMilestones, milestones) {
+  selCols <- c("filename","user","number","time","diff_time_cum","diff_time_cum_real")[
+    c("filename","user","number","time","diff_time_cum","diff_time_cum_real") %in%
+      colnames(actionsMilestones)] 
+  actionsMilestones[
+    apply(actionsMilestones[,milestones],1,sum)>0,
+    c(selCols,milestones)]
+}
+
+
+#COLORS
+getdfOIColors <- function(dfObsItems, dfEVMil) {
+  if(is.null(dfObsItems)) return(NULL)
+  
+  dfObsItemsEvMilest<-data.frame(item=as.character(dfObsItems$milNames),
+                                 stringsAsFactors = FALSE)
+  if(is.null(dfEVMil)) {
+    dfObsItemsEvMilest$evMil <- dfObsItemsEvMilest$item
+  } else {
+    dfObsItemsEvMilest$evMil <- 
+      sapply(dfObsItemsEvMilest$item,
+             function(x) {paste(ifelse(grepl(x,dfEVMil$evTests),
+                                       as.character(dfEVMil$milNames),""),collapse = "")})
+  }
+  
+  ncolors <- length(unique(dfObsItemsEvMilest$evMil[dfObsItemsEvMilest$evMil!=""]))
+  colorsMil <- rep(c(brewer.pal(9,"Set1"),brewer.pal(12,"Set3")),100)[1:ncolors]
+  if (ncolors!=length(unique(dfObsItemsEvMilest$evMil))) colorsMil <- c(colorsMil, "grey60")
+  
+  dfEvColor <- data.frame(evMil=unique(dfObsItemsEvMilest$evMil),colorMil=colorsMil)
+  dfObsItemsEvMilest <- merge(dfObsItemsEvMilest,dfEvColor,by="evMil") %>% arrange(item)
+  dfObsItemsEvMilest$colorInk <- ifelse(sapply(dfObsItemsEvMilest$colorMil, function(x) mean(ColToRgb(x))/255)<.5,
+                                        "white","black")
+  dfObsItemsEvMilest
+}
+
+#GRAPHS
+#With milestones.
+visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
+  if (is.null(bMilestones)) return(NULL) 
+  
+  vecExits<-100*apply(bMilestones[,-1],2,sum)
+  dfResultats<-as.data.frame(rbind(yes=vecExits/nrow(bMilestones),no=100-vecExits/nrow(bMilestones)))
+  dfResultats$grades <- NULL
+  
+  dfResults <- dfResultats
+  
+  par(las=2) # make label text perpendicular to axis
+  par(mar=c(12,5,2,2)) # increase y-axis margin.
+  par(cex=0.7)
+  
+  barplot(as.matrix(dfResultats),space=0,col=c("skyblue","white"))
+  
+}
+
+visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
+  if (!is.null(bMilestones)) {
+    require(gplots)
+    
+    nMilestones<-data.matrix(bMilestones[,-1])
+    if(!is.null(labels)) {
+      rownames(nMilestones)<-labels
+    } else {
+      rownames(nMilestones)<-bMilestones[,1]
+    }
+    mode(nMilestones)<-"numeric"
+    
+    colHM<-c("#EEEEEEFF","skyblue")
+    
+    heatmap.2(nMilestones,dendrogram="row",Colv=NULL,Rowv=TRUE,margins=c(6,6),
+              cexRow=0.6,cexCol=0.8,breaks=c(-0.5,0.5,1.5),key=FALSE,trace="none",
+              scale="none",col=colHM,
+              colsep=0:ncol(nMilestones)-1,rowsep=0:nrow(nMilestones)-1,
+              lmat=rbind(c(4,3),c(2,1)), 
+              lhei=c(0.5,9.5),
+              lwid=c(2,8))
+  }	
+}
+
+## Functions not yet used
+gradeDistribution <- function(dfStudentsMilestonesEv=NA) {
+  if(is.null(dfStudentsMilestonesEv)) return(NULL)
+  
+  ggplot(data=NULL,aes(x=dfStudentsMilestonesEv)) +
+    geom_histogram(color="black", alpha=.2, fill="skyblue", binwidth=5, boundary = 0) + 
+    geom_vline(aes(xintercept=mean(dfStudentsMilestonesEv)), linetype="dashed", size=1) +
+    geom_rug(alpha=.5) +
+    labs(x="Grades", y="Frequency")+theme_bw()
+}
+
+nActVStoTVSGrade <- function (dfStudents=NULL, dfStudentsMilestones=NULL, id=NULL){
+  
+  if(is.null(dfStudents)|is.null(dfStudentsMilestones)|is.null(id)) return(NULL)
+  
+  df <- merge(x = dfStudents, y = dfStudentsMilestones, by.x = id, by.y = "student")
+  
+  ggplot(df, aes(x=time_on_task, y=n_actions)) +  
+    geom_point(size = I(4), alpha = I(0.8), aes(color = grades)) +
+    labs(x = "Time on Task", y = "Number of Actions") + scale_color_gradientn(
+      colors=c("red4","red","white","green","forestgreen"),values=c(0,.4,.5,.6,1))+theme_bw()
+}
 

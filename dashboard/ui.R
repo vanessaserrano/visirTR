@@ -3,7 +3,7 @@ options(install.packages.check.source = "no")
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","DT","gplots",
          "xts","dygraphs","scales",
-         "formattable","treemap","viridis","cat")
+         "formattable","treemap","viridis","cat","gsubfn")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/",
@@ -39,7 +39,7 @@ ui <- dashboardPage(
        
 
         menuItem("Data Input",icon = icon("folder"), startExpanded = TRUE,
-            menuSubItem("Log Files", tabName = "browsedata")),
+            menuSubItem("Logs & Work Indicators", tabName = "browsedata")),
       menuItem("Global Results",icon = icon("folder"), startExpanded = TRUE,
         menuSubItem("Time", tabName = "timeana"),
         menuSubItem("Circuits", tabName = "numcircu"),
@@ -48,6 +48,9 @@ ui <- dashboardPage(
         menuSubItem("Common Circuits",tabName = "common-circuits")),
       menuItem("User-specific Results",icon = icon("folder"), startExpanded  = TRUE,
         menuSubItem("User Results",tabName = "usresults")),
+      menuItem("Work Indicators",icon = icon("folder"), startExpanded  = TRUE,
+               menuSubItem("Observation Items",tabName = "obsitems"),
+               menuSubItem("Evaluation Milestones",tabName = "evmil")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
      
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
@@ -78,27 +81,28 @@ ui <- dashboardPage(
       
       }")
     ),
-    
+  
     
     #boxes to be put in a row (or column)
     tabItems(
       tabItem("browsedata", 
-              fluidRow(
+        fluidRow(
           box(title = "Data Input", status = "warning", solidHeader = TRUE,width = 4,
               collapsible = TRUE,
-              fileInput('logsImport', 'Log Files')
+              fileInput('logsImport', 'Log Files'),
+              fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
+              fileInput('evMilestonesImport', 'Evaluation Milestones (optional)', accept = c('text/plain','.txt'))
           ),
-          box(
-            title = "Information", width = 4, solidHeader = TRUE,
-            "To start, load user traces by pressing button Browse"
+          box(solidHeader = TRUE,
+              "To start, load user traces by pressing button Browse"),
+          mainPanel(
+            verbatimTextOutput("milestonesData",placeholder=TRUE),
+            verbatimTextOutput("evmilestonesData",placeholder=TRUE)
           )
-          
-          ),
-          fluidRow(
+        ),
+        fluidRow(
           valueBoxOutput("numStudents",width = 3),
-          valueBoxOutput("numActions",width = 3)),
-          
-          fluidRow( 
+          valueBoxOutput("numActions",width = 3),
           valueBoxOutput("mindate",width = 3),
           valueBoxOutput("maxdate",width = 3)
         )
@@ -154,13 +158,17 @@ ui <- dashboardPage(
                                             height=540, width=12))),
                      tabPanel("Normalized Circuits Distribution", 
                               fluidRow(
+                                box(status="primary",checkboxInput("simplified_distribution","Simplified normalized circuit"),
+                                    width = 12)),
+                              fluidRow(
                                 valueBoxOutput("umuniqnormcirc",width = 3),
                                 valueBoxOutput("Meannumuniqnormcircst",width = 3),
                                 valueBoxOutput("lowboundN",width = 3),
                                 valueBoxOutput("upboundN",width = 3)
                               ),
                               fluidRow(
-                                box(status="primary",plotOutput("circdistN"), height=480, width=12)
+                                box(status="primary",
+                                    plotOutput("circdistN"), height=390, width=12)
                               )  
                      )
               )
@@ -176,7 +184,8 @@ ui <- dashboardPage(
           
           tabPanel( "Normalized Circuits vs Time",
             fluidRow(
-              box(status="primary",uiOutput("plotuinActnorm"),verbatimTextOutput("plot_pointsnActnorm"), height=480, width=12)
+              box(status="primary",checkboxInput("simplified_time","Simplified normalized circuit"),
+                  uiOutput("plotuinActnorm"),verbatimTextOutput("plot_pointsnActnorm"), height=480, width=12)
             )
           )
         )
@@ -187,6 +196,7 @@ ui <- dashboardPage(
           tabBox(height=480, width=12,
                  tabPanel("Common Circuits",
                           fluidRow(box(status="primary",
+                                       checkboxInput("simplified_common","Simplified normalized circuit"),
                                        dataTableOutput("cc_circuits"), 
                                        height=480, width=12))
                  ),
@@ -211,9 +221,9 @@ ui <- dashboardPage(
   
   tabItem("usresults",
           fluidRow(
-            box( status = "primary",width = 12,
+            box( status = "primary",
                 collapsible = TRUE,
-                htmlOutput("spr_selectStudent")
+                htmlOutput("spr_selectStudent"), height=750, width=12
             
   ,
   tabBox(height=540, width=12,
@@ -221,11 +231,14 @@ ui <- dashboardPage(
                   fluidRow(
   valueBoxOutput("numStudActions",width = 3),
   valueBoxOutput("timstud",width = 3),
-  valueBoxOutput("numcircuit",width = 3),
-  valueBoxOutput("numnormcircuit",width = 3)),
+  valueBoxOutput("numcircuit",width = 3)),
   
   fluidRow(
-    valueBoxOutput("numresist",width = 3),  
+    valueBoxOutput("numnormcircuit",width = 3),
+    valueBoxOutput("numsimplcircuit",width = 3),
+    valueBoxOutput("numresist",width = 3)),
+  
+  fluidRow(
     valueBoxOutput("numcurr",width = 3),
     valueBoxOutput("numvoltag",width = 3),
     valueBoxOutput("numerror",width = 3)
@@ -239,6 +252,7 @@ ui <- dashboardPage(
         tabPanel("List of Normalized Ciruits",
                  
                  fluidRow(box(status="primary",
+                              checkboxInput("simplified_list","Simplified normalized circuit"),
                               dataTableOutput("lcn_circuits"), 
                               height=480, width=12))),
   
@@ -258,11 +272,28 @@ ui <- dashboardPage(
   
   
   
-  )
+  ),
+  tabItem("obsitems",
+          tabBox(height=480, width=12,
+                 tabPanel("Average Items",
+                          fluidRow(box(status="primary", plotOutput("proportionbars"),height=480, width=12)
+                            
+                          )),
+                 tabPanel("Heatmap",fluidRow(box(status="primary", plotOutput("heatmap"),
+                                                 height=480, width=12))))),
+  
+  tabItem("evmil",
+          tabBox(height=480, width=12,
+                 tabPanel("Average Milestones",
+                          fluidRow(box(status="primary", plotOutput("evproportionbars"),height=480, width=12)
+                                   
+                          )),
+                 tabPanel("Heatmap",fluidRow(box(status="primary", plotOutput("evheatmap"),
+                                                 height=480, width=12)))))
+  
 
   
 
-          
   
 
     )
