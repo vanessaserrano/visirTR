@@ -7,7 +7,19 @@ shinyServer(function(input, output, session) {
   
 #### DEFINITIONS & CALCULATIONS ####
 ## Action & Student data ####
-    dfActionCircuit<- reactive({funActionCircuit(dfImport())})
+  dfImport<-reactive({
+    inFile <- input$logsImport
+    if (is.null(inFile)) return(NULL)
+    
+    df <- read.table(inFile$datapath, header=F, sep=",", quote="\"",
+                     stringsAsFactors = FALSE)
+    colnames(df) <- c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                      "DatosEnviadosXML","DatosRecibidosXML","Tarea")
+    df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+    return(df)
+  })
+  
+  dfActionCircuit<- reactive({funActionCircuit(dfImport())})
   dfOrderTime <- reactive({funOrderTime(dfActionCircuit())})
   dfSSA <- reactive({FunctionSSA(dfImport())})
   dfStudTime <- reactive({FunctionTimeStud(dfImport(),dfActionCircuit())})
@@ -17,7 +29,6 @@ shinyServer(function(input, output, session) {
   dfStudTimeNorm <- reactive({FunctionTimeStudNorm(dfImport(),dfActionCircuit())})
   dfStudTimeSimpl <- reactive({FunctionTimeStudSimpl(dfImport(),dfActionCircuit())})
 
-  
   ## Normalized Circuits ####  
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
@@ -111,34 +122,29 @@ shinyServer(function(input, output, session) {
 #### DATA INPUT ####
 ### >> LOGS & WORK INDICATORS ####
 ## Logs ####
-dfImport<-reactive({
-    inFile <- input$logsImport
-    if (is.null(inFile)) return(NULL)
-    
-    df <- read.table(inFile$datapath, header=F, sep=",", quote="\"",
-                     stringsAsFactors = FALSE)
-    colnames(df) <- c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
-                      "DatosEnviadosXML","DatosRecibidosXML","Tarea")
-    df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-    
-    return(df)
+  output$logFiles <- renderText({
+    if(is.null(dfImport())) {
+      "<strong>PLEASE START BY IMPORTING A LOG FILE THROUGH THE LEFT PANEL</strong>"
+    } else {
+      "Log file loaded, details are shown below..."
+    }
   })
-  
+    
 ## Work Indicators ####
   output$milestonesData <- renderText({
     if(is.null(dfMilestonesDef())) {
-      "Observation items definition not yet loaded!"
+      "<em>Observation items to be loaded... use the control on the left if needed.</em>"
     } else {
-      paste("Read observation items: ",nrow(dfMilestonesDef()),
-            " milestones (", paste(dfMilestonesDef()[,1],collapse = ", ") ,")", sep="")
+      paste("Read ",nrow(dfMilestonesDef()),
+            " observation items<br />", paste(dfMilestonesDef()[,1],collapse = ", ") , sep="")
     }
   })
   output$evmilestonesData <- renderText({
     if(is.null(dfMilestonesEvDef())) {
-      "Evaluation milestones not loaded. Observation milestones will be used for evaluation."
+      "<em>Evaluation milestones to be loaded... use the control on the left if needed. Observation milestones, if available, will be used for evaluation.</em>"
     } else {
-      paste("Read evaluation milestones: ",nrow(dfMilestonesEvDef()),
-            " milestones (", paste(dfMilestonesEvDef()[,1],collapse = ", ") ,")", sep="")
+      paste("Read ",nrow(dfMilestonesEvDef()),
+            " evaluation milestones<br />", paste(dfMilestonesEvDef()[,1],collapse = ", "), sep="")
     }
   })
 

@@ -15,31 +15,26 @@ source("dashboard_functiVISIR.R")
 theme = "bootstrap.css"
 ui <- dashboardPage( 
   skin="yellow",
-  
   dashboardHeader(
     title="VISIR DASHBOARD"
   ),
-  
   dashboardSidebar(
     sidebarMenu(
-        tags$head(tags$style(HTML('
-        a[href="#shiny-tab-widgets"] {
-          z-index: -99999;
-        }
-        a[href="#"] {
-          z-index: -99999;
-        }
-      '))),
-        tags$head(
-          tags$style(HTML('#StrucInfo{background-color:orange}'))
-        ),
-        tags$head(
-          tags$style(HTML('#Glossary{background-color:orange}'))
-        ),
-       
-
-        menuItem("Data Input",icon = icon("folder"), startExpanded = TRUE,
-            menuSubItem("Logs & Work Indicators", tabName = "browsedata")),
+      tags$head(tags$style(HTML('
+      a[href="#shiny-tab-widgets"] {
+        z-index: -99999;
+      }
+      a[href="#"] {
+        z-index: -99999;
+      }
+    '))),
+      tags$head(
+        tags$style(HTML('#StrucInfo{background-color:orange}'))
+      ),
+      tags$head(
+        tags$style(HTML('#Glossary{background-color:orange}'))
+      ),
+      menuItem("Data Input",icon = icon("home"), tabName = "browsedata"),
       menuItem("Global Results",icon = icon("folder"), startExpanded = TRUE,
         menuSubItem("Time", tabName = "timeana"),
         menuSubItem("Circuits", tabName = "numcircu"),
@@ -52,61 +47,37 @@ ui <- dashboardPage(
                menuSubItem("Observation Items",tabName = "obsitems"),
                menuSubItem("Evaluation Milestones",tabName = "evmil")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
-     
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
-               actionButton("Glossary", "Glossary of Terms",icon =  NULL, style='width:175px')
-               )
-      
-      
-      
-  )),
-  dashboardBody(tags$head(
-    tags$style(HTML('.skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a {
-          color: #fff;
-          background: #1e282c;
-          border-left-color: #1e282c;
-          }
-     
-                    
-                    
-                    ')),
+               actionButton("Glossary", "Glossary of Terms",icon =  NULL, style='width:175px'))
+    )
+  ),
+  dashboardBody(
+    tags$head(tags$style('.skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a
+          {color: #fff; background: #1e282c; border-left-color: #1e282c;}'),
     tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.css")),
-      
-    tags$head(tags$style(
-      "body{
-      
-      margin: auto;
-      
-      
-      
-      }")
-    ),
-  
-    
+    tags$head(tags$style("body {margin: auto;}")),
+
     #boxes to be put in a row (or column)
     tabItems(
       tabItem("browsedata", 
         fluidRow(
-          box(title = "Data Input", status = "warning", solidHeader = TRUE,width = 4,
+          box(title = "Data Input", status = "warning", solidHeader = TRUE, width = 4,
               collapsible = TRUE,
-              fileInput('logsImport', 'Log Files'),
+              fileInput('logsImport', 'Log File'),
               fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
               fileInput('evMilestonesImport', 'Evaluation Milestones (optional)', accept = c('text/plain','.txt'))
           ),
-          box(solidHeader = TRUE,
-              "To start, load user traces by pressing button Browse"),
-          mainPanel(
-            verbatimTextOutput("milestonesData",placeholder=TRUE),
-            verbatimTextOutput("evmilestonesData",placeholder=TRUE)
-          )
+          column(width = 7,
+            box(solidHeader = TRUE, width = NULL, htmlOutput("logFiles")),
+            fluidRow(width = NULL,
+              valueBoxOutput("numStudents",width = 6),
+              valueBoxOutput("numActions",width = 6),
+              valueBoxOutput("mindate",width = 6),
+              valueBoxOutput("maxdate",width = 6)),
+            box(solidHeader = TRUE, width = NULL, htmlOutput("milestonesData")),
+            box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData")))
         ),
-        fluidRow(
-          valueBoxOutput("numStudents",width = 3),
-          valueBoxOutput("numActions",width = 3),
-          valueBoxOutput("mindate",width = 3),
-          valueBoxOutput("maxdate",width = 3)
-        )
-      ),
+),
 
       tabItem("timeana",
         tabBox(height=480, width=12,
