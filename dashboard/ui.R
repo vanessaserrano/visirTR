@@ -3,16 +3,15 @@ options(install.packages.check.source = "no")
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","DT","gplots",
          "xts","dygraphs","scales",
-         "formattable","treemap","viridis","cat","gsubfn")
+         "formattable","treemap","viridis","cat","gsubfn","vroom")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/",
          quiet=TRUE, type="binary")}
 for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 
-source("dashboard_functiVISIR.R")
+source("functions_VISIRDB.R")
 
-theme = "bootstrap.css"
 ui <- dashboardPage( 
   skin="yellow",
   dashboardHeader(
@@ -20,43 +19,38 @@ ui <- dashboardPage(
   ),
   dashboardSidebar(
     sidebarMenu(
-      tags$head(tags$style(HTML('
-      a[href="#shiny-tab-widgets"] {
+    tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.css"),
+    tags$head(tags$style('
+      body {margin: auto; min-width:300px;}
+      REMOVE_TO_ENABLE_a[href="#shiny-tab-widgets"] {
         z-index: -99999;
       }
-      a[href="#"] {
+      REMOVE_TO_ENABLE_a[href="#"] {
         z-index: -99999;
       }
-    '))),
-      tags$head(
-        tags$style(HTML('#StrucInfo{background-color:orange}'))
-      ),
-      tags$head(
-        tags$style(HTML('#Glossary{background-color:orange}'))
-      ),
+      #StrucInfo {background-color:#ffda5b}
+      #Glossary {background-color:#ffda5b}
+      .skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a
+          {color: #fff; background: #1e282c; border-left-color: #1e282c;}
+      ')),
       menuItem("Data Input",icon = icon("home"), tabName = "browsedata"),
-      menuItem("Global Results",icon = icon("folder"), startExpanded = TRUE,
+      menuItem("Global Results",icon = icon("folder"), startExpanded = FALSE,
         menuSubItem("Time", tabName = "timeana"),
         menuSubItem("Circuits", tabName = "numcircu"),
         menuSubItem("Circuits vs Time", tabName = "circvstim")),
-      menuItem("Circuit-based Analysis",icon = icon("folder"), startExpanded  = TRUE,
+      menuItem("Circuit-based Analysis",icon = icon("folder"), startExpanded  = FALSE,
         menuSubItem("Common Circuits",tabName = "common-circuits")),
-      menuItem("User-specific Results",icon = icon("folder"), startExpanded  = TRUE,
+      menuItem("User-specific Results",icon = icon("folder"), startExpanded  = FALSE,
         menuSubItem("User Results",tabName = "usresults")),
-      menuItem("Work Indicators",icon = icon("folder"), startExpanded  = TRUE,
+      menuItem("Work Indicators",icon = icon("folder"), startExpanded  = FALSE,
                menuSubItem("Observation Items",tabName = "obsitems"),
                menuSubItem("Evaluation Milestones",tabName = "evmil")),
-      menuItem("Help",icon = icon("question-circle"), startExpanded  = TRUE,
+      menuItem("Help",icon = icon("question-circle"), startExpanded  = FALSE,
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
                actionButton("Glossary", "Glossary of Terms",icon =  NULL, style='width:175px'))
     )
   ),
   dashboardBody(
-    tags$head(tags$style('.skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a
-          {color: #fff; background: #1e282c; border-left-color: #1e282c;}'),
-    tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.css")),
-    tags$head(tags$style("body {margin: auto;}")),
-
     #boxes to be put in a row (or column)
     tabItems(
       tabItem("browsedata", 

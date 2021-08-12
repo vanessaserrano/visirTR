@@ -1,4 +1,5 @@
-options(shiny.maxRequestSize=500*1024^2)
+options(shiny.maxRequestSize=5*1024^3)
+
 shinyServer(function(input, output, session) {
 
   session$onSessionEnded(function() {
@@ -11,17 +12,16 @@ shinyServer(function(input, output, session) {
     inFile <- input$logsImport
     if (is.null(inFile)) return(NULL)
     
-    df <- read.table(inFile$datapath, header=F, sep=",", quote="\"",
-                     stringsAsFactors = FALSE)
-    colnames(df) <- c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
-                      "DatosEnviadosXML","DatosRecibidosXML","Tarea")
+    df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+                col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                      "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
+                col_types="ccccccc", escape_double = T, escape_backslash = F)
     df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
     return(df)
   })
   
   dfActionCircuit<- reactive({funActionCircuit(dfImport())})
   dfOrderTime <- reactive({funOrderTime(dfActionCircuit())})
-  dfSSA <- reactive({FunctionSSA(dfImport())})
   dfStudTime <- reactive({FunctionTimeStud(dfImport(),dfActionCircuit())})
   dfMTS <- reactive({FunctionMTS(dfImport())})
   dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
@@ -372,7 +372,7 @@ shinyServer(function(input, output, session) {
 ## Circuits distribution ####
   # Total number of circuits
   
-  output$numuniquecirc<-  renderValueBox({
+  output$numuniquecirc <- renderValueBox({
     valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
@@ -382,7 +382,7 @@ shinyServer(function(input, output, session) {
 
   # Mean number of circuits by student  
   
-  output$Meannumuniquecircst<-  renderValueBox({
+  output$Meannumuniquecircst <- renderValueBox({
     valueBox(
       value=tags$p(ifelse(is.null(dfImport()),"--",
                           InfovalueBoxMNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
@@ -475,7 +475,6 @@ shinyServer(function(input, output, session) {
     g
   })
 
-  
   output$circdistN <- renderPlot({
     if(is.null(dfImport())) return(NULL)
     g <- plotDistribution(distnumcircN(dfActionCircuit())$CircuitoNormalizado, xlabel="Normalized Circuits per User")
@@ -495,10 +494,20 @@ shinyServer(function(input, output, session) {
 ## Number of circuits vs time ####
     output$nActionsVStoT <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-    ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu))  +  geom_point(size = I(3), alpha = I(0.4)) + 
-      labs(x = "Time (in h)", y = "Number of Circuits") + theme_bw()+geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
-      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc") + geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$NumCircu),digits = 2),hjust = -15.5))+
-      geom_text(aes(x = mean(dfStudTime()$TotalTime), y= mean(dfStudTime()$NumCircu), label=round(mean(dfStudTime()$TotalTime),digits = 2),vjust = -7.5)) + theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+    
+    meanTT <- mean(dfStudTime()$TotalTime)
+    meanNC <- mean(dfStudTime()$NumCircu)
+    
+    ggplot(dfStudTime(), aes(x=TotalTime, y=NumCircu))  +  
+      geom_point(size = 3, alpha = 0.4) + 
+      labs(x = "Time (in h)", y = "Number of Circuits") +
+      geom_hline(yintercept = mean(dfStudTime()$NumCircu), color="#fbada7")+
+      geom_vline(xintercept = mean(dfStudTime()$TotalTime), color="#66d9dc") +
+      geom_text(aes(x = meanTT, y= meanNC, label=round(meanNC,digits = 2),hjust = -15.5)) +
+      geom_text(aes(x = meanTT, y= meanNC, label=round(meanTT,digits = 2),vjust = -7.5)) + 
+      theme_bw() + 
+      theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+
   })
 
   output$plotuinAct <- renderUI({
