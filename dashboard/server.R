@@ -36,12 +36,6 @@ shinyServer(function(input, output, session) {
     data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
   })
   
-  tabN1Circuits <- reactive({
-    tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
-    tab <- tab[order(-tab)]
-    data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
-  })
-  
   tabNStudents <- reactive({
     tab <- table(na.omit(dfActionCircuit()$Alumno))
     tab <- tab[order(tab)]
@@ -54,12 +48,6 @@ shinyServer(function(input, output, session) {
     data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
   })
   
-  tabS1Circuits <- reactive({
-    tab <- table(na.omit(dfActionCircuit()$CircuitoSimplificado))
-    tab <- tab[order(-tab)]
-    data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
-  })
-
   ## Work Indicators ####
   dfMilestonesDef<-reactive({
     inFile <- input$obsItemsImport
@@ -120,7 +108,6 @@ shinyServer(function(input, output, session) {
   
 
 #### DATA INPUT ####
-### >> LOGS & WORK INDICATORS ####
 ## Logs ####
   output$logFiles <- renderText({
     if(is.null(dfImport())) {
@@ -187,28 +174,30 @@ shinyServer(function(input, output, session) {
   # Total time spend
   output$totaltimespend <-  renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-             InfovalueBoxTT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
-      "Total Time (in h)",color = "blue")
+      value=ifelse(is.null(dfImport()),"--",
+             InfovalueBoxTT(dfOrderTime())), 
+      subtitle="Total Time (in h)",
+      color = "blue")
     })
       
   
   # Mean time spend
-  
   output$meantimespend <-  renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxMeT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
-      "Mean Time/User (in h)",color = "blue")
+      value=ifelse(is.null(dfImport()),"--",
+              InfovalueBoxMeT(dfOrderTime())), 
+      subtitle="Mean Time/User (in h)",
+      color = "blue")
   })
   
 
   # Max time spend
   output$maxtimespend <-  renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxMaxT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
-      "Max Time (in h)",color = "blue")
+      value=ifelse(is.null(dfImport()),"--",
+            InfovalueBoxMaxT(dfOrderTime())), 
+      subtitle = "Max Time (in h)",
+      color = "blue")
   })
   
 
@@ -216,9 +205,10 @@ shinyServer(function(input, output, session) {
   
   output$mintimespend<-  renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxMinT(dfOrderTime())),style = "font-size: 90%;"),width = 4, 
-      "Min Time (in h)",color = "blue")
+      value=ifelse(is.null(dfImport()),"--",
+            InfovalueBoxMinT(dfOrderTime())), 
+      subtitle = "Min Time (in h)",
+      color = "blue")
   })
   
 
@@ -682,15 +672,15 @@ shinyServer(function(input, output, session) {
   ## Number of Circuits vs User ####
   output$ntc_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
-    if(is.null(tabS1Circuits())) 
+    if(is.null(tabSCircuits())) 
       return(selectInput("ncu_circuit", "Select a simplified normalized circuit...", c("No data available")))
     else {
-      return(selectInput("ncu_circuit", "Select a simplified normalized circuit...", tabS1Circuits()$Circuit))
+      return(selectInput("ncu_circuit", "Select a simplified normalized circuit...", tabSCircuits()$Circuit))
     }})
   
   output$ntc_plotu_chart <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-        grafntcdata <- dfActionCircuit() %>% select(Alumno)
+    grafntcdata <- dfActionCircuit() %>% select(Alumno)
  
     if(is.null(input$ct_circuit)) {
       grafntcdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
@@ -701,12 +691,11 @@ shinyServer(function(input, output, session) {
       grafntcdata <- grafntcdata %>% group_by(Alumno) %>% summarise(Len=sum(sel,na.rm=TRUE))
     }
         
-    g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
+    ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
       geom_bar(stat="identity",width = 0.7,fill="steelblue") +
       theme(axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
       labs(x = "User", y= "Number of Simplified Normalized Circuits")
-    g
   })
   
   output$ntc_plotu <- renderUI({
@@ -715,10 +704,7 @@ shinyServer(function(input, output, session) {
     )
   })
   
- 
-  
-  
-  
+
   #### USER-SPECIFIC RESULTS ####
   ### >> USER RESULTS ####
   
