@@ -1,4 +1,5 @@
-options(install.packages.check.source = "no")
+options(install.packages.check.source = "no",
+        shiny.maxRequestSize=5*1024^3)
 
 pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","DT","gplots",
@@ -91,7 +92,8 @@ ui <- dashboardPage(
           ),
           tabPanel( "Time vs User & Date",
             fluidRow(
-              box(status="primary",uiOutput("plot"),verbatimTextOutput("plot_poin"), height=480, width=12)
+              box(status="primary",uiOutput("plot"),verbatimTextOutput("plot_poin"), 
+                  height=480, width=12)
             )
           )
         )  
