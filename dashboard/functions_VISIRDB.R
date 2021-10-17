@@ -272,8 +272,8 @@ simplificarCircuito <- function(circuito){
 
 #### PUBLIC FUNCTIONS ####
 ### >> DATASETS ####
-funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
-  numAcciones<-nrow(dfVISIR_acciones)
+create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
+    numAcciones<-nrow(dfVISIR_acciones)
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
@@ -313,7 +313,14 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
   
   dfVISIR_accionesOrdenado$Alumno <- factor(dfVISIR_accionesOrdenado$Alumno, 
                                             levels=ordenAlumnos$Alumno, ordered=TRUE)
-  
+
+  (dfActionTime_ext <<- dfVISIR_accionesOrdenado)
+}
+
+create_dfActionCircuit <- function (dfActionTime) {
+  dfVISIR_accionesOrdenado <- dfActionTime
+  numAcciones<-nrow(dfVISIR_accionesOrdenado)
+    
   dfVISIR_accionesOrdenado$EsCircuito <- grepl("<circuitlist>",
     dfVISIR_accionesOrdenado$DatosEnviadosXML)
 
@@ -464,7 +471,7 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
                                   Voltaje = as.numeric(as.character(tempVoltaje)))
   
   # Cálculo Relación
-  dfVISIR_accionesCircuito$Relación_Resultado_Voltaje <- dfVISIR_accionesCircuito$Resultado / dfVISIR_accionesCircuito$Voltaje
+  dfVISIR_accionesCircuito$RatioResVol <- dfVISIR_accionesCircuito$Resultado / dfVISIR_accionesCircuito$Voltaje
   
   # Circuito Significativo (Simplificado)
   for (i in 1:nrow(dfVISIR_accionesCircuito)){
@@ -479,17 +486,14 @@ funActionCircuit <- function (dfVISIR_acciones, timeLimit = 900) {
                             "<voltage>", dfVISIR_accionesCircuito$Voltaje, "</voltage>",
                             "<measure>", dfVISIR_accionesCircuito$Medida, "</measure>", sep="")
   
-  # dfA <<- dfVISIR_accionesCircuito
-  return(dfVISIR_accionesCircuito)
+  (dfActionCircuit_ext <<- dfVISIR_accionesCircuito)
 }
 
-funOrderTime <- function (dfVISIR_accionesOrdenado) {
-  ordenAlumno <- dfVISIR_accionesOrdenado %>% select(Alumno, Time) %>% group_by(Alumno) %>% 
-    summarise(TotalTime=max(Time))
-  
-  ordenAlumno$TotalTime <-as.numeric(ordenAlumno$TotalTime)
-  return(ordenAlumno)
-}
+# funOrderTime <- function (dfVISIR_accionesOrdenado) {
+#   ordenAlumno <- dfVISIR_accionesOrdenado %>% select(Alumno, Time) %>% group_by(Alumno) %>% 
+#     summarise(TotalTime=max(Time),.groups = "drop_last")
+#   return(ordenAlumno)
+# }
 
 FunctionSSA <- function (dfVISIR_acciones) {
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
@@ -510,20 +514,13 @@ FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
   
-  #Parte Tiempo
-  TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
-    summarise(TotalTime=max(Time))
-  TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
-  TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
-
-  #Parte Circuitos
-  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,Circuito) %>%  group_by(Alumno) %>% 
-    summarise(NumCircu=length(Circuito))
-  
-  # Mix Both Data Frames (Student Circuits Time)
-  zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
+  zz <- dfActionCircuit %>% select(Alumno,Time,Circuito) %>% group_by(Alumno) %>% 
+    summarise(TotalTime=max(Time), NumCircu=length(Circuito), .groups = "drop_last")
   zz$TotalTime <- as.numeric(zz$TotalTime)
+  zz$TotalTime <- round(zz$TotalTime/60,digits = 2) #in hours
   
+  # TODO: Validar filtratge i etiqueta
+  # TODO: Recuperar funcions
   MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
   MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
@@ -599,6 +596,8 @@ FunctionTimeStudSimpl <- function (dfVISIR_acciones,dfActionCircuit) {
 }
 
 FunctionMTS <- function (dfVISIR_acciones) {
+  # TODO: Refer partint del codi de 
+  
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
           dfVISIR_acciones$FechaHoraEnvio),]
@@ -621,32 +620,31 @@ FunctionMTS <- function (dfVISIR_acciones) {
 }
 
 distnumcirc <- function(dfActionCircuit){
-  print(str(dfActionCircuit))
-  CircByStudentD <- dfActionCircuit %>% select(Alumno,Circuito,FechaHoraEnvio) %>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Circuito =length(Circuito))
-  return(CircByStudentD)
+  dfActionCircuit %>% select(Alumno,Circuito,FechaHoraEnvio) %>%
+    filter(complete.cases(.)) %>%
+    group_by(Alumno) %>% summarise(Circuito =length(Circuito), .groups = "drop_last")
 }
 
 distnumcircN <- function(dfActionCircuit){
-  CircByStudentDN <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)))
-  return(CircByStudentDN)
+  dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>%
+    summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)), .groups = "drop_last")
 }
 
 # Circuito Simplificado #
 distnumcircS <- function(dfActionCircuit){
-  CircByStudentDS <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
-  return(CircByStudentDS)
+  dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>%
+    summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)), .groups = "drop_last")
 }
 
 ### >> GRAPHS ####
 ## Time vs Date ####
 Dygraphfunc <- function(dfMTS) {
   if(is.null(dfMTS)) return(NULL)
-  
+  # TODO: TimeSpent!!!!
   Totaltimebydate2 <-dfMTS %>% group_by(Dates)%>% 
-    summarise(Time=sum(TimeSpent,na.rm=TRUE)) %>%mutate(Time=Time) %>%  mutate(Time=round(Time,digits = 2))
+    summarise(Time=sum(TimeSpent,na.rm=TRUE)) %>%  mutate(Time=round(Time,digits = 2))
   Totaltime <- zoo(Totaltimebydate2$Time,Totaltimebydate2$Dates)
   Tot<-cbind(Totaltime)
   dygraph(Tot)%>% dyAxis("y",rangePad=c(-0.05),label = "Time (in h)") %>% dySeries("Totaltime", label = "Total Time",axis="y")  %>%
@@ -718,7 +716,8 @@ plotDistribution <- function(values=NA,minValues=NULL,maxValues=NULL,xlabel="") 
   
   if (is.null(minValues)) {
     minValues<-min(values,na.rm=TRUE)
-    minValues<-floor(minValues/10^floor(log10(minValues)-1))*10^floor(log10(minValues)-1)
+    if(minValues>0) 
+      minValues<-floor(minValues/10^floor(log10(minValues)-1))*10^floor(log10(minValues)-1)
   }
   
   # Freedman-Diaconis rule
@@ -763,7 +762,7 @@ plotDistribution <- function(values=NA,minValues=NULL,maxValues=NULL,xlabel="") 
   #   theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"))
   # 
   # ghist
-  
+
   g <- ggplot(data=NULL,aes(x=values)) +
     geom_histogram(color="black", alpha=.2, fill="skyblue",
                    binwidth=bw2, boundary=ggmaxValues)+ 
@@ -905,20 +904,20 @@ ValueBoxnumint <- function(dfActionCircuit){
 }  
 
 InfovalueBoxTT <- function(dfOrderTime){
-  tottime<-sum(dfOrderTime$TotalTime)/60
+  tottime<-sum(dfOrderTime$TotalTime)
   round(tottime,digits = 2)
 }
 
 InfovalueBoxMeT <- function(dfOrderTime){
-  round(mean(dfOrderTime$TotalTime)/60,digits = 2)
+  round(mean(dfOrderTime$TotalTime),digits = 2)
 }
 
 InfovalueBoxMaxT <- function(dfOrderTime){
-  round(max(dfOrderTime$TotalTime)/60,digits = 2)
+  round(max(dfOrderTime$TotalTime),digits = 2)
 }
 
 InfovalueBoxMinT <- function(dfOrderTime){
-  round(min(dfOrderTime$TotalTime)/60,digits = 2)
+  round(min(dfOrderTime$TotalTime),digits = 2)
 }
 
 # Distribución Circuito Simplificado #
@@ -955,21 +954,15 @@ InfovalueBoxupboundS <- function(dfActionCircuit){
 
 #With Milestones
 generatedfActionsMilestones <- function (actions, dfMilestones) {
-  
   dfActionsSorted <- actions
   
   milestones <- as.character(dfMilestones$milNames)
   regExps <- as.character(dfMilestones$regExps)
   postLogicEval <- as.character(dfMilestones$logTests)
   
-  milestonesRegExp <- regExps
-  milestonesName <- milestones
-  milestonesLogEv <- postLogicEval
-  
-  milestones <- regExps
-  milestones[1:length(milestonesName)]<-milestonesName
-  postLogicEval<-rep("",length(regExps))
-  postLogicEval[1:length(milestonesLogEv)]<-milestonesLogEv
+  # milestonesRegExp <- regExps
+  # milestonesName <- milestones
+  # milestonesLogEv <- postLogicEval
   
   # Milestones per accio
   testVector<-as.character(dfActionsSorted$XML)
@@ -1001,28 +994,24 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
           }
         }
         evaluated<-evaluated | (postLogicEval[j]=="" & result[1]!=-1)
-        #plj <<- postLogicEval
+        
         if(postLogicEval[j]!="" & result[1]!=-1) {
           evaluated<-evaluated | as.logical(eval(parse(text=postLogicEval[j])))
         }			
       }
       lisRegExpsElement[j]<-evaluated
     }
-    #lis1 <<- lisRegExpsElement
     dfRegExpsPerElement<-rbind(dfRegExpsPerElement,lisRegExpsElement)
   }
   colnames(dfRegExpsPerElement)<-milestones
   
-  #df1 <<- cbind(dfActionsSorted,dfRegExpsPerElement)
-  cbind(dfActionsSorted,dfRegExpsPerElement)
+  (dfActionsObsItems_ext <<- cbind(dfActionsSorted,dfRegExpsPerElement))
 }  
 
 generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
   
   dfActionsSortedMilestones<-actionsMilestones
-  df1 <<- actionsMilestones
-  df2 <<- dfMilestones
-  
+
   ## Creación de ID y filename
   dfActionsSortedMilestones$number <- seq(1,nrow(dfActionsSortedMilestones),1)
   dfActionsSortedMilestones$filename <- 1
@@ -1079,7 +1068,6 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
     #vecTimeOnTask[i]<-darrer[,"diff_time_cum_real"]/60
     vecTimeOnTask[i]<-darrer[,"Time"]/60
     
-    
     for(m in 1:length(milestones)) {
       dfActionPerSessionMilestone<-dfActionsPerSessionSorted[
         dfActionsPerSessionSorted[,milestones[m]]==TRUE,]
@@ -1132,6 +1120,7 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
                                    paste("dtr_",milestones,sep=""))
   
   # El problema està en aquest for !!!!!!!!!!!!!!!####
+  # Sembla que hi ha càlculs innecesaris
   i <- 1
   for (i in 1:length(vecUsers)) {
     dfActionsPerUser<-dfActionsSortedMilestones[as.character(dfActionsSortedMilestones[,"Alumno"])==vecUsers[i],]
@@ -1184,19 +1173,19 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
     }	
   }
 
-  dfUsers <- data.frame(vecUsers,vecNSessions,vecNFiles,vecNActions,vecMinTime,
-                       vecMaxTime,vecDuration,vecTimeOnTask,dfMilestonesPerUser)
+  # dfUsers <- data.frame(vecUsers,vecNSessions,vecNFiles,vecNActions,vecMinTime,
+  #                      vecMaxTime,vecDuration,vecTimeOnTask,dfMilestonesPerUser)
+  # 
+  # colnames(dfUsers)<-c("Alumno","n_sessions","n_files","n_actions",
+  #                      "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerUser))
   
-  colnames(dfUsers)<-c("Alumno","n_sessions","n_files","n_actions",
-                       "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerUser))
-  
-  dfUsers<-data.frame(dfUsers$Alumno,
-                      dfUsers[,paste("n_",milestones,sep="")]>0)
+  dfUsers<-data.frame(vecUsers,
+                      dfMilestonesPerUser[,paste("n_",milestones,sep="")]>0)
   
   rownames(dfUsers)<-1:nrow(dfUsers)
   colnames(dfUsers)<-c("Alumno",milestones)
 
-  return(dfUsers)
+  (dfObsItems_xUser_ext <<- dfUsers)
 }
 
 generatedStudentsMilestonesEv <- function (studentsObsMilestones,dfMilestonesEv) {
@@ -1219,7 +1208,7 @@ generatedStudentsMilestonesEv <- function (studentsObsMilestones,dfMilestonesEv)
   }
   
   df$grades <- (rowSums(df[,2:length(df)])/(length(df)-1))*100
-  df
+  (dfEvMilestones_xUser_ext <<- df)
 }
 
 generatedfObs <- function(actionsMilestones, milestones) {

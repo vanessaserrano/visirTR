@@ -1,5 +1,3 @@
-options(shiny.maxRequestSize=5*1024^3)
-
 shinyServer(function(input, output, session) {
 
   session$onSessionEnded(function() {
@@ -17,18 +15,24 @@ shinyServer(function(input, output, session) {
                       "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
                 col_types="ccccccc", escape_double = T, escape_backslash = F)
     df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-    return(df)
+    (dfImport_ext <<- df)
   })
   
-  dfActionCircuit<- reactive({funActionCircuit(dfImport())})
-  dfOrderTime <- reactive({funOrderTime(dfActionCircuit())})
+  dfActionTime <- reactive({create_dfActionTime(dfImport(), timeLimit = 900)})
+  dfActionCircuit <- reactive({create_dfActionCircuit(dfActionTime())})
+  
+  # dfOrderTime <- reactive({funOrderTime(dfActionCircuit())})
   dfStudTime <- reactive({FunctionTimeStud(dfImport(),dfActionCircuit())})
   dfMTS <- reactive({FunctionMTS(dfImport())})
+  
   dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
+  
   dftimeuserdate <- reactive({fplotlyfunc3(dfMTS())})
+  
   dfStudTimeNorm <- reactive({FunctionTimeStudNorm(dfImport(),dfActionCircuit())})
   dfStudTimeSimpl <- reactive({FunctionTimeStudSimpl(dfImport(),dfActionCircuit())})
 
+  
   ## Normalized Circuits ####  
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
@@ -175,7 +179,7 @@ shinyServer(function(input, output, session) {
   output$totaltimespend <-  renderValueBox({
     valueBox(
       value=ifelse(is.null(dfImport()),"--",
-             InfovalueBoxTT(dfOrderTime())), 
+             InfovalueBoxTT(dfStudTime())), 
       subtitle="Total Time (in h)",
       color = "blue")
     })
@@ -185,7 +189,7 @@ shinyServer(function(input, output, session) {
   output$meantimespend <-  renderValueBox({
     valueBox(
       value=ifelse(is.null(dfImport()),"--",
-              InfovalueBoxMeT(dfOrderTime())), 
+              InfovalueBoxMeT(dfStudTime())), 
       subtitle="Mean Time/User (in h)",
       color = "blue")
   })
@@ -195,7 +199,7 @@ shinyServer(function(input, output, session) {
   output$maxtimespend <-  renderValueBox({
     valueBox(
       value=ifelse(is.null(dfImport()),"--",
-            InfovalueBoxMaxT(dfOrderTime())), 
+            InfovalueBoxMaxT(dfStudTime())), 
       subtitle = "Max Time (in h)",
       color = "blue")
   })
@@ -206,7 +210,7 @@ shinyServer(function(input, output, session) {
   output$mintimespend<-  renderValueBox({
     valueBox(
       value=ifelse(is.null(dfImport()),"--",
-            InfovalueBoxMinT(dfOrderTime())), 
+            InfovalueBoxMinT(dfStudTime())), 
       subtitle = "Min Time (in h)",
       color = "blue")
   })
@@ -214,7 +218,7 @@ shinyServer(function(input, output, session) {
 
   output$timstu <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-    plotDistribution(dfOrderTime()$TotalTime/60, xlabel="Time (in h) per User")
+    plotDistribution(dfStudTime()$TotalTime, xlabel="Time (in h) per User")
   })
   
 ## Time on task vs User per Date HeatMap ####
