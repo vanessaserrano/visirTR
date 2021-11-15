@@ -40,7 +40,7 @@ normalizarCircuito<-function(x) {
   # x es una cadena
   if(is.null(x)) return(NA)
   if(is.na(x)) return(NA)
-  if(x=="") return(NA)
+  if(x=="") return("")
   
   ## Substitución del 0 por GND
   circuito <- as.character(x)
@@ -172,7 +172,7 @@ esCircuitoCerrado <- function(x) {
 
 simplificarCircuito <- function(circuito){
   if (is.na(circuito)) return(NA)
-  if (circuito=="") return(NA)
+  if (circuito=="") return("")
   
   circuito_prin <- NA
   componentes <- strsplit(circuito,"/",fixed=TRUE)[[1]]
@@ -193,14 +193,14 @@ simplificarCircuito <- function(circuito){
                    stringsAsFactors = F)
   
   # el circuito debe tener los dos cables del multimetro, 
-  # sino devuelve un NA
+  # sino devuelve cadena vacía
   valid <- (grepl("DMM_VLO", circuito) & grepl("DMM_VHI", circuito)) |
     (grepl("DMM_ALO", circuito) & grepl("DMM_AHI", circuito)) | 
     (grepl("DMM_1_1", circuito) & grepl("DMM_1_2", circuito)) | 
     (grepl("IPROBE_1_1", circuito) & grepl("IPROBE_1_2", circuito)) |
     (grepl("DMM_2_1", circuito) & grepl("DMM_2_2", circuito)) | 
     (grepl("IPROBE_2_1", circuito) & grepl("IPROBE_2_2", circuito))
-  if (!valid) return(NA)
+  if (!valid) return("")
   
   nodesf1 <- NA          # nodo inicial del fragmento principal
   if (grepl("DMM_VLO", circuito) & grepl("DMM_VHI", circuito)) nodesf1 <- "DMM_VLO"
@@ -210,7 +210,7 @@ simplificarCircuito <- function(circuito){
   if (grepl("IPROBE_1_1", circuito) & grepl("IPROBE_1_2", circuito)) nodesf1 <- "IPROBE_1_1"
   if (grepl("IPROBE_2_1", circuito) & grepl("IPROBE_2_2", circuito)) nodesf1 <- "IPROBE_2_1"
   
-  if(is.na(nodesf1)) return(NA)
+  if(is.na(nodesf1)) return("")
   
   internal <- data.frame(
     V3=c("DMM_VHI","DMM_AHI","DMM_1_1","DMM_2_1","IPROBE_1_1","IPROBE_2_1"),
@@ -272,6 +272,18 @@ simplificarCircuito <- function(circuito){
 
 #### PUBLIC FUNCTIONS ####
 ### >> DATASETS ####
+import_dfActions <- function(inFile) {
+  
+  if (is.null(inFile)) return(NULL)
+  
+  df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+              col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                          "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
+              col_types="ccccccc", escape_double = T, escape_backslash = F)
+  df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  (dfImport_ext <<- df)
+}
+
 create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
     numAcciones<-nrow(dfVISIR_acciones)
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
@@ -508,28 +520,24 @@ FunctionSSA <- function (dfVISIR_acciones) {
   return(Acciones)
 }
 
-FunctionTimeStud <- function (dfVISIR_acciones,dfActionCircuit) {
-  numAcciones<-nrow(dfVISIR_acciones)
-  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
-    order(dfVISIR_acciones$Alumno,
-          dfVISIR_acciones$FechaHoraEnvio),]
-  
-  zz <- dfActionCircuit %>% select(Alumno,Time,Circuito) %>% group_by(Alumno) %>% 
-    summarise(TotalTime=max(Time), NumCircu=length(Circuito), .groups = "drop_last")
+aggreg_dfActionCircuit_xStud <- function (dfActionCircuit) {
+  zz <- dfActionCircuit %>% group_by(Alumno) %>% 
+    summarise(TotalTime=max(Time), 
+              NumCircu=length(Circuito),
+              NumExp = length(Circuito),
+              NumCCircu=length(unique(Circuito)),
+              NumNCircu=length(unique(CircuitoNormalizado)),
+              NumSCircu=length(unique(CircuitoSimplificado)),
+                                     .groups = "drop_last")
   zz$TotalTime <- as.numeric(zz$TotalTime)
   zz$TotalTime <- round(zz$TotalTime/60,digits = 2) #in hours
   
-  # TODO: Validar filtratge i etiqueta
-  # TODO: Recuperar funcions
-  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
-  MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
+  # MeanNumCircSVV <- mean(zz$NumCircu)
+  # 
+  # zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
+  # zz$Evaluation <- as.factor(zz$Evaluation)
   
-  zz$NumCircu <- as.numeric(zz$NumCircu)
-  zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
-  zz$Evaluation <- as.factor(zz$Evaluation)
-  
-  return(zz)
+  (dfActionCircuit_xStud_ext <<- zz)
 }
 
 
@@ -608,7 +616,7 @@ FunctionMTS <- function (dfVISIR_acciones) {
   dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
                                                       ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
                                                              "NA")))
-  X_P <- dfVISIR_accionesOrdenado%>% select(Alumno,Dates,FechaHoraEnvio,Connection)
+  X_P <- dfVISIR_accionesOrdenado %>% select(Alumno,Dates,FechaHoraEnvio,Connection)
   X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
                                               format="%Y-%m-%d %H:%M:%S"))
   Totaltimebydate <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
@@ -619,24 +627,24 @@ FunctionMTS <- function (dfVISIR_acciones) {
   
 }
 
-distnumcirc <- function(dfActionCircuit){
-  dfActionCircuit %>% select(Alumno,Circuito,FechaHoraEnvio) %>%
-    filter(complete.cases(.)) %>%
-    group_by(Alumno) %>% summarise(Circuito =length(Circuito), .groups = "drop_last")
-}
-
-distnumcircN <- function(dfActionCircuit){
-  dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>%
-    summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)), .groups = "drop_last")
-}
-
-# Circuito Simplificado #
-distnumcircS <- function(dfActionCircuit){
-  dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>%
-    summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)), .groups = "drop_last")
-}
+# distnumcirc <- function(dfActionCircuit){
+#   dfActionCircuit %>% select(Alumno,Circuito,FechaHoraEnvio) %>%
+#     filter(complete.cases(.)) %>%
+#     group_by(Alumno) %>% summarise(Circuito =length(Circuito), .groups = "drop_last")
+# }
+# 
+# distnumcircN <- function(dfActionCircuit){
+#   dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>%
+#     filter(complete.cases(.)) %>%  group_by(Alumno) %>%
+#     summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)), .groups = "drop_last")
+# }
+# 
+# # Circuito Simplificado #
+# distnumcircS <- function(dfActionCircuit){
+#   dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>%
+#     filter(complete.cases(.)) %>%  group_by(Alumno) %>%
+#     summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)), .groups = "drop_last")
+# }
 
 ### >> GRAPHS ####
 ## Time vs Date ####
@@ -691,7 +699,9 @@ timelineuser<- function(dfActionCircuit) {
 
 ## Circuits vs Date ####
 Dygraphfunc2 <- function(dfActionCircuit) {
-  ADYygraph <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.))
+  ADYygraph <- dfActionCircuit %>%
+    select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio) %>%
+    filter(complete.cases(.))
   ADYygraph$Dates <- format(as.Date(ADYygraph$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
   ADYygraph$Dates <- as.Date(ADYygraph$Dates,"%Y-%m-%d")
   TotcircuDate <- ADYygraph %>% group_by(Dates) %>%  summarise(TotalCircuits=length(Circuito))
@@ -814,21 +824,22 @@ InfovalueBoxNC <- function(dfActionCircuit){
 }
 
 InfovalueBoxMNC <- function(dfActionCircuit){
-  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)%>% group_by(Alumno) %>% summarise(Numcirc=length(Circuito))
+  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)%>% 
+    group_by(Alumno) %>% summarise(Numcirc=length(Circuito))
   MeanNumCircSV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
   return(MeanNumCircSV)
 }
 
 InfovalueBoxlowbound <- function(dfActionCircuit){
   lowboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)%>%
-    group_by(Alumno)%>%  summarise(Circuito =length(Circuito))
+    group_by(Alumno) %>%  summarise(Circuito =length(Circuito))
   mincircv <- min(lowboundf$Circuito)
   return(mincircv)
 }
 
 InfovalueBoxupbound <- function(dfActionCircuit){
   upboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)%>%
-    group_by(Alumno)%>%  summarise(Circuito =length(Circuito))
+    group_by(Alumno) %>%  summarise(Circuito =length(Circuito))
   maxcircv <- max(upboundf$Circuito)
   return(maxcircv)
 }
