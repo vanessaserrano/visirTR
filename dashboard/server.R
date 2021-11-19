@@ -9,10 +9,10 @@ shinyServer(function(input, output, session) {
   dfImport<-reactive({import_dfActions(input$logsImport)})
   dfActionTime <- reactive({create_dfActionTime(dfImport(), timeLimit = 900)})
   dfActionCircuit <- reactive({create_dfActionCircuit(dfActionTime())})
-  dfACxStud <- reactive({aggreg_dfActionCircuit_xStud(dfActionCircuit())})
-  dfMTS <- reactive({FunctionMTS(dfImport())})
-  dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
-  dftimeuserdate <- reactive({fplotlyfunc3(dfMTS())})
+  dfACxStud <- reactive({aggreg_dfActionCircuit_xStud(dfActionTime(),dfActionCircuit())})
+  dfACxStudDate <- reactive({aggreg_dfActionCircuit_xStudDate(dfActionTime(),dfActionCircuit())})
+  # dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
+  # dftimeuserdate <- reactive({fplotlyfunc3(dfACxStudDate())})
 
   ## Normalized Circuits ####  
   tabNCircuits <- reactive({
@@ -150,8 +150,8 @@ shinyServer(function(input, output, session) {
 ### >> TIME ####
 ## Total Time vs Date (Dygraph) ####
   output$dygraph <-renderDygraph({
-    if(is.null(dfImport())) return(NULL)
-    Dygraphfunc(dfMTS())
+    if(is.null(dfACxStudDate())) return(NULL)
+    Dygraphfunc(dfACxStudDate())
   })
 
 
@@ -205,8 +205,11 @@ shinyServer(function(input, output, session) {
 ## Time on task vs User per Date HeatMap ####
   output$timeheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
-    ggplot(data = dftimeuserdate(), aes(x = User, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=Time)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+    ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
+      geom_tile(aes(fill=TimeInDate)) + 
+      labs(x="User") +
+      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),
+            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
       scale_fill_viridis(direction=-1)
   })
   
@@ -222,9 +225,9 @@ shinyServer(function(input, output, session) {
   
   output$plot_poin <- renderText({
     if(is.null(dfImport())) return(NULL)
-    dat <- data.frame(ids=dftimeuserdate()$Time)
-    dat$toT <- dftimeuserdate()$User
-    dat$nAc <- dftimeuserdate()$Dates
+    dat <- data.frame(ids=dfACxStudDate()$TimeInDate)
+    dat$toT <- dfACxStudDate()$Alumno
+    dat$nAc <- dfACxStudDate()$Dates
     dat <- as.data.frame(dat)
     
     res <- nearPoints(dat, input$plot_hovernAct, 
@@ -245,16 +248,15 @@ shinyServer(function(input, output, session) {
   })
   
   
-  
-  
-  
-  
 ### >> CIRCUITS ####
 ## Circuits vs User heat map ####
   output$circsuserheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
-    ggplot(data = dfcircuser(), aes(x = User, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=Circuits)) + theme(axis.text.x=element_text(angle = 90, vjust = 0.5),axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+    ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
+      geom_tile(aes(fill=NumCircu)) + 
+      labs(x ="User") +
+      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),
+            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
       scale_fill_viridis(direction=-1)
   })
   
@@ -270,9 +272,9 @@ shinyServer(function(input, output, session) {
   
   output$plot_points <- renderText({
     if(is.null(dfImport())) return(NULL)
-    dat <- data.frame(ids=dfcircuser()$Circuits)
-    dat$toT <- dfcircuser()$User
-    dat$nAc <- dfcircuser()$Dates
+    dat <- data.frame(ids=dfACxStudDate()$NumCircu)
+    dat$toT <- dfACxStudDate()$Alumno
+    dat$nAc <- dfACxStudDate()$Dates
     dat <- as.data.frame(dat)
     
     res <- nearPoints(dat, input$plot_hovernAct, 
@@ -575,11 +577,12 @@ shinyServer(function(input, output, session) {
     dat <- as.data.frame(dat)
     g <- "Number of Normalized Circuits:"
     
-    if(input$simplified_time) {dat <- data.frame(ids=dfACxStud()$Alumno)
-    dat$toT <- dfACxStud()$TotalTime
-    dat$nAc <- dfACxStud()$NumSCircu
-    dat <- as.data.frame(dat)
-    g <- "Number of Simplified Normalized Circuits:"
+    if(input$simplified_time) {
+      dat <- data.frame(ids=dfACxStud()$Alumno)
+      dat$toT <- dfACxStud()$TotalTime
+      dat$nAc <- dfACxStud()$NumSCircu
+      dat <- as.data.frame(dat)
+      g <- "Number of Simplified Circuits:"
     }
     
     res <- nearPoints(dat, input$plot_hovernAct, 
@@ -694,10 +697,11 @@ shinyServer(function(input, output, session) {
       grafntcdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
     } else {
       grafntcdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ncu_circuit
-    
-      grafntcdata <- grafntcdata %>% select(Alumno,sel)
-      grafntcdata <- grafntcdata %>% group_by(Alumno) %>% summarise(Len=sum(sel,na.rm=TRUE))
     }
+    
+    grafntcdata <- grafntcdata %>% select(Alumno,sel)
+    grafntcdata <- grafntcdata %>% group_by(Alumno) %>%
+      summarise(Len=sum(sel,na.rm=TRUE),.groups="drop")
         
     ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
       geom_bar(stat="identity",width = 0.7,fill="steelblue") +
@@ -739,7 +743,7 @@ shinyServer(function(input, output, session) {
     df1$sol[df1$Alumno != input$ns_student] <- NA
     
     df1<- df1 %>% select(Alumno,sol)%>% filter(complete.cases(.)) %>%
-      summarise(Act=length(sol))
+      summarise(Act=length(sol),.groups="drop")
     
     valueBox(
         value = df1$Act, 
@@ -794,15 +798,10 @@ shinyServer(function(input, output, session) {
       "--", 
       g,color = "blue"))
     else { 
-      df4 <-dfACxStud() %>%  select(Alumno,NumNCircu)
-      
-      df4$co <- "YES"  
-      df4$co[df4$Alumno != input$ns_student] <- NA
-      
-      df4<- df4 %>% select(Alumno,NumNCircu,co)
+      df4 <-dfACxStud()
       
       valueBox(
-        value = df4$NumNCircu, 
+        value = df4$NumNCircu[df4$Alumno == input$ns_student], 
         g,color = "blue")
     }
   })
@@ -814,15 +813,10 @@ shinyServer(function(input, output, session) {
       "--", 
       g,color = "blue"))
     else { 
-      df4 <- dfACxStud() %>%  select(Alumno,NumSCircu)
-    
-      df4$co <- "YES"  
-      df4$co[df4$Alumno != input$ns_student] <- NA
-      
-      df4 <- df4 %>% select(Alumno,NumSCircu,co)
+      df4 <- dfACxStud()
       
       valueBox(
-        value = df4$NumSCircu, 
+        value = df4$NumSCircu[df4$Alumno == input$ns_student], 
         g,color = "blue")
     }
   })
@@ -843,7 +837,7 @@ shinyServer(function(input, output, session) {
       df7$res[df7$Alumno != input$ns_student] <-NA
       
       df7<- df7 %>% select(Alumno,res,sest) %>%  filter(complete.cases(.)) %>%
-        group_by(Alumno,res) %>% summarise(resis=sum(sest))
+        group_by(Alumno,res) %>% summarise(resis=sum(sest),.groups="drop")
       
       valueBox(
         value = df7$resis, 
@@ -866,7 +860,7 @@ shinyServer(function(input, output, session) {
       df8$res[df8$Alumno != input$ns_student] <- NA
       
       df8<- df8 %>% select(Alumno,res,sest) %>%  filter(complete.cases(.)) %>%
-        group_by(Alumno,res) %>% summarise(curr=sum(sest))
+        group_by(Alumno,res) %>% summarise(curr=sum(sest),.groups="drop")
       
       valueBox(
         value = df8$curr, 
@@ -894,7 +888,7 @@ shinyServer(function(input, output, session) {
     df9$res[df9$Alumno != input$ns_student] <- NA
     
     df9<- df9 %>% select(Alumno,res,sest) %>%  filter(complete.cases(.))
-    df9 <- df9 %>% group_by(Alumno,res) %>% summarise(voltag=sum(sest))
+    df9 <- df9 %>% group_by(Alumno,res) %>% summarise(voltag=sum(sest),.groups="drop")
     
     valueBox(
       value = df9$voltag, 
@@ -918,7 +912,7 @@ shinyServer(function(input, output, session) {
     
     dfx<- dfx %>% select(Alumno,res,sest) %>%
       filter(complete.cases(.)) %>%
-      group_by(Alumno,res) %>% summarise(error=sum(sest))
+      group_by(Alumno,res) %>% summarise(error=sum(sest),.groups="drop")
     
     valueBox(
       value = dfx$error, 
@@ -936,7 +930,7 @@ shinyServer(function(input, output, session) {
     df5<- df5 %>% select(Alumno,CircuitoNormalizado,co) %>%
       filter(complete.cases(.))%>%
       group_by(Alumno,CircuitoNormalizado) %>%
-      summarise(TimTes=length(CircuitoNormalizado)) %>%
+      summarise(TimTes=length(CircuitoNormalizado),.groups="drop") %>%
       arrange(desc(TimTes)) %>%
       ungroup(Alumno,CircuitoNormalizado) %>%
       select(CircuitoNormalizado,TimTes)
@@ -962,7 +956,8 @@ shinyServer(function(input, output, session) {
     
     df5<- df5 %>% select(Alumno,CircuitoNormalizado,co)%>% filter(complete.cases(.))
     
-    df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>% summarise(TimTes=length(CircuitoNormalizado)) 
+    df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>%
+      summarise(TimTes=length(CircuitoNormalizado),.groups="drop") 
     
     df5 <- df5 %>%arrange(desc(TimTes)) %>%
       ungroup(Alumno,CircuitoNormalizado) %>%select(CircuitoNormalizado,TimTes)
@@ -981,7 +976,8 @@ shinyServer(function(input, output, session) {
       
       df5<- df5 %>% select(Alumno,CircuitoSimplificado,co)%>% filter(complete.cases(.))
       
-      df5 <- df5 %>% group_by(Alumno,CircuitoSimplificado) %>% summarise(TimTes=length(CircuitoSimplificado)) 
+      df5 <- df5 %>% group_by(Alumno,CircuitoSimplificado) %>% 
+        summarise(TimTes=length(CircuitoSimplificado),.groups="drop") 
       
       df5 <- df5 %>%arrange(desc(TimTes)) %>%
         ungroup(Alumno,CircuitoSimplificado) %>% select(CircuitoSimplificado,TimTes)

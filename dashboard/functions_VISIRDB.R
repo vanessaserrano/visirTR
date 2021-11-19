@@ -520,111 +520,107 @@ FunctionSSA <- function (dfVISIR_acciones) {
   return(Acciones)
 }
 
-aggreg_dfActionCircuit_xStud <- function (dfActionCircuit) {
-  zz <- dfActionCircuit %>% group_by(Alumno) %>% 
-    summarise(TotalTime=max(Time), 
-              NumCircu=length(Circuito),
+aggreg_dfActionCircuit_xStud <- function (dfActions, dfActionCircuit) {
+  zz <- dfActions %>% group_by(Alumno) %>% 
+    summarise(TotalTime=max(TiempoAcumuladoCorregido),.groups="drop") %>% 
+    mutate(TotalTime=round(TotalTime/60,digits = 2))    #in hours
+  
+  zz1 <- dfActionCircuit %>% group_by(Alumno) %>% 
+    summarise(NumCircu=length(Circuito),
               NumExp = length(Circuito),
               NumCCircu=length(unique(Circuito)),
               NumNCircu=length(unique(CircuitoNormalizado)),
               NumSCircu=length(unique(CircuitoSimplificado)),
-                                     .groups = "drop_last")
-  zz$TotalTime <- as.numeric(zz$TotalTime)
-  zz$TotalTime <- round(zz$TotalTime/60,digits = 2) #in hours
-  
-  # MeanNumCircSVV <- mean(zz$NumCircu)
-  # 
-  # zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
-  # zz$Evaluation <- as.factor(zz$Evaluation)
-  
-  (dfActionCircuit_xStud_ext <<- zz)
+              NumMesE=sum(Measure=="Error"),
+              NumMesC=sum(Measure=="Current"),
+              NumMesV=sum(Measure=="Voltage"),
+              NumMesR=sum(Measure=="Resistance"),
+                                     .groups = "drop")
+  zz <- merge(zz,zz1)
+  (sumxStud_ext <<- zz)
 }
 
 
-FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
-  numAcciones<-nrow(dfVISIR_acciones)
+# FunctionTimeStudNorm <- function (dfVISIR_acciones,dfActionCircuit) {
+#   numAcciones<-nrow(dfVISIR_acciones)
+# 
+#   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+#     order(dfVISIR_acciones$Alumno,
+#           dfVISIR_acciones$FechaHoraEnvio),]
+#   
+#   #Parte Tiempo
+#   TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
+#     summarise(TotalTime=max(Time))
+#   TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
+#   TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
+# 
+#   #Parte Circuitos
+#   CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
+#     summarise(NumCircu=length(unique(CircuitoNormalizado)))
+#   
+#   # Mix Both Data Frames (Student Circuits Time)
+#   zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
+#   zz$TotalTime <- as.numeric(zz$TotalTime)
+#   MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+#     filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
+#   MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
+#   
+#   zz$NumCircu <- as.numeric(zz$NumCircu)
+#   zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
+#   zz$Evaluation <- as.factor(zz$Evaluation)
+#   
+#   return(zz)
+# }
+# 
+# FunctionTimeStudSimpl <- function (dfVISIR_acciones,dfActionCircuit) {
+#   numAcciones<-nrow(dfVISIR_acciones)
+#   
+#   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
+#     order(dfVISIR_acciones$Alumno,
+#           dfVISIR_acciones$FechaHoraEnvio),]
+#   
+#   #Parte Tiempo
+#   TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
+#     summarise(TotalTime=max(Time))
+#   TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
+#   TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
+#   
+#   #Parte Circuitos
+#   CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
+#     summarise(NumCircu=length(unique(CircuitoSimplificado)))
+#   
+#   # Mix Both Data Frames (Student Circuits Time)
+#   zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
+#   zz$TotalTime <- as.numeric(zz$TotalTime)
+#   MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
+#     filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
+#   MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
+#   
+#   zz$NumCircu <- as.numeric(zz$NumCircu)
+#   zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
+#   zz$Evaluation <- as.factor(zz$Evaluation)
+#   
+#   return(zz)
+# }
 
-  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
-    order(dfVISIR_acciones$Alumno,
-          dfVISIR_acciones$FechaHoraEnvio),]
+aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos) {
+  sumxStudDate <- dfAccionesTiempo %>%  group_by(Alumno,Dates) %>%
+    arrange(Alumno,Dates) %>%
+    summarise(TimeToDate=max(TiempoAcumuladoCorregido),.groups="drop") %>%
+    mutate(TimeInDate = c(0,diff(TimeToDate))) %>%
+    mutate(TimeInDate = ifelse(c(F,Alumno[-1]==Alumno[-length(Alumno)]),TimeInDate,TimeToDate)) %>% 
+    mutate(TimeSpent = round(TimeInDate/60, digits=2))
+  circxStudDate <- dfCircuitos  %>%  group_by(Alumno,Dates) %>%
+    arrange(Alumno,Dates) %>%
+    summarise(NumCircu=length(Circuito),
+              NumExp = length(Circuito),
+              NumCCircu=length(unique(Circuito)),
+              NumNCircu=length(unique(CircuitoNormalizado)),
+              NumSCircu=length(unique(CircuitoSimplificado)),
+              .groups="drop")
+  sumxStudDate <- merge(sumxStudDate,circxStudDate)
   
-  #Parte Tiempo
-  TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
-    summarise(TotalTime=max(Time))
-  TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
-  TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
-
-  #Parte Circuitos
-  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoNormalizado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
-    summarise(NumCircu=length(unique(CircuitoNormalizado)))
-  
-  # Mix Both Data Frames (Student Circuits Time)
-  zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
-  zz$TotalTime <- as.numeric(zz$TotalTime)
-  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
-  MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
-  
-  zz$NumCircu <- as.numeric(zz$NumCircu)
-  zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
-  zz$Evaluation <- as.factor(zz$Evaluation)
-  
-  return(zz)
-}
-
-FunctionTimeStudSimpl <- function (dfVISIR_acciones,dfActionCircuit) {
-  numAcciones<-nrow(dfVISIR_acciones)
-  
-  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
-    order(dfVISIR_acciones$Alumno,
-          dfVISIR_acciones$FechaHoraEnvio),]
-  
-  #Parte Tiempo
-  TimeStud <- dfActionCircuit %>% select(Alumno,Time) %>% group_by(Alumno) %>% 
-    summarise(TotalTime=max(Time))
-  TimeStud$TotalTime <-as.numeric(TimeStud$TotalTime)
-  TimeStud$TotalTime <- round(TimeStud$TotalTime/60,digits = 2)
-  
-  #Parte Circuitos
-  CircuTimebyStud <- dfActionCircuit %>% select(Alumno,CircuitoSimplificado) %>% filter(complete.cases(.)) %>% group_by(Alumno) %>% 
-    summarise(NumCircu=length(unique(CircuitoSimplificado)))
-  
-  # Mix Both Data Frames (Student Circuits Time)
-  zz <- merge(CircuTimebyStud, TimeStud, all = TRUE)
-  zz$TotalTime <- as.numeric(zz$TotalTime)
-  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numcirc=length(unique(Circuito)))
-  MeanNumCircSVV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
-  
-  zz$NumCircu <- as.numeric(zz$NumCircu)
-  zz$Evaluation <- ifelse(zz$NumCircu > MeanNumCircSVV, "UpAverageCircuits","DownAverageCircuits")
-  zz$Evaluation <- as.factor(zz$Evaluation)
-  
-  return(zz)
-}
-
-FunctionMTS <- function (dfVISIR_acciones) {
-  # TODO: Refer partint del codi de 
-  
-  dfVISIR_accionesOrdenado <- dfVISIR_acciones[
-    order(dfVISIR_acciones$Alumno,
-          dfVISIR_acciones$FechaHoraEnvio),]
-  
-  dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
-  dfVISIR_accionesOrdenado$ConnectionIni <- grepl("@@@initial::request@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
-  dfVISIR_accionesOrdenado$ConnectionFina <- grepl("@@@finish@@@",dfVISIR_accionesOrdenado$DatosEnviadosXML)
-  dfVISIR_accionesOrdenado$Connection <-factor(ifelse(dfVISIR_accionesOrdenado$ConnectionIni,"Initial",
-                                                      ifelse(dfVISIR_accionesOrdenado$ConnectionFina,"Final",
-                                                             "NA")))
-  X_P <- dfVISIR_accionesOrdenado %>% select(Alumno,Dates,FechaHoraEnvio,Connection)
-  X_P$FechaHoraEnvio <- as.numeric(as.POSIXct(as.character(X_P$FechaHoraEnvio),
-                                              format="%Y-%m-%d %H:%M:%S"))
-  Totaltimebydate <- X_P %>% mutate(seqid = cumsum(Connection=="Initial")) %>%
-    group_by(Alumno,Dates,seqid) %>% summarise(TimeSpent=sum(diff(FechaHoraEnvio))) %>% 
-    group_by(Alumno,Dates) %>% summarise(TimeSpent=sum(TimeSpent)) %>%
-    mutate(TimeSpent=TimeSpent/3600) %>% mutate(TimeSpent=round(TimeSpent,digits = 2))
-  return(Totaltimebydate)
-  
+  (sumxStudDate_ext <<- sumxStudDate)
 }
 
 # distnumcirc <- function(dfActionCircuit){
@@ -650,43 +646,45 @@ FunctionMTS <- function (dfVISIR_acciones) {
 ## Time vs Date ####
 Dygraphfunc <- function(dfMTS) {
   if(is.null(dfMTS)) return(NULL)
-  # TODO: TimeSpent!!!!
   Totaltimebydate2 <-dfMTS %>% group_by(Dates)%>% 
-    summarise(Time=sum(TimeSpent,na.rm=TRUE)) %>%  mutate(Time=round(Time,digits = 2))
+    summarise(Time=sum(TimeSpent,na.rm=TRUE),.groups="drop") %>%
+    mutate(Time=round(Time,digits = 2))
   Totaltime <- zoo(Totaltimebydate2$Time,Totaltimebydate2$Dates)
-  Tot<-cbind(Totaltime)
+  Tot<-as.data.frame(Totaltime)
   dygraph(Tot)%>% dyAxis("y",rangePad=c(-0.05),label = "Time (in h)") %>% dySeries("Totaltime", label = "Total Time",axis="y")  %>%
     dyOptions(axisLineWidth = 1.5,drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
 }
 
 ## Time on task vs User & Date ####
-fplotlyfunc3 <- function(dfMTS) {
-  if(is.null(dfMTS)) return(NULL)
-  
-  dfMTS$TimeSpent<-as.numeric(dfMTS$TimeSpent)
-  dfMTS$Dates <- as.factor(dfMTS$Dates)
-  dfMTS$Alumno <- as.factor(dfMTS$Alumno)
-  names(dfMTS)[names(dfMTS) == 'Alumno'] <- 'User'
-  names(dfMTS)[names(dfMTS) == 'TimeSpent'] <- 'Time'
-  
-  return(dfMTS)
-}
+# fplotlyfunc3 <- function(dfMTS) {
+#   if(is.null(dfMTS)) return(NULL)
+#   
+#   dfMTS$TimeSpent<-as.numeric(dfMTS$TimeSpent)
+#   dfMTS$Dates <- as.factor(dfMTS$Dates)
+#   dfMTS$Alumno <- as.factor(dfMTS$Alumno)
+#   names(dfMTS)[names(dfMTS) == 'Alumno'] <- 'User'
+#   names(dfMTS)[names(dfMTS) == 'TimeSpent'] <- 'Time'
+#   
+#   return(dfMTS)
+# }
 
 ## Heat map: Number of circuits vs USer & Date ####
-fciruserdate <- function(dfActionCircuit) {
-  if(is.null(dfActionCircuit)) return(NULL)
-  
-  dfActionCircuit$Dates <- format(as.Date(dfActionCircuit$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-  Circuitsperuserdate <- dfActionCircuit %>% select(Alumno,Dates,Circuito) %>% group_by(Alumno,Dates) %>%
-    summarise(Diffti=length(Circuito)) %>%  group_by(Dates,Alumno) %>% summarise(Circuits=sum(Diffti)) 
-  Circuitsperuserdate$Circuits<-as.numeric(Circuitsperuserdate$Circuits)
-  Circuitsperuserdate$Dates <- as.factor(Circuitsperuserdate$Dates)
-  Circuitsperuserdate$Alumno <- as.factor(Circuitsperuserdate$Alumno)
-  names(Circuitsperuserdate)[names(Circuitsperuserdate) == 'Alumno'] <- 'User'
-  
-  
-  return(Circuitsperuserdate)
-}
+# fciruserdate <- function(dfActionCircuit) {
+#   if(is.null(dfActionCircuit)) return(NULL)
+#   
+#   dfActionCircuit$Dates <- format(as.Date(dfActionCircuit$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+#   Circuitsperuserdate <- dfActionCircuit %>% select(Alumno,Dates,Circuito) %>%
+#     group_by(Alumno,Dates) %>%
+#     summarise(Diffti=length(Circuito),.groups="drop") %>%
+#     group_by(Dates,Alumno) %>%
+#     summarise(Circuits=sum(Diffti),.groups="drop") 
+#   Circuitsperuserdate$Circuits<-as.numeric(Circuitsperuserdate$Circuits)
+#   Circuitsperuserdate$Dates <- as.factor(Circuitsperuserdate$Dates)
+#   Circuitsperuserdate$Alumno <- as.factor(Circuitsperuserdate$Alumno)
+#   names(Circuitsperuserdate)[names(Circuitsperuserdate) == 'Alumno'] <- 'User'
+#   
+#   return(Circuitsperuserdate)
+# }
 
 ## Circuits Timeline vs User ####
 timelineuser<- function(dfActionCircuit) {
@@ -704,8 +702,10 @@ Dygraphfunc2 <- function(dfActionCircuit) {
     filter(complete.cases(.))
   ADYygraph$Dates <- format(as.Date(ADYygraph$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
   ADYygraph$Dates <- as.Date(ADYygraph$Dates,"%Y-%m-%d")
-  TotcircuDate <- ADYygraph %>% group_by(Dates) %>%  summarise(TotalCircuits=length(Circuito))
-  TotNormcircuDate <- ADYygraph %>% group_by(Dates) %>%  summarise(TotalnormCircuits=length(unique(CircuitoNormalizado)))
+  TotcircuDate <- ADYygraph %>% group_by(Dates) %>%
+    summarise(TotalCircuits=length(Circuito),.groups="drop")
+  TotNormcircuDate <- ADYygraph %>% group_by(Dates) %>%
+    summarise(TotalnormCircuits=length(unique(CircuitoNormalizado)),.groups="drop")
   TotcircuDate$TotalnormCircuits <- TotNormcircuDate$TotalnormCircuits
 
   ses<- zoo(TotcircuDate$TotalCircuits,TotcircuDate$Dates)
@@ -791,7 +791,8 @@ plotDistribution <- function(values=NA,minValues=NULL,maxValues=NULL,xlabel="") 
 ### >> CALCULATIONS ####
 InfovalueBoxNCC <- function(dfActionCircuit){
   Accircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Circuito) %>% summarise(NuCC= sum(unique(EsCircuitoCerrado)))
+    filter(complete.cases(.)) %>%  group_by(Circuito) %>%
+    summarise(NuCC= sum(unique(EsCircuitoCerrado)),.groups="drop")
   NumccircuVC<-sum(Accircu$NuCC)
   return(NumccircuVC)
 }
@@ -804,15 +805,17 @@ InfovalueBoxNNC <- function(dfActionCircuit){
 
 InfovalueBoxMNCC <- function(dfActionCircuit){
   MeanCNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.)) %>%
-    group_by(Alumno,Circuito) %>%  summarise(NumCcircuit=sum(unique(EsCircuitoCerrado))) %>%
-    group_by(Alumno) %>%  summarise(NumCcircuitS=sum(NumCcircuit))
+    group_by(Alumno,Circuito) %>% 
+    summarise(NumCcircuit=sum(unique(EsCircuitoCerrado)),.groups="drop") %>%
+    group_by(Alumno) %>%  summarise(NumCcircuitS=sum(NumCcircuit),.groups="drop")
   MeanNumCCirSV <- round(mean(MeanCNAcircu$NumCcircuitS),digits = 2)
   return(MeanNumCCirSV)
 }
 
 InfovalueBoxMNNC <- function(dfActionCircuit){
   MeanNNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numncirc=length(unique(CircuitoNormalizado)))
+    filter(complete.cases(.)) %>%  group_by(Alumno) %>% 
+    summarise(Numncirc=length(unique(CircuitoNormalizado)),.groups="drop")
   MeanNumNCircSV <- round(mean(MeanNNAcircu$Numncirc),digits = 2)
   return(MeanNumNCircSV)
 }
