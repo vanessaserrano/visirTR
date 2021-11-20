@@ -1,5 +1,4 @@
 shinyServer(function(input, output, session) {
-
   session$onSessionEnded(function() {
     stopApp()
   })
@@ -11,9 +10,8 @@ shinyServer(function(input, output, session) {
   dfActionCircuit <- reactive({create_dfActionCircuit(dfActionTime())})
   dfACxStud <- reactive({aggreg_dfActionCircuit_xStud(dfActionTime(),dfActionCircuit())})
   dfACxStudDate <- reactive({aggreg_dfActionCircuit_xStudDate(dfActionTime(),dfActionCircuit())})
-  # dfcircuser <- reactive({fciruserdate(dfActionCircuit())})
-  # dftimeuserdate <- reactive({fplotlyfunc3(dfACxStudDate())})
-
+  dfACxDate <- reactive({aggreg_xDate(dfACxStudDate())})
+  
   ## Normalized Circuits ####  
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
@@ -150,8 +148,8 @@ shinyServer(function(input, output, session) {
 ### >> TIME ####
 ## Total Time vs Date (Dygraph) ####
   output$dygraph <-renderDygraph({
-    if(is.null(dfACxStudDate())) return(NULL)
-    Dygraphfunc(dfACxStudDate())
+    if(is.null(dfACxDate())) return(NULL)
+    createPlot_TimexDate(dfACxDate())
   })
 
 
@@ -464,8 +462,8 @@ shinyServer(function(input, output, session) {
   
 ## Circuits per date ####
   output$dygraph2 <-renderDygraph({
-    if(is.null(dfImport())) return(NULL)
-    Dygraphfunc2(dfActionCircuit())
+    if(is.null(dfACxDate())) return(NULL)
+    createPlot_ExpxDate(dfACxDate())
   })
   
 ### >> NUMBER OF CIRCUITS VS TIME ON TASK ####
@@ -755,46 +753,34 @@ shinyServer(function(input, output, session) {
   
   
   output$timstud <- renderValueBox({
-    if(is.null(dfImport())) return( valueBox(
+    if(is.null(dfACxStud())) return( valueBox(
       "--", 
       "Total Time (in h)",color = "blue"))
     else { 
-      df2 <-dfACxStud() %>%  select(Alumno,TotalTime)
-      
-      df2$co <- "YES"
-      df2$co[df2$Alumno != input$ns_student] <- NA
-      
-      df2 <- df2 %>% select(Alumno,TotalTime,co) %>% filter(complete.cases(.))
-      
+      df <-dfACxStud()
       valueBox(
-        value = df2$TotalTime, 
+        value = df$TotalTime[df$Alumno == input$ns_student],
         "Total Time (in h)",color = "blue")
     }
   }) 
   
   output$numcircuit <- renderValueBox({
-    if(is.null(dfImport())) return( valueBox(
+    if(is.null(dfACxStud())) return( valueBox(
       
       "--", 
-      "Circuits",color = "blue"))
+      "Experiments",color = "blue"))
     else { 
-      df3 <-dfACxStud() %>%  select(Alumno,NumCircu)
-      
-      df3$co <- "YES"
-      df3$co[df3$Alumno != input$ns_student] <- NA
-      
-      df3<- df3 %>% select(Alumno,NumCircu,co)%>% filter(complete.cases(.))
-      
+      df <-dfACxStud()
       valueBox(
-        value = df3$NumCircu, 
-        "Circuits",color = "blue")
+        value = df$NumExp[df$Alumno == input$ns_student], 
+        "Experiments",color = "blue")
     }
   })  
   
 
   output$numnormcircuit <- renderValueBox({
     g <- "Normalized Circuits"
-    if(is.null(dfImport())) return( valueBox(
+    if(is.null(dfACxStud())) return( valueBox(
       "--", 
       g,color = "blue"))
     else { 
@@ -808,8 +794,8 @@ shinyServer(function(input, output, session) {
 
   
   output$numsimplcircuit <- renderValueBox({
-    g <- "Simplified Normalized Circuits"
-    if(is.null(dfImport())) return( valueBox(
+    g <- "Simplified Circuits"
+    if(is.null(dfACxStud())) return( valueBox(
       "--", 
       g,color = "blue"))
     else { 
@@ -821,118 +807,61 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  
   output$numresist <- renderValueBox({
-    if(is.null(dfImport())) return( valueBox(
-      
+    if(is.null(dfACxStud())) return( valueBox(
       "--", 
-      "Resistance Measurement",color = "blue"))
-    else { 
-      df7 <-dfActionCircuit() %>%  select(Alumno,Measure)
-  
-      df7$sest <- as.numeric((ifelse(df7$Measure =="Resistance","1",
-                                     "0")))
-      
-      df7$res <- "YES"
-      df7$res[df7$Alumno != input$ns_student] <-NA
-      
-      df7<- df7 %>% select(Alumno,res,sest) %>%  filter(complete.cases(.)) %>%
-        group_by(Alumno,res) %>% summarise(resis=sum(sest),.groups="drop")
-      
-      valueBox(
-        value = df7$resis, 
-        "Resistance Measurement",color = "blue")
-    }
+      "Resistance Measurements",color = "blue"))
     
+    df <- dfACxStud()
+    valueBox(
+      value = df$NumMesR[df$Alumno==input$ns_student], 
+        "Resistance Measurements",color = "blue")
   })    
   
   output$numcurr <- renderValueBox({
-    
-    if(is.null(dfImport())) return( valueBox(
-      
+    if(is.null(dfACxStud())) return( valueBox(
       "--", 
-      "Current Measurement",color = "blue"))
-    else { 
-      df8 <-dfActionCircuit() %>%  select(Alumno,Measure)
-      df8$sest <- as.numeric((ifelse(df8$Measure =="Current","1",
-                                     "0")))
-      df8$res <- "YES"
-      df8$res[df8$Alumno != input$ns_student] <- NA
-      
-      df8<- df8 %>% select(Alumno,res,sest) %>%  filter(complete.cases(.)) %>%
-        group_by(Alumno,res) %>% summarise(curr=sum(sest),.groups="drop")
-      
-      valueBox(
-        value = df8$curr, 
-        "Current Measurement",color = "blue")
-      }
+      "Current Measurements",color = "blue"))
     
+    df <- dfACxStud()
+    valueBox(
+      value = df$NumMesC[df$Alumno==input$ns_student], 
+      "Current Measurements",color = "blue")
   })  
 
   
   output$numvoltag <- renderValueBox({
-    
-    if(is.null(dfImport())) return( valueBox(
-      
+    if(is.null(dfACxStud())) return( valueBox(
       "--", 
-      "Voltage Measurement",color = "blue"))
-    else { 
-      
+      "Voltage Measurements",color = "blue"))
     
-    df9 <-dfActionCircuit() %>%  select(Alumno,Measure)
-    
-    df9$sest <- as.numeric((ifelse(df9$Measure =="Voltage","1",
-                                   "0")))
-    
-    df9$res <- "YES"
-    df9$res[df9$Alumno != input$ns_student] <- NA
-    
-    df9<- df9 %>% select(Alumno,res,sest) %>%  filter(complete.cases(.))
-    df9 <- df9 %>% group_by(Alumno,res) %>% summarise(voltag=sum(sest),.groups="drop")
-    
+    df <- dfACxStud()
     valueBox(
-      value = df9$voltag, 
-      "Voltage Measurement",color = "blue")
-    }
-    
+      value = df$NumMesV[df$Alumno==input$ns_student], 
+      "Voltage Measurements", color = "blue")
   })  
   
   output$numerror <- renderValueBox({
-    if(is.null(dfImport())) return( valueBox(
+    if(is.null(dfACxStud())) return( valueBox(
       "--", 
-      "Measures not evaluated",color = "blue"))
-    else { 
+      "Errors in measurement",color = "blue"))
     
-    dfx <-dfActionCircuit() %>%  select(Alumno,Measure)
-    
-    dfx$sest <- as.numeric((ifelse(dfx$Measure =="Error","1",
-                                   "0")))
-    dfx$res <- "YES"
-    dfx$res[dfx$Alumno != input$ns_student] <- NA
-    
-    dfx<- dfx %>% select(Alumno,res,sest) %>%
-      filter(complete.cases(.)) %>%
-      group_by(Alumno,res) %>% summarise(error=sum(sest),.groups="drop")
-    
+    df <- dfACxStud()
     valueBox(
-      value = dfx$error, 
-      "Error",color = "blue")
-    }
+      value = df$NumMesE[df$Alumno==input$ns_student], 
+      "Errors in measurement",color = "blue")
   })  
   
   output$lcn_circuits <- renderDataTable({
-    if(is.null(dfImport())) return(NULL)
+    if(is.null(dfActionCircuit())) return(NULL)
     
-    df5 <-dfActionCircuit() %>%  select(Alumno,CircuitoNormalizado)
-    df5$co <- factor(ifelse(df5$Alumno == input$ns_student,"YES",
-                            NA))
+    df5 <- dfActionCircuit()
+    df5 <- df5[df5$Alumno == input$ns_student,]
     
-    df5<- df5 %>% select(Alumno,CircuitoNormalizado,co) %>%
-      filter(complete.cases(.))%>%
+    df5<- df5 %>%
       group_by(Alumno,CircuitoNormalizado) %>%
       summarise(TimTes=length(CircuitoNormalizado),.groups="drop") %>%
       arrange(desc(TimTes)) %>%
-      ungroup(Alumno,CircuitoNormalizado) %>%
       select(CircuitoNormalizado,TimTes)
     
     names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuits'
@@ -947,42 +876,23 @@ shinyServer(function(input, output, session) {
   output$lcn_circuits <- renderDataTable({
     if(is.null(dfImport())) return(NULL)
     
-    df5 <-dfActionCircuit() %>%  select(Alumno,CircuitoNormalizado)
-    
-    df5$scl <-dfActionCircuit()$Alumno == input$ns_student
-    
-    df5$co <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
-                            NA))
-    
-    df5<- df5 %>% select(Alumno,CircuitoNormalizado,co)%>% filter(complete.cases(.))
-    
-    df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>%
-      summarise(TimTes=length(CircuitoNormalizado),.groups="drop") 
-    
-    df5 <- df5 %>%arrange(desc(TimTes)) %>%
-      ungroup(Alumno,CircuitoNormalizado) %>%select(CircuitoNormalizado,TimTes)
-    
-    names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuits'
-    names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+    df5 <-dfActionCircuit()[dfActionCircuit()$Alumno == input$ns_student,]
     
     if(input$simplified_list) {
-      
-      df5 <-dfActionCircuit() %>%  select(Alumno,CircuitoSimplificado)
-      
-      df5$scl <-dfActionCircuit()$Alumno == input$ns_student
-      
-      df5$co <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
-                              NA))
-      
-      df5<- df5 %>% select(Alumno,CircuitoSimplificado,co)%>% filter(complete.cases(.))
-      
       df5 <- df5 %>% group_by(Alumno,CircuitoSimplificado) %>% 
-        summarise(TimTes=length(CircuitoSimplificado),.groups="drop") 
+        summarise(TimTes=length(CircuitoSimplificado),.groups="drop") %>% 
+        arrange(desc(TimTes)) %>%
+        select(CircuitoSimplificado,TimTes)
       
-      df5 <- df5 %>%arrange(desc(TimTes)) %>%
-        ungroup(Alumno,CircuitoSimplificado) %>% select(CircuitoSimplificado,TimTes)
+      names(df5)[names(df5) == 'CircuitoSimplificado'] <- 'Simplified Circuits'
+      names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+    } else {
+      df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>%
+        summarise(TimTes=length(CircuitoNormalizado),.groups="drop") %>%
+        arrange(desc(TimTes)) %>%
+        select(CircuitoNormalizado,TimTes)
       
-      names(df5)[names(df5) == 'CircuitoSimplificado'] <- 'Simplified Normalized Circuits'
+      names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuits'
       names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
     }
    
@@ -992,16 +902,9 @@ shinyServer(function(input, output, session) {
   output$hc_circuits <- renderDataTable({
     if(is.null(dfImport())) return(NULL)
     
-    df6 <-dfActionCircuit() %>%  select(Alumno,Time,FechaHoraEnvio,Circuito)
-    
-    df6$hc <-dfActionCircuit()$Alumno == input$ns_student
-    
-    df6$hco <- factor(ifelse(dfActionCircuit()$Alumno == input$ns_student,"YES",
-                            NA))
+    df6 <-dfActionCircuit() [dfActionCircuit()$Alumno == input$ns_student,] %>%
+      select(Time,FechaHoraEnvio,Circuito) %>% mutate(Time=round(Time,digits = 2))
    
-    df6<- df6 %>% filter(complete.cases(.)) %>% select(Time,FechaHoraEnvio,Circuito) %>% mutate(Time=round(Time,digits = 2))
-   
- 
     datatable(df6)
   })
 
