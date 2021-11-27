@@ -560,7 +560,7 @@ aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos) {
 }
 
 aggreg_xDate <- function(dfAC_xStudDate) {
-  (simxDate_ext <<- dfAC_xStudDate %>% group_by(Dates) %>% 
+  (sumxDate_ext <<- dfAC_xStudDate %>% group_by(Dates) %>% 
      summarise(NumExp = sum(NumExp),
                TotalTime = sum(TimeInDate)/60,.groups="drop"))
 }
@@ -574,29 +574,32 @@ createPlot_TimexDate <- function(dfACxD) {
   Tot <- zoo(Totaltimebydate2$Time,Totaltimebydate2$Dates)
   Tot <- as.data.frame(Tot)
   colnames(Tot) <- "Totaltime"
-  dygraph(Tot)%>% dyAxis("y",rangePad=c(-0.05),label = "Time (in h)") %>% dySeries("Totaltime", label = "Total Time",axis="y")  %>%
-    dyOptions(axisLineWidth = 1.5,drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
+  
+  dygraph(Tot) %>% dyAxis("y",rangePad=c(-0.05),label = "Time, in h") %>%
+    dySeries("Totaltime", label = "Time, in h",axis="y")  %>%
+    dyOptions(axisLineWidth = 1.5,drawGrid = FALSE) %>%
+    dyLegend(width = 400)%>% dyRangeSelector()
 }
-
 
 ## Circuits Timeline vs User ####
 timelineuser<- function(dfActionCircuit) {
-  ggplot(dfActionCircuit, aes(x = Alumno, y = Time,color=Mesure)) + 
+  ggplot(dfActionCircuit, aes(x = Alumno, y = Time, color = Mesure)) + 
     geom_point(size = 1.5, alpha = 0.8) +
     theme_few()+
     theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
           axis.ticks.x=element_blank())+scale_fill_manual(values=gra)
 }
 
-## Circuits vs Date ####
+## Experiments per Date ####
 createPlot_ExpxDate <- function(dfACxD) {
   ses<- zoo(dfACxD$NumExp,dfACxD$Dates)
   Totcircu<-as.data.frame(ses)
   
-  dygraph(Totcircu)%>% dyAxis("y",rangePad=c(-0.05),label = "Circuits") %>%  dySeries("ses", label = "Total Circuits",axis="y") %>% 
-    dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>% dyLegend(width = 400)%>% dyRangeSelector()
+  dygraph(Totcircu) %>% dyAxis("y",rangePad=c(-0.05),label = "Experiments") %>%
+    dySeries("ses", label = "Experiments",axis="y") %>% 
+    dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>%
+    dyLegend(width = 400)%>% dyRangeSelector()
 }
-
 
 plotDistribution <- function(values=NA,minValues=NULL,maxValues=NULL,xlabel="") {
   if(is.null(values)) return(NULL)
@@ -653,6 +656,76 @@ plotDistribution <- function(values=NA,minValues=NULL,maxValues=NULL,xlabel="") 
 
 
 ### >> CALCULATIONS ####
+## Time ####
+InfovalueBoxTT <- function(dfACxStud){
+  tottime<-sum(dfACxStud$TotalTime)
+  round(tottime,digits = 2)
+}
+
+InfovalueBoxMeT <- function(dfACxStud){
+  round(mean(dfACxStud$TotalTime),digits = 2)
+}
+
+InfovalueBoxMaxT <- function(dfACxStud){
+  round(max(dfACxStud$TotalTime),digits = 2)
+}
+
+InfovalueBoxMinT <- function(dfACxStud){
+  round(min(dfACxStud$TotalTime),digits = 2)
+}
+
+## Experiments #### 
+InfovalueBoxTNumExp <- function(dfACxStud){
+  return(sum(dfACxStud$NumExp))
+}
+
+InfovalueBoxMeanExp <- function(dfACxStud){
+  return(round(mean(dfACxStud$NumExp), digits=2))
+}
+
+InfovalueBoxMinExp <- function(dfACxStud){
+  return(min(dfACxStud$NumExp))
+}
+
+InfovalueBoxMaxExp <- function(dfACxStud){
+  return(max(dfACxStud$NumExp))
+}
+
+## Unique, normalized ####
+InfovalueBoxMinNorm <- function(dfACxStud){
+  return(min(dfACxStud$NumNCircu))
+}
+
+InfovalueBoxMeanNorm <- function(dfACxStud){
+  return(round(mean(dfACxStud$NumNCircu), digits=2))
+}
+
+InfovalueBoxMaxNorm <- function(dfACxStud){
+  return(max(dfACxStud$NumNCircu))
+}
+
+InfovalueBoxGNumNorm <- function(dfActionCircuit){
+  return(length(unique(dfActionCircuit$CircuitoNormalizado)))
+}
+
+## Unique, simplified ####
+InfovalueBoxMinSimp <- function(dfACxStud){
+  return(min(dfACxStud$NumSCircu))
+}
+
+InfovalueBoxMeanSimp <- function(dfACxStud){
+  return(round(mean(dfACxStud$NumSCircu), digits=2))
+}
+
+InfovalueBoxMaxSimp <- function(dfACxStud){
+  return(max(dfACxStud$NumSCircu))
+}
+
+InfovalueBoxGNumSimp <- function(dfActionCircuit){
+  return(length(unique(dfActionCircuit$CircuitoSimplificado)))
+}
+
+## Closed Circuits? ####
 InfovalueBoxNCC <- function(dfActionCircuit){
   Accircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Circuito) %>%
@@ -684,33 +757,6 @@ InfovalueBoxMNNC <- function(dfActionCircuit){
   return(MeanNumNCircSV)
 }
 
-InfovalueBoxNC <- function(dfActionCircuit){
-  Acircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)
-  NumcircuV<-length(Acircu$Circuito)
-  return(NumcircuV)
-}
-
-InfovalueBoxMNC <- function(dfActionCircuit){
-  MeanNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)%>% 
-    group_by(Alumno) %>% summarise(Numcirc=length(Circuito))
-  MeanNumCircSV <- round(mean(MeanNAcircu$Numcirc),digits = 2)
-  return(MeanNumCircSV)
-}
-
-InfovalueBoxlowbound <- function(dfActionCircuit){
-  lowboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)%>%
-    group_by(Alumno) %>%  summarise(Circuito =length(Circuito))
-  mincircv <- min(lowboundf$Circuito)
-  return(mincircv)
-}
-
-InfovalueBoxupbound <- function(dfActionCircuit){
-  upboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito)%>%
-    group_by(Alumno) %>%  summarise(Circuito =length(Circuito))
-  maxcircv <- max(upboundf$Circuito)
-  return(maxcircv)
-}
-
 InfovalueBoxmeanstud <- function(dfActionCircuit){
   upboundf <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
     filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(Circuito =length(unique(Circuito)))
@@ -722,33 +768,7 @@ InfovalueBoxmeanstud <- function(dfActionCircuit){
   return(strx)
 }
 
-InfovalueBoxNNC <- function(dfActionCircuit){
-  Ancircu <-dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.))
-  NumncircuVC<-length(unique(Ancircu$CircuitoNormalizado))
-  return(NumncircuVC)
-}
-
-InfovalueBoxMNNC <- function(dfActionCircuit){
-  MeanNNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numncirc=length(unique(CircuitoNormalizado)))
-  MeanNumNCircSV <- round(mean(MeanNNAcircu$Numncirc),digits = 2)
-  return(MeanNumNCircSV)
-}
-
-InfovalueBoxlowboundN <- function(dfActionCircuit){
-  lowboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)))
-  mincircunv <- min(lowboundfN$CircuitoNormalizado)
-  return(mincircunv)
-}
-
-InfovalueBoxupboundN <- function(dfActionCircuit){
-  upboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoNormalizado =length(unique(CircuitoNormalizado)))
-  maxcircnv <- max(upboundfN$CircuitoNormalizado)
-  return(maxcircnv)
-}
-
+## Measure ####
 ValueBoxnumvolts <- function(dfActionCircuit){
   Voltsdf<- dfActionCircuit %>% select(CircuitoNormalizado,TypeofMesure)%>% filter(complete.cases(.)) %>% 
     group_by(CircuitoNormalizado,TypeofMesure) %>%  summarise(Frequency=length(unique(TypeofMesure))) %>% 
@@ -780,53 +800,6 @@ ValueBoxnumint <- function(dfActionCircuit){
   intv <-unlist(c(intdf[as.vector(c(1)),as.vector(c(2))]),use.names=FALSE)
   return(intv)
 }  
-
-InfovalueBoxTT <- function(dfOrderTime){
-  tottime<-sum(dfOrderTime$TotalTime)
-  round(tottime,digits = 2)
-}
-
-InfovalueBoxMeT <- function(dfOrderTime){
-  round(mean(dfOrderTime$TotalTime),digits = 2)
-}
-
-InfovalueBoxMaxT <- function(dfOrderTime){
-  round(max(dfOrderTime$TotalTime),digits = 2)
-}
-
-InfovalueBoxMinT <- function(dfOrderTime){
-  round(min(dfOrderTime$TotalTime),digits = 2)
-}
-
-# Distribución Circuito Simplificado #
-InfovalueBoxSC <- function(dfActionCircuit){
-  Ancircu <-dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>% filter(complete.cases(.))
-  NumncircuVC<-length(unique(Ancircu$CircuitoSimplificado))
-  return(NumncircuVC)
-}
-
-InfovalueBoxMSC <- function(dfActionCircuit){
-  MeanNNAcircu <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno) %>% summarise(Numncirc=length(unique(CircuitoSimplificado)))
-  MeanNumNCircSV <- round(mean(MeanNNAcircu$Numncirc),digits = 2)
-  return(MeanNumNCircSV)
-}
-
-InfovalueBoxlowboundS <- function(dfActionCircuit){
-  lowboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
-  mincircunv <- min(lowboundfN$CircuitoSimplificado)
-  return(mincircunv)
-}
-
-InfovalueBoxupboundS <- function(dfActionCircuit){
-  upboundfN <- dfActionCircuit %>% select(Alumno,NumCircuito,Circuito,CircuitoNormalizado,CircuitoSimplificado,EsCircuitoCerrado,MultimetroMal,FechaHoraEnvio)%>%
-    filter(complete.cases(.)) %>%  group_by(Alumno)%>%  summarise(CircuitoSimplificado =length(unique(CircuitoSimplificado)))
-  maxcircnv <- max(upboundfN$CircuitoSimplificado)
-  return(maxcircnv)
-}
-
-
 
 #### WORK INDICATORS ####
 

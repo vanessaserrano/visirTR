@@ -13,17 +13,18 @@ shinyServer(function(input, output, session) {
   dfACxDate <- reactive({aggreg_xDate(dfACxStudDate())})
   
   ## Normalized Circuits ####  
+  tabNStudents <- reactive({
+    tab <- dfACxStud()
+    tab$Alumno <- as.character(tab$Alumno)
+    tab <- tab[order(tab$Alumno),]
+    data.frame(Student = tab$Alumno, NumExp = tab$NumExp, stringsAsFactors = FALSE) 
+  }) 
+  
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
     tab <- tab[order(-tab)]
     data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
   })
-  
-  tabNStudents <- reactive({
-    tab <- table(na.omit(dfActionCircuit()$Alumno))
-    tab <- tab[order(tab)]
-    data.frame(Student = names(tab), TimesTested = as.integer(tab), stringsAsFactors = FALSE) 
-  }) 
   
   tabSCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoSimplificado))
@@ -67,7 +68,6 @@ shinyServer(function(input, output, session) {
   dfObsItemsLong <- reactive({
     dfObsLong <- dfActionsMilestones()
     if(is.null(dfObsLong)) return(NULL)
-    
     if(input$checkbox) 
       dfObsLong <- rename(dfObsLong,student=user) %>% select(-filename)
     else
@@ -146,6 +146,49 @@ shinyServer(function(input, output, session) {
   
 #### GLOBAL RESULTS ####
 ### >> TIME ####
+## Distribution of time on task ####
+# Total time spend
+  output$totaltimespend <-  renderValueBox({
+    valueBox(
+      value=ifelse(is.null(dfACxStud()),"--",
+                   InfovalueBoxTT(dfACxStud())), 
+      subtitle="Total time, in h",
+      color = "navy")
+  })
+  
+# Mean time spend
+  output$meantimespend <-  renderValueBox({
+    valueBox(
+      value=ifelse(is.null(dfACxStud()),"--",
+                   InfovalueBoxMeT(dfACxStud())), 
+      subtitle="Mean, among users, in h",
+      color = "blue")
+  })
+  
+# Max time spend
+  output$maxtimespend <-  renderValueBox({
+    valueBox(
+      value=ifelse(is.null(dfACxStud()),"--",
+                   InfovalueBoxMaxT(dfACxStud())), 
+      subtitle = "Maximum, among users, in h",
+      color = "blue")
+  })
+  
+# Min time spend
+  output$mintimespend<-  renderValueBox({
+    valueBox(
+      value=ifelse(is.null(dfACxStud()),"--",
+                   InfovalueBoxMinT(dfACxStud())), 
+      subtitle = "Mininum, among users, in h",
+      color = "blue")
+  })
+  
+  output$timstu <- renderPlot({
+    if(is.null(dfACxStud())) return(NULL)
+    plotDistribution(dfACxStud()$TotalTime, xlabel="Time (in h) per User")
+  })
+
+    
 ## Total Time vs Date (Dygraph) ####
   output$dygraph <-renderDygraph({
     if(is.null(dfACxDate())) return(NULL)
@@ -153,53 +196,6 @@ shinyServer(function(input, output, session) {
   })
 
 
-## Distribution of time on task ####
-  # Total time spend
-  output$totaltimespend <-  renderValueBox({
-    valueBox(
-      value=ifelse(is.null(dfImport()),"--",
-             InfovalueBoxTT(dfACxStud())), 
-      subtitle="Total Time (in h)",
-      color = "blue")
-    })
-      
-  
-  # Mean time spend
-  output$meantimespend <-  renderValueBox({
-    valueBox(
-      value=ifelse(is.null(dfImport()),"--",
-              InfovalueBoxMeT(dfACxStud())), 
-      subtitle="Mean Time/User (in h)",
-      color = "blue")
-  })
-  
-
-  # Max time spend
-  output$maxtimespend <-  renderValueBox({
-    valueBox(
-      value=ifelse(is.null(dfImport()),"--",
-            InfovalueBoxMaxT(dfACxStud())), 
-      subtitle = "Max Time (in h)",
-      color = "blue")
-  })
-  
-
-  # Min time spend
-  
-  output$mintimespend<-  renderValueBox({
-    valueBox(
-      value=ifelse(is.null(dfImport()),"--",
-            InfovalueBoxMinT(dfACxStud())), 
-      subtitle = "Min Time (in h)",
-      color = "blue")
-  })
-  
-
-  output$timstu <- renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    plotDistribution(dfACxStud()$TotalTime, xlabel="Time (in h) per User")
-  })
-  
 ## Time on task vs User per Date HeatMap ####
   output$timeheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
@@ -246,8 +242,47 @@ shinyServer(function(input, output, session) {
   })
   
   
-### >> CIRCUITS ####
-## Circuits vs User heat map ####
+### >> EXPERIMENTS ####
+## Experiments distribution ####
+# Lower bound
+  output$lowbound<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxMinExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      "Minimum, among users",color = "blue")
+  })
+  
+# Mean number of circuits per user  
+  output$Meannumuniquecircst <- renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxMeanExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      "Mean, among users",color = "blue")
+  })
+
+# Upper bound 
+  output$upbound<-  renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxMaxExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      "Maximum, among users",color = "blue")
+  })
+
+# Total number of experiments
+  output$numuniquecirc <- renderValueBox({
+    valueBox(
+      value=tags$p(ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxTNumExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      "Total number of experiments", color = "navy")
+  })
+  
+# Plot  
+  output$circdist <- renderPlot({
+    if(is.null(dfImport())) return(NULL)
+    plotDistribution(dfACxStud()$NumCircu, xlabel="Circuits per User")
+  })
+  
+## Experiments per User and Date -- Heat map ####
   output$circsuserheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
     ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
@@ -270,7 +305,7 @@ shinyServer(function(input, output, session) {
   
   output$plot_points <- renderText({
     if(is.null(dfImport())) return(NULL)
-    dat <- data.frame(ids=dfACxStudDate()$NumCircu)
+    dat <- data.frame(ids=dfACxStudDate()$NumExp)
     dat$toT <- dfACxStudDate()$Alumno
     dat$nAc <- dfACxStudDate()$Dates
     dat <- as.data.frame(dat)
@@ -284,21 +319,24 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.factor(res$nAc))
     responset <- unique(as.factor(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to see the number of circuits.") 
+      return ("Place your mouse over a data point to see the number of experiments.") 
     else
       return (paste("User Id:",responset[1],"\n",
                     "Date:",responsec[1],"\n",
-                    "Circuits:",response[1]))
+                    "Experiments:",response[1]))
   })
   
 
-## Circuits Timeline vs user ####
+## Experimental Timelines ####
   output$timelineus <-renderPlot({
-    if(is.null(dfImport())) return(NULL)
+    if(is.null(dfActionCircuit())) return(NULL)
     gra=c("red","green","blue","yellow")
-    g <- ggplot(dfActionCircuit(), aes(x = Alumno, y = Time,
-                                  color = Measure, shape= Measure)) + 
+    
+    g <- dfActionCircuit() %>% mutate (Time = round(Time/60, digits=2)) %>% 
+      ggplot(aes(x = Alumno, y = Time, 
+                 color = Measure, shape= Measure)) + 
       geom_point(size = 4, alpha = 0.5) +  
+      labs(x="Time, in h") +
       scale_color_manual(values = gra) +
       scale_shape_manual(values= c(95,95,95,1)) + labs(x = "User")  +
       theme(panel.background = element_rect(fill=NA), 
@@ -306,10 +344,19 @@ shinyServer(function(input, output, session) {
             panel.grid.major.x = element_line(linetype=0),
             panel.grid.major.y = element_line(colour="lightgray",linetype="solid"),
             legend.key=element_blank(),
+            legend.title = element_text(size=14),
+            legend.text= element_text(size=11),
+            axis.title = element_text(size=14),
+            axis.text= element_text(size=11),
             axis.text.x=element_text(angle = 90, vjust = 0.5))+
-      guides(color = guide_legend(override.aes = list(size=7)))  
+      guides(color = guide_legend(override.aes = list(size=11)))  
              
-    if(input$timeline_facet) g <- g + facet_wrap(~Measure,nrow=2)
+    if(input$timeline_facet) {
+      g <- g + facet_wrap(~Measure,nrow=2) +
+        theme(axis.text.x = element_blank(),
+              strip.text= element_text(size=14),
+              legend.position = "none")
+    }  
     g
   })
   
@@ -344,112 +391,60 @@ shinyServer(function(input, output, session) {
       return (paste("User:",response[1]))
   }) 
   
-## Circuits distribution ####
-  # Total number of circuits
-  
-  output$numuniquecirc <- renderValueBox({
-    valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Total Number of Circuits",color = "blue")
-  })
-  
-
-  # Mean number of circuits by student  
-  
-  output$Meannumuniquecircst <- renderValueBox({
-    valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxMNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Mean Number Circuits per User",color = "blue")
-  })
-  
-
-  # Lower bound
-  
-  output$lowbound<-  renderValueBox({
-    valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxlowbound(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Minimum circuits performed",color = "blue")
-  })
-
-  # Upper bound 
-  
-  output$upbound<-  renderValueBox({
-    valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxupbound(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Maximum circuits performed",color = "blue")
-  })
-  
-
-  output$circdist <- renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    plotDistribution(dfACxStud()$NumCircu, xlabel="Circuits per User")
-  })
-
-## Circuitos normalizados únicos ####
-  # Total number of normalized circuits
-  output$umuniqnormcirc<-  renderValueBox({
-    g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Total",color = "blue")
-    
-    if(input$simplified_distribution) g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxSC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Total",color = "blue")
-    g
-
-  })
-  
-
-  #Mean number of circuits by student  
-  output$Meannumuniqnormcircst<-  renderValueBox({
-    g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxMNNC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Mean",color = "blue")
-    
-    if(input$simplified_distribution) g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxMSC(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Mean",color = "blue")
-    g
-  })
-
+## Unique Circuits ####
   #Low bound 
-  
   output$lowboundN<-  renderValueBox({
-    g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxlowboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Minimum",color = "blue")
-    
-    if(input$simplified_distribution) g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxlowboundS(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Minimum",color = "blue")
-    g
+    if(is.null(dfACxStud())) vVB <- "---"
+    if(!is.null(dfACxStud())) {
+      vVB <- ifelse(input$simplified_distribution,
+                    InfovalueBoxMinSimp(dfACxStud()),
+                    InfovalueBoxMinNorm(dfACxStud()))
+    }
+    valueBox(
+      value=vVB, width = 4, 
+      "Minimum, among users",color = "blue")
   })
   
-  #Upper bound 
-  
-  output$upboundN<-  renderValueBox({
-    g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxupboundN(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Maximum",color = "blue")
-    
-    if(input$simplified_distribution) g <- valueBox(
-      value=tags$p(ifelse(is.null(dfImport()),"--",
-                          InfovalueBoxupboundS(dfActionCircuit())),style = "font-size: 90%;"),width = 4, 
-      "Maximum",color = "blue")
-    g
+#Mean 
+  output$Meannumuniqnormcircst<-  renderValueBox({
+    if(is.null(dfACxStud())) vVB <- "---"
+    if(!is.null(dfACxStud())) {
+      vVB <- ifelse(input$simplified_distribution,
+                    InfovalueBoxMeanSimp(dfACxStud()),
+                    InfovalueBoxMeanNorm(dfACxStud()))
+    }
+    valueBox(
+      value=vVB, width = 4, 
+      "Mean, among users",color = "blue")
   })
 
+  #Upper bound 
+  output$upboundN<-  renderValueBox({
+    if(is.null(dfACxStud())) vVB <- "---"
+    if(!is.null(dfACxStud())) {
+      vVB <- ifelse(input$simplified_distribution,
+                    InfovalueBoxMaxSimp(dfACxStud()),
+                    InfovalueBoxMaxNorm(dfACxStud()))
+    }
+    valueBox(
+      value=vVB, width = 4, 
+      "Maximum, among users",color = "blue")
+  })
+  
+# Total
+  output$umuniqnormcirc<-  renderValueBox({
+    if(is.null(dfActionCircuit())) vVB <- "---"
+    if(!is.null(dfActionCircuit())) {
+      vVB <- ifelse(input$simplified_distribution,
+                    InfovalueBoxGNumSimp(dfActionCircuit()),
+                    InfovalueBoxGNumNorm(dfActionCircuit()))
+    }
+    valueBox(
+      value=vVB, width = 4, 
+      "Number of unique circuits, in global",color = "navy")
+  }) 
+    
+# Plot  
   output$circdistN <- renderPlot({
     if(is.null(dfImport())) return(NULL)
     g <- plotDistribution(dfACxStud()$NumNCircu, xlabel="Normalized Circuits per User")
@@ -936,10 +931,6 @@ shinyServer(function(input, output, session) {
 
 #### HELP ####  
   observeEvent(input$"StrucInfo", {
-    # match input$todo to the right task from the reactive tasks() (by id)
-    # (I'm sure there's a simpler way of doing this)
- 
-    # show a custom-made modal for the task (input$todo) that was just clicked
     showModal(modalDialog(title = "Dashboard Structure",
                           HTML("This dashboard is divided in 4 folders: <br/> <b> Data Input </b> <br/> Data loading and
                                       main information <br/> <b> Global Results </b> <br/>
@@ -957,10 +948,6 @@ shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$"Glossary", {
-    # match input$todo to the right task from the reactive tasks() (by id)
-    # (I'm sure there's a simpler way of doing this)
-    
-    # show a custom-made modal for the task (input$todo) that was just clicked
     showModal(modalDialog(title = "Glossary of Terms",
                           HTML(" <b> User:</b> A person who uses VISIR, can be a student or not <br/>
                                          <b> Action:</b> User interactions with the client that generate a message on the server <br/>

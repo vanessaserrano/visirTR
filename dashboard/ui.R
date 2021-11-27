@@ -13,16 +13,18 @@ for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 
 source("functions_VISIRDB.R")
 
+
+
 ui <- dashboardPage( 
   skin="yellow",
   dashboardHeader(
-    title="VISIR DASHBOARD"
+    title="VISIR-DB"
   ),
   dashboardSidebar(
     sidebarMenu(
     tags$link(rel = "stylesheet", type = "text/css", href = "bootstrap.css"),
     tags$head(tags$style('
-      body {margin: auto; min-width:300px;}
+      body {margin: auto; min-width:400px;}
       REMOVE_TO_ENABLE_a[href="#shiny-tab-widgets"] {
         z-index: -99999;
       }
@@ -37,8 +39,8 @@ ui <- dashboardPage(
       menuItem("Data Input",icon = icon("home"), tabName = "browsedata"),
       menuItem("Global Results",icon = icon("folder"), startExpanded = FALSE,
         menuSubItem("Time", tabName = "timeana"),
-        menuSubItem("Circuits", tabName = "numcircu"),
-        menuSubItem("Circuits vs Time", tabName = "circvstim")),
+        menuSubItem("Experiments", tabName = "numcircu"),
+        menuSubItem("Experiments vs Time", tabName = "circvstim")),
       menuItem("Circuit-based Analysis",icon = icon("folder"), startExpanded  = FALSE,
         menuSubItem("Common Circuits",tabName = "common-circuits")),
       menuItem("User-specific Results",icon = icon("folder"), startExpanded  = FALSE,
@@ -78,19 +80,19 @@ ui <- dashboardPage(
         tabBox(height=480, width=12,
           tabPanel("Time Distribution", 
             fluidRow(
-              valueBoxOutput("totaltimespend",width = 3),
+              valueBoxOutput("mintimespend",width = 3),
               valueBoxOutput("meantimespend",width = 3),
               valueBoxOutput("maxtimespend",width = 3),
-              valueBoxOutput("mintimespend",width = 3)
+              valueBoxOutput("totaltimespend",width = 3)
             ),
             fluidRow(
               box(status="primary",plotOutput("timstu"), height=480, width=12)
             )
           ),
-          tabPanel( "Total Time vs Date",
+          tabPanel( "Time per Date",
             fluidRow(box(status="primary",dygraphOutput("dygraph"), height=480, width=12))
           ),
-          tabPanel( "Time vs User & Date",
+          tabPanel( "Time per User and Date",
             fluidRow(
               box(status="primary",uiOutput("plot"),verbatimTextOutput("plot_poin"), 
                   height=480, width=12)
@@ -102,36 +104,36 @@ ui <- dashboardPage(
       
       tabItem("numcircu",
               tabBox(height=480, width=12,
-                     tabPanel( "Circuits Distribution",
+                     tabPanel( "Experiments Distribution",
                                fluidRow(
-                                 valueBoxOutput("numuniquecirc",width = 3),
-                                 valueBoxOutput("Meannumuniquecircst",width = 3),
                                  valueBoxOutput("lowbound",width = 3),
-                                 valueBoxOutput("upbound",width = 3)
+                                 valueBoxOutput("Meannumuniquecircst",width = 3),
+                                 valueBoxOutput("upbound",width = 3),
+                                 valueBoxOutput("numuniquecirc",width = 3)
                                ),
                                fluidRow(
                                  box(status="primary",plotOutput("circdist"), height=480, width=12)
                                )
                      ),
-                     tabPanel( "Circuits vs Date",
+                     tabPanel( "Experiments per Date",
                                fluidRow(box(status="primary",dygraphOutput("dygraph2"), height=480, width=12))),
-                     tabPanel( "Circuits vs User & Date",
+                     tabPanel( "Experiments per User and Date",
                                fluidRow(box(status="primary",uiOutput("plotui"),verbatimTextOutput("plot_points"), height=480, width=12))),
-                     tabPanel( "Circuit Timeline vs User",
+                     tabPanel( "Experimental Timelines",
                                fluidRow(box(status="primary",
                                             checkboxInput("timeline_facet","Show facetted"),
                                             uiOutput("plotu"),
                                             verbatimTextOutput("plot_point"),
                                             height=540, width=12))),
-                     tabPanel("Normalized Circuits Distribution", 
+                     tabPanel("Unique Circuits Distribution", 
                               fluidRow(
-                                box(status="primary",checkboxInput("simplified_distribution","Simplified normalized circuit"),
+                                box(status="primary",checkboxInput("simplified_distribution","Check to use simplified circuits (normalized circuits when unchecked)"),
                                     width = 12)),
                               fluidRow(
-                                valueBoxOutput("umuniqnormcirc",width = 3),
-                                valueBoxOutput("Meannumuniqnormcircst",width = 3),
                                 valueBoxOutput("lowboundN",width = 3),
-                                valueBoxOutput("upboundN",width = 3)
+                                valueBoxOutput("Meannumuniqnormcircst",width = 3),
+                                valueBoxOutput("upboundN",width = 3),
+                                valueBoxOutput("umuniqnormcirc",width = 3)
                               ),
                               fluidRow(
                                 box(status="primary",
@@ -143,15 +145,15 @@ ui <- dashboardPage(
       
       tabItem("circvstim",
         tabBox(height=480, width=12,
-          tabPanel( "Circuits vs Time",
+          tabPanel( "Experiments vs Time",
             fluidRow(
               box(status="primary",uiOutput("plotuinAct"),verbatimTextOutput("plot_pointsnAct"), height=480, width=12)
             )
           ),
           
-          tabPanel( "Normalized Circuits vs Time",
+          tabPanel("Unique Circuits vs Time",
             fluidRow(
-              box(status="primary",checkboxInput("simplified_time","Simplified normalized circuit"),
+              box(status="primary",checkboxInput("simplified_time","Check to use simplified circuits (normalized circuits when unchecked)"),
                   uiOutput("plotuinActnorm"),verbatimTextOutput("plot_pointsnActnorm"), height=480, width=12)
             )
           )
@@ -163,7 +165,7 @@ ui <- dashboardPage(
           tabBox(height=480, width=12,
                  tabPanel("Common Circuits",
                           fluidRow(box(status="primary",
-                                       checkboxInput("simplified_common","Simplified normalized circuit"),
+                                       checkboxInput("simplified_common","Check to use simplified circuits (normalized circuits when unchecked)"),
                                        dataTableOutput("cc_circuits"), 
                                        height=480, width=12))
                  ),
@@ -216,30 +218,21 @@ ui <- dashboardPage(
   
   ),
   
-        tabPanel("List of Normalized Ciruits",
+        tabPanel("List of Unique Ciruits",
                  
                  fluidRow(box(status="primary",
-                              checkboxInput("simplified_list","Simplified normalized circuit"),
+                              checkboxInput("simplified_list","Check to use simplified circuits (normalized circuits when unchecked)"),
                               dataTableOutput("lcn_circuits"), 
                               height=480, width=12))),
   
-  tabPanel("History of circuits",
+  tabPanel("History of Experiments",
            
            fluidRow(box(status="primary",
                         dataTableOutput("hc_circuits"), 
                         height=480, width=12)))
-                 
-                 
-                 
-                 
-  
-  
   )))
-  
-  
-  
-  
   ),
+
   tabItem("obsitems",
           tabBox(height=480, width=12,
                  tabPanel("Average Items",
@@ -257,12 +250,6 @@ ui <- dashboardPage(
                           )),
                  tabPanel("Heatmap",fluidRow(box(status="primary", plotOutput("evheatmap"),
                                                  height=480, width=12)))))
-  
-
-  
-
-  
-
     )
   )
 )  
