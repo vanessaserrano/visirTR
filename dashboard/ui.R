@@ -34,7 +34,9 @@ ui <- dashboardPage(
       #StrucInfo {background-color:#ffda5b}
       #Glossary {background-color:#ffda5b}
       .skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a
-          {color: #fff; background: #1e282c; border-left-color: #1e282c;}
+                         {color: #fff; background: #1e282c; border-left-color: #1e282c;}
+      .small-box p {font-size: 14px;}
+      .small-box h3 {font-size: 30px;}
       ')),
       menuItem("Data Input",icon = icon("home"), tabName = "browsedata"),
       menuItem("Global Results",icon = icon("folder"), startExpanded = FALSE,
@@ -162,10 +164,13 @@ ui <- dashboardPage(
       
 
   tabItem("common-circuits",
-          tabBox(height=480, width=12,
+          fluidRow(
+            box(status = "primary",
+                collapsible = FALSE, width=12,
+              checkboxInput("simplified_common","Check to use simplified circuits (normalized circuits when unchecked)"),
+              tabBox(height=480, width=12,
                  tabPanel("Common Circuits",
                           fluidRow(box(status="primary",
-                                       checkboxInput("simplified_common","Check to use simplified circuits (normalized circuits when unchecked)"),
                                        dataTableOutput("cc_circuits"), 
                                        height=480, width=12))
                  ),
@@ -176,79 +181,65 @@ ui <- dashboardPage(
                                        verbatimTextOutput("ct_plot_point"),
                                        height=540, width=12))
                  ),
-                 
                  tabPanel("Number of Circuits vs User",
                           fluidRow(box(status="primary",
                                        htmlOutput("ntc_selectCircuit"),
                                        uiOutput("ntc_plotu"),
                                        verbatimTextOutput("ntc_plot_point"),
                                        height=540, width=12)))
-                 
-                 
-          )
+            )))
   ),
   
   tabItem("usresults",
           fluidRow(
-            box( status = "primary",
-                collapsible = TRUE,
-                htmlOutput("spr_selectStudent"), height=750, width=12
-            
-  ,
-  tabBox(height=540, width=12,
-         tabPanel("Summary",
+            box(status = "primary",
+                collapsible = FALSE, height=750, width=12,
+              htmlOutput("spr_selectStudent"), 
+              tabBox(height=540, width=12,
+                tabPanel("Summary",
                   fluidRow(
-  valueBoxOutput("numStudActions",width = 3),
-  valueBoxOutput("timstud",width = 3),
-  valueBoxOutput("numcircuit",width = 3)),
-  
-  fluidRow(
-    valueBoxOutput("numnormcircuit",width = 3),
-    valueBoxOutput("numsimplcircuit",width = 3),
-    valueBoxOutput("numresist",width = 3)),
-  
-  fluidRow(
-    valueBoxOutput("numcurr",width = 3),
-    valueBoxOutput("numvoltag",width = 3),
-    valueBoxOutput("numerror",width = 3)
+                    valueBoxOutput("numStudActions",width = 3),
+                    valueBoxOutput("timstud",width = 3),
+                    valueBoxOutput("numcircuit",width = 3)),
+                  fluidRow(
+                    valueBoxOutput("numnormcircuit",width = 3),
+                    valueBoxOutput("numsimplcircuit",width = 3),
+                    valueBoxOutput("numresist",width = 3)),
+                  fluidRow(
+                    valueBoxOutput("numcurr",width = 3),
+                    valueBoxOutput("numvoltag",width = 3),
+                    valueBoxOutput("numerror",width = 3))
+                ),
+                tabPanel("List of Unique Ciruits",
+                 fluidRow(
+                   box(status="primary",
+                     checkboxInput("simplified_list","Check to use simplified circuits (normalized circuits when unchecked)"),
+                     dataTableOutput("lcn_circuits"), 
+                                height=480, width=12))),
     
-  )
-
-  
-  
-  ),
-  
-        tabPanel("List of Unique Ciruits",
-                 
-                 fluidRow(box(status="primary",
-                              checkboxInput("simplified_list","Check to use simplified circuits (normalized circuits when unchecked)"),
-                              dataTableOutput("lcn_circuits"), 
-                              height=480, width=12))),
-  
-  tabPanel("History of Experiments",
-           
-           fluidRow(box(status="primary",
-                        dataTableOutput("hc_circuits"), 
-                        height=480, width=12)))
+                tabPanel("History of Experiments",
+                  fluidRow(box(status="primary",
+                          dataTableOutput("hc_circuits"), 
+                          height=480, width=12)))
   )))
   ),
 
   tabItem("obsitems",
           tabBox(height=480, width=12,
-                 tabPanel("Average Items",
+                 tabPanel("Group Performance",
                           fluidRow(box(status="primary", plotOutput("proportionbars"),height=480, width=12)
                             
                           )),
-                 tabPanel("Heatmap",fluidRow(box(status="primary", plotOutput("heatmap"),
+                 tabPanel("Performance per User",fluidRow(box(status="primary", plotOutput("heatmap"),
                                                  height=480, width=12))))),
   
   tabItem("evmil",
           tabBox(height=480, width=12,
-                 tabPanel("Average Milestones",
+                 tabPanel("Group Performance",
                           fluidRow(box(status="primary", plotOutput("evproportionbars"),height=480, width=12)
                                    
                           )),
-                 tabPanel("Heatmap",fluidRow(box(status="primary", plotOutput("evheatmap"),
+                 tabPanel("Performance per User",fluidRow(box(status="primary", plotOutput("evheatmap"),
                                                  height=480, width=12)))))
     )
   )

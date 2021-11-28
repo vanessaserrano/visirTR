@@ -267,7 +267,6 @@ simplificarCircuito <- function(circuito){
 #### PUBLIC FUNCTIONS ####
 ### >> DATASETS ####
 import_dfActions <- function(inFile) {
-  
   if (is.null(inFile)) return(NULL)
   
   df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
@@ -279,6 +278,8 @@ import_dfActions <- function(inFile) {
 }
 
 create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
+  if(is.null(dfVISIR_acciones)) return(NULL)
+  
   numAcciones<-nrow(dfVISIR_acciones)
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
     order(dfVISIR_acciones$Alumno,
@@ -324,6 +325,8 @@ create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
 }
 
 create_dfActionCircuit <- function (dfActionTime) {
+  if(is.null(dfActionTime)) return(NULL)
+  
   dfVISIR_accionesOrdenado <- dfActionTime
   numAcciones<-nrow(dfVISIR_accionesOrdenado)
     
@@ -500,26 +503,9 @@ create_dfActionCircuit <- function (dfActionTime) {
   (dfActionCircuit_ext <<- dfVISIR_accionesCircuito)
 }
 
-# funOrderTime <- function (dfVISIR_accionesOrdenado) {
-#   ordenAlumno <- dfVISIR_accionesOrdenado %>% select(Alumno, Time) %>% group_by(Alumno) %>% 
-#     summarise(TotalTime=max(Time),.groups = "drop_last")
-#   return(ordenAlumno)
-# }
-
-# FunctionSSA <- function (dfVISIR_acciones) {
-#   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
-#     order(dfVISIR_acciones$Alumno,
-#           dfVISIR_acciones$FechaHoraEnvio),]
-#   dfVISIR_accionesOrdenado$Dates <- format(as.Date(dfVISIR_accionesOrdenado$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
-#   dfVISIR_accionesOrdenado$Dates <- as.Date(dfVISIR_accionesOrdenado$Dates,"%Y-%m-%d")
-#   
-#   Acciones <- dfVISIR_accionesOrdenado %>% select(Dates,Sesion,Alumno) %>%group_by(Dates) %>% 
-#     summarise(Sesion=length(unique(Sesion)),Alumnos=length(unique(Alumno)),Acciones=length(Dates))
-#   
-#   return(Acciones)
-# }
-
 aggreg_dfActionCircuit_xStud <- function (dfActions, dfActionCircuit) {
+  if(is.null(dfActions) || is.null(dfActionCircuit)) return(NULL)
+  
   zz <- dfActions %>% group_by(Alumno) %>% 
     summarise(TotalTime=max(TiempoAcumuladoCorregido),.groups="drop") %>% 
     mutate(TotalTime=round(TotalTime/60,digits = 2))    #in hours
@@ -535,11 +521,15 @@ aggreg_dfActionCircuit_xStud <- function (dfActions, dfActionCircuit) {
               NumMesV=sum(Measure=="Voltage"),
               NumMesR=sum(Measure=="Resistance"),
                                      .groups = "drop")
-  zz <- merge(zz,zz1)
+  zz <- merge(zz,zz1,all=TRUE)
+  zz[is.na(zz)] <- 0
+  
   (sumxStud_ext <<- zz)
 }
 
 aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos) {
+  if(is.null(dfAccionesTiempo) || is.null(dfCircuitos)) return(NULL)
+  
   sumxStudDate <- dfAccionesTiempo %>%  group_by(Alumno,Dates) %>%
     arrange(Alumno,Dates) %>%
     summarise(TimeToDate=max(TiempoAcumuladoCorregido),.groups="drop") %>%
@@ -554,12 +544,15 @@ aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos) {
               NumNCircu=length(unique(CircuitoNormalizado)),
               NumSCircu=length(unique(CircuitoSimplificado)),
               .groups="drop")
-  sumxStudDate <- merge(sumxStudDate,circxStudDate)
+  sumxStudDate <- merge(sumxStudDate,circxStudDate,all=TRUE)
+  sumxStudDate[is.na(sumxStudDate)] <- 0
   
   (sumxStudDate_ext <<- sumxStudDate)
 }
 
 aggreg_xDate <- function(dfAC_xStudDate) {
+  if(is.null(dfAC_xStudDate)) return(NULL)
+  
   (sumxDate_ext <<- dfAC_xStudDate %>% group_by(Dates) %>% 
      summarise(NumExp = sum(NumExp),
                TotalTime = sum(TimeInDate)/60,.groups="drop"))
@@ -577,18 +570,18 @@ createPlot_TimexDate <- function(dfACxD) {
   
   dygraph(Tot) %>% dyAxis("y",rangePad=c(-0.05),label = "Time, in h") %>%
     dySeries("Totaltime", label = "Time, in h",axis="y")  %>%
-    dyOptions(axisLineWidth = 1.5,drawGrid = FALSE) %>%
+    dyOptions(axisLineWidth = 1.5,drawGrid = FALSE, axisLabelFontSize=11) %>%
     dyLegend(width = 400)%>% dyRangeSelector()
 }
 
 ## Circuits Timeline vs User ####
-timelineuser<- function(dfActionCircuit) {
-  ggplot(dfActionCircuit, aes(x = Alumno, y = Time, color = Mesure)) + 
-    geom_point(size = 1.5, alpha = 0.8) +
-    theme_few()+
-    theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())+scale_fill_manual(values=gra)
-}
+# timelineuser<- function(dfActionCircuit) {
+#   ggplot(dfActionCircuit, aes(x = Alumno, y = Time, color = Mesure)) + 
+#     geom_point(size = 1.5, alpha = 0.8) +
+#     theme_few()+
+#     theme(axis.title.x=element_blank(), axis.text.x=element_blank(),
+#           axis.ticks.x=element_blank())+scale_fill_manual(values=gra)
+# }
 
 ## Experiments per Date ####
 createPlot_ExpxDate <- function(dfACxD) {
@@ -597,7 +590,7 @@ createPlot_ExpxDate <- function(dfACxD) {
   
   dygraph(Totcircu) %>% dyAxis("y",rangePad=c(-0.05),label = "Experiments") %>%
     dySeries("ses", label = "Experiments",axis="y") %>% 
-    dyOptions(axisLineWidth = 1.5, drawGrid = FALSE) %>%
+    dyOptions(axisLineWidth = 1.5, drawGrid = FALSE, axisLabelFontSize=11) %>%
     dyLegend(width = 400)%>% dyRangeSelector()
 }
 
@@ -651,7 +644,9 @@ plotDistribution <- function(values=NA,minValues=NULL,maxValues=NULL,xlabel="") 
   g + labs(x=xlabel, y="Frequency")+
     coord_cartesian(xlim= c(ggminValues, ggmaxValues)) +
     theme_bw() + theme_remove_all +
-    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"))
+    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
+          axis.title = element_text(size=14),
+          axis.text= element_text(size=11))
 }
 
 
@@ -957,7 +952,7 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
                          "min_time","max_time","duration","time_on_task",colnames(dfMilestonesPerSession))
 
   # Muntatge de dfUsers
-  vecUsers<-unique(as.character(dfActionsSortedMilestones[,"Alumno"]))
+  vecUsers<-levels(dfActionsSortedMilestones[,"Alumno"])
 
   vecMinTime<-character(length(vecUsers))
   vecMaxTime<-character(length(vecUsers))
@@ -995,17 +990,16 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
       }
     }
     
-    primer<-head(dfActionsPerUserSorted,1)
-    darrer<-tail(dfActionsPerUserSorted,1)
-    vecMinTime[i]<-as.character(primer[,"FechaHoraEnvio"])
-    vecMaxTime[i]<-as.character(darrer[,"FechaHoraRespuesta"])
-    vecNActions[i]<-nrow(dfActionsPerUserSorted)
-    vecNSessions[i]<-nrow(dfSessionsPerUserSorted)
-    vecNFiles[i]<-length(unique(dfActionsPerUserSorted[,"filename"]))
+    vecMinTime[i]<- NA
+    vecMaxTime[i]<-NA
+    
+    vecNActions[i]<-NA
+    vecNSessions[i]<-NA
+    vecNFiles[i]<-NA
     
     # com a suma de sessions, en minuts
-    vecDuration[i]<-sum(dfSessionsPerUserSorted[,"duration"])
-    vecTimeOnTask[i]<-sum(dfSessionsPerUserSorted[,"time_on_task"])
+    vecDuration[i]<- NA
+    vecTimeOnTask[i]<-NA
     
     for(m in 1:length(milestones)) {
       dfMilestonesPerUser[i,paste("n_",milestones[m],sep="")]<-
@@ -1105,19 +1099,21 @@ getdfOIColors <- function(dfObsItems, dfEVMil) {
 #With milestones.
 visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
   if (is.null(bMilestones)) return(NULL) 
-  
+
   vecExits<-100*apply(bMilestones[,-1],2,sum)
-  dfResultats<-as.data.frame(rbind(yes=vecExits/nrow(bMilestones),no=100-vecExits/nrow(bMilestones)))
-  dfResultats$grades <- NULL
+  df <- data.frame(OItems=names(vecExits),Percent=vecExits/nrow(bMilestones))
   
-  dfResults <- dfResultats
+  theme_remove_all <- theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   
-  par(las=2) # make label text perpendicular to axis
-  par(mar=c(12,5,2,2)) # increase y-axis margin.
-  par(cex=0.7)
-  
-  barplot(as.matrix(dfResultats),space=0,col=c("skyblue","white"))
-  
+  g <- ggplot(df,aes(x=OItems, y=Percent)) +
+    geom_bar(stat="identity", color="black", alpha=.2, fill="skyblue")+
+    labs(x="Work Indicator", y="% Performing Users")+
+    coord_cartesian(ylim= c(0, 100)) +
+   theme_bw() + theme_remove_all +
+   theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
+           axis.title = element_text(size=14),
+           axis.text= element_text(size=11))
+  g
 }
 
 visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {

@@ -133,13 +133,11 @@ shinyServer(function(input, output, session) {
       "Actions", color = "blue")
   })
   output$maxdate <- renderValueBox({
-    valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",max(dfImport()$Dates)),
-                            style = "font-size: 90%;"), width = 4, 
+    valueBox(value = ifelse(is.null(dfImport()),"--",max(dfImport()$Dates)), width = 4, 
              "Last logged date", color = "blue")
   })
   output$mindate <- renderValueBox({
-    valueBox(value = tags$p(ifelse(is.null(dfImport()),"--",min(dfImport()$Dates)),
-                            style = "font-size: 90%;"),width = 4, 
+    valueBox(value = ifelse(is.null(dfImport()),"--",min(dfImport()$Dates)),width = 4, 
              "First logged date", color = "blue")
   })
   
@@ -185,7 +183,7 @@ shinyServer(function(input, output, session) {
   
   output$timstu <- renderPlot({
     if(is.null(dfACxStud())) return(NULL)
-    plotDistribution(dfACxStud()$TotalTime, xlabel="Time (in h) per User")
+    plotDistribution(dfACxStud()$TotalTime, xlabel="Time per User, in h")
   })
 
     
@@ -196,15 +194,24 @@ shinyServer(function(input, output, session) {
   })
 
 
-## Time on task vs User per Date HeatMap ####
+## Time on task vs User per Date -- HeatMap ####
   output$timeheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
-    ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
+    g <- ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
       geom_tile(aes(fill=TimeInDate)) + 
-      labs(x="User") +
-      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),
+      labs(x="User", y="Date") +
+      theme(axis.title = element_text(size=14),
+            axis.text= element_text(size=11),
+            legend.title = element_text(size=14),
+            legend.text= element_text(size=11),
+            axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
-      scale_fill_viridis(direction=-1)
+      scale_fill_viridis(name="Time, in h",direction=-1)
+    if(length(dfACxStudDate()$Alumno) > 50) g <- g +
+      theme(axis.text.x = element_blank())
+    if(length(dfACxStudDate()$Dates) > 30) g <- g +
+      theme(axis.text.y = element_blank())
+    g
   })
   
   output$plot <- renderUI({
@@ -226,6 +233,7 @@ shinyServer(function(input, output, session) {
     
     res <- nearPoints(dat, input$plot_hovernAct, 
                       xvar = "toT", yvar = "nAc",
+                      threshold = 50,
                       maxpoints = 1,
                       addDist = TRUE)
     
@@ -247,50 +255,59 @@ shinyServer(function(input, output, session) {
 # Lower bound
   output$lowbound<-  renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfACxStud()),"--",
-                          InfovalueBoxMinExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      value=ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxMinExp(dfACxStud())),width = 4, 
       "Minimum, among users",color = "blue")
   })
   
 # Mean number of circuits per user  
   output$Meannumuniquecircst <- renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfACxStud()),"--",
-                          InfovalueBoxMeanExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      value=ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxMeanExp(dfACxStud())),width = 4, 
       "Mean, among users",color = "blue")
   })
 
 # Upper bound 
   output$upbound<-  renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfACxStud()),"--",
-                          InfovalueBoxMaxExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      value=ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxMaxExp(dfACxStud())),width = 4, 
       "Maximum, among users",color = "blue")
   })
 
 # Total number of experiments
   output$numuniquecirc <- renderValueBox({
     valueBox(
-      value=tags$p(ifelse(is.null(dfACxStud()),"--",
-                          InfovalueBoxTNumExp(dfACxStud())),style = "font-size: 90%;"),width = 4, 
+      value=ifelse(is.null(dfACxStud()),"--",
+                          InfovalueBoxTNumExp(dfACxStud())),width = 4, 
       "Total number of experiments", color = "navy")
   })
   
 # Plot  
   output$circdist <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-    plotDistribution(dfACxStud()$NumCircu, xlabel="Circuits per User")
+    plotDistribution(dfACxStud()$NumCircu, xlabel="Experiments per User")
   })
   
 ## Experiments per User and Date -- Heat map ####
   output$circsuserheat <-renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=NumCircu)) + 
-      labs(x ="User") +
-      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),
+    if(is.null(dfACxStudDate())) return(NULL)
+    g <- ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
+      geom_tile(aes(fill=NumCircu)) +
+      labs(x ="User", y= "Date") +
+      theme(axis.title = element_text(size=14),
+            axis.text= element_text(size=11),
+            legend.title = element_text(size=14),
+            legend.text= element_text(size=11),
+            axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-      scale_fill_viridis(direction=-1)
+      scale_fill_viridis(name="Experiments",direction=-1)
+    if(length(dfACxStudDate()$Alumno) > 50) g <- g +
+      theme(axis.text.x = element_blank())
+    if(length(dfACxStudDate()$Dates) > 30) g <- g +
+      theme(axis.text.y = element_blank())
+    g
   })
   
   output$plotui <- renderUI({
@@ -312,6 +329,7 @@ shinyServer(function(input, output, session) {
     
     res <- nearPoints(dat, input$plot_hovernAct, 
                       xvar = "toT", yvar = "nAc",
+                      threshold = 50,
                       maxpoints = 1,
                       addDist = TRUE)
     
@@ -330,15 +348,17 @@ shinyServer(function(input, output, session) {
 ## Experimental Timelines ####
   output$timelineus <-renderPlot({
     if(is.null(dfActionCircuit())) return(NULL)
-    gra=c("red","green","blue","yellow")
+    gra=c("red","green","blue","black")
     
     g <- dfActionCircuit() %>% mutate (Time = round(Time/60, digits=2)) %>% 
       ggplot(aes(x = Alumno, y = Time, 
                  color = Measure, shape= Measure)) + 
-      geom_point(size = 4, alpha = 0.5) +  
+      geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
+                data=dfACxStud(), color="grey") + 
+      geom_point(size = 4, alpha = 0.5) +
       labs(x="Time, in h") +
       scale_color_manual(values = gra) +
-      scale_shape_manual(values= c(95,95,95,1)) + labs(x = "User")  +
+      scale_shape_manual(values= c(95,95,95,13)) + labs(x = "User")  +
       theme(panel.background = element_rect(fill=NA), 
             panel.border = element_rect(colour="black",fill=NA),
             panel.grid.major.x = element_line(linetype=0),
@@ -349,14 +369,17 @@ shinyServer(function(input, output, session) {
             axis.title = element_text(size=14),
             axis.text= element_text(size=11),
             axis.text.x=element_text(angle = 90, vjust = 0.5))+
-      guides(color = guide_legend(override.aes = list(size=11)))  
+      guides(color = guide_legend(override.aes = list(size=9)))  
              
     if(input$timeline_facet) {
       g <- g + facet_wrap(~Measure,nrow=2) +
         theme(axis.text.x = element_blank(),
               strip.text= element_text(size=14),
               legend.position = "none")
-    }  
+    }
+    
+    if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
+    
     g
   })
   
@@ -379,6 +402,7 @@ shinyServer(function(input, output, session) {
     
     res <- nearPoints(dat, input$plot_hovernAct, 
                       xvar = "toT", yvar = "nAc",
+                      threshold = 50,
                       maxpoints = 1,
                       addDist = TRUE)
     
@@ -450,7 +474,7 @@ shinyServer(function(input, output, session) {
     g <- plotDistribution(dfACxStud()$NumNCircu, xlabel="Normalized Circuits per User")
     
     if(input$simplified_distribution) {
-      g <- plotDistribution(dfACxStud()$NumSCircu, xlabel="Simplified Normalized Circuits per User")
+      g <- plotDistribution(dfACxStud()$NumSCircu, xlabel="Simplified Circuits per User")
     }
     g
   })
@@ -471,7 +495,6 @@ shinyServer(function(input, output, session) {
     maxTT <- max(dfACxStud()$TotalTime)
     maxNC <- max(dfACxStud()$NumCircu)
     
-    
     ggplot(dfACxStud(), aes(x=TotalTime, y=NumCircu))  +  
       geom_point(size = 3, alpha = 0.4) + 
       labs(x = "Time (in h)", y = "Number of Circuits") +
@@ -480,7 +503,9 @@ shinyServer(function(input, output, session) {
       geom_text(aes(x = (meanTT + maxTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
       geom_text(aes(x = meanTT, y= (meanNC + maxNC)/2, label=round(meanTT,digits = 2))) + 
       theme_bw() + 
-      theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+      theme(axis.title = element_text(size=14),
+            axis.text= element_text(size=11),
+            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
 
   })
 
@@ -503,6 +528,7 @@ shinyServer(function(input, output, session) {
     
     res <- nearPoints(dat, input$plot_hovernAct, 
                       xvar = "toT", yvar = "nAc",
+                      threshold = 50,
                       maxpoints = 1,
                       addDist = TRUE)
     
@@ -517,7 +543,7 @@ shinyServer(function(input, output, session) {
                     "Time (in h):",responset[1]))
   })
   
-## Number of normalized circuits vs time ####
+## Number of unique circuits vs time ####
   output$nActionsVStoTnorm <- renderPlot({
     if(is.null(dfACxStud())) return(NULL)
     
@@ -533,7 +559,9 @@ shinyServer(function(input, output, session) {
       geom_vline(xintercept = meanTT, color="#66d9dc") + 
       geom_text(aes(x = (maxTT + meanTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
       geom_text(aes(x = meanTT, y= (maxNC + meanNC)/2, label=round(meanTT, digits = 2))) +
-      theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+      theme(axis.title = element_text(size=14),
+            axis.text= element_text(size=11),
+            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   
     if(input$simplified_time) {
       meanNC <- mean(dfACxStud()$NumSCircu)
@@ -545,7 +573,9 @@ shinyServer(function(input, output, session) {
         geom_vline(xintercept = meanTT, color="#66d9dc") + 
         geom_text(aes(x = (maxTT + meanTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
         geom_text(aes(x = meanTT, y= (maxNC + meanNC)/2, label=round(meanTT, digits = 2))) +
-        theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+        theme(axis.title = element_text(size=14),
+              axis.text= element_text(size=11),
+              axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
     }
     
     g
@@ -580,6 +610,7 @@ shinyServer(function(input, output, session) {
     
     res <- nearPoints(dat, input$plot_hovernAct, 
                       xvar = "toT", yvar = "nAc",
+                      threshold = 50,
                       maxpoints = 1,
                       addDist = TRUE)
     
@@ -604,33 +635,46 @@ shinyServer(function(input, output, session) {
     names(g)[names(g) == 'Circuit'] <- 'Normalized Circuits'
     
     if(input$simplified_common) {g <- tabSCircuits()
-    names(g)[names(g) == 'Circuit'] <- 'Simplified Normalized Circuits'
+    names(g)[names(g) == 'Circuit'] <- 'Simplified Circuits'
     }
     g
   })
 
 ## Circuit in timeline ####
   output$ct_selectCircuit <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    if(is.null(tabSCircuits())) 
-      return(selectInput("ct_circuit", "Select a simplified normalized circuit...", c("No data available")))
+    if(is.null(tabNCircuits())) 
+      return(selectInput("ct_circuit", "Select a circuit...", c("No data available")))
     else {
-      return(selectInput("ct_circuit", "Select a simplified normalized circuit...", tabSCircuits()$Circuit))
+      if(input$simplified_common) {
+        return(selectInput("ct_circuit", "Select a circuit...", tabSCircuits()$Circuit))
+      } else {
+        return(selectInput("ct_circuit", "Select a circuit...", tabNCircuits()$Circuit))
+      }
     }})
   
   output$ct_plotu_chart <- renderPlot({
     if(is.null(dfImport())) return(NULL)
+    
     gra <- c("grey","red")
-    grafdata <- dfActionCircuit() %>% select(Alumno,Time)
+    
+    grafdata <- dfActionCircuit() %>% mutate (Time = round(Time/60, digits=2))
     
     if(is.null(input$ct_circuit)) {
       grafdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
     } else {
-      grafdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ct_circuit
+      if(input$simplified_common) {
+        grafdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ct_circuit
+      } else {
+        grafdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ct_circuit
+      }
     }
+    
     g <- ggplot(grafdata, aes(x = Alumno, y = Time,
-                                       color = sel,shape= sel)) + 
+                                       color = sel, shape= sel)) + 
+      geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
+                data=dfACxStud(), color="grey") + 
       geom_point(size = 4, alpha = 0.5) +  
+      labs(y="Time, in h") +
       scale_color_manual(values = gra) +
       scale_shape_manual(values= c(95,1)) + labs(x = "User")  +
       theme(panel.background = element_rect(fill=NA), 
@@ -638,7 +682,12 @@ shinyServer(function(input, output, session) {
             panel.grid.major.x = element_line(linetype=0),
             panel.grid.major.y = element_line(colour="lightgray",linetype="solid"),
             legend.position="none",
+            axis.title = element_text(size=14),
+            axis.text= element_text(size=11),
             axis.text.x=element_text(angle = 90, vjust = 0.5)) 
+
+    if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
+    
     g
   })
   
@@ -661,6 +710,7 @@ shinyServer(function(input, output, session) {
     
     res <- nearPoints(dat, input$ct_plotu_hover, 
                       xvar = "toT", yvar = "nAc",
+                      threshold= 50,
                       maxpoints = 1,
                       addDist = TRUE)
     
@@ -676,37 +726,55 @@ shinyServer(function(input, output, session) {
   ## Number of Circuits vs User ####
   output$ntc_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
+    
     if(is.null(tabSCircuits())) 
-      return(selectInput("ncu_circuit", "Select a simplified normalized circuit...", c("No data available")))
+      return(selectInput("ncu_circuit", "Select a circuit...", c("No data available")))
     else {
-      return(selectInput("ncu_circuit", "Select a simplified normalized circuit...", tabSCircuits()$Circuit))
+      if(input$simplified_common) {
+        return(selectInput("ncu_circuit", "Select a circuit...", tabSCircuits()$Circuit))
+      } else {
+        return(selectInput("ncu_circuit", "Select a circuit...", tabNCircuits()$Circuit))
+      }
     }})
   
   output$ntc_plotu_chart <- renderPlot({
     if(is.null(dfImport())) return(NULL)
-    grafntcdata <- dfActionCircuit() %>% select(Alumno)
+    grafntcdata <- dfActionCircuit()
  
-    if(is.null(input$ct_circuit)) {
+    if(is.null(input$ncu_circuit)) {
       grafntcdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
     } else {
-      grafntcdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ncu_circuit
+      if(input$simplified_common) {
+        grafntcdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ncu_circuit
+      } else {
+        grafntcdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ncu_circuit
+      }
     }
     
-    grafntcdata <- grafntcdata %>% select(Alumno,sel)
     grafntcdata <- grafntcdata %>% group_by(Alumno) %>%
       summarise(Len=sum(sel,na.rm=TRUE),.groups="drop")
-        
-    ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
+
+    grafntcdata <- merge(sumxStud_ext, grafntcdata, all=T)
+    grafntcdata[is.na(grafntcdata)] <- 0
+    
+
+    
+    g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
       geom_bar(stat="identity",width = 0.7,fill="steelblue") +
-      theme(axis.text.x=element_text(angle = 90, vjust = 0.5),
+      theme(axis.title = element_text(size=14),
+            axis.text= element_text(size=11),
+            axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-      labs(x = "User", y= "Number of Simplified Normalized Circuits")
+      labs(x = "User", y= "Number of Unique Circuits")
+    
+    if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
+    
+    g
   })
   
   output$ntc_plotu <- renderUI({
     if(is.null(dfImport())) return(NULL)
-    plotOutput("ntc_plotu_chart", height=400
-    )
+    plotOutput("ntc_plotu_chart", height=400)
   })
   
 
@@ -919,7 +987,8 @@ shinyServer(function(input, output, session) {
 ### >> EVALUATION MILESTONES ####
   output$evproportionbars <- renderPlot ({
     if(is.null(dfStudentsMilestonesEv())) return(NULL)
-    visirtrMilestonesDifficulty(dfStudentsMilestonesEv())
+    visirtrMilestonesDifficulty(
+      dfStudentsMilestonesEv()[,-ncol(dfStudentsMilestonesEv())])
   })
   
   #Heatmap
