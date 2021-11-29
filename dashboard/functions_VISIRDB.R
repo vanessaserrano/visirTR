@@ -1029,9 +1029,13 @@ generatedfUsersMilestones <- function (actionsMilestones,dfMilestones) {
   dfUsers<-data.frame(vecUsers,
                       dfMilestonesPerUser[,paste("n_",milestones,sep="")]>0)
   
-  rownames(dfUsers)<-1:nrow(dfUsers)
+  
+  rownames(dfUsers)<-NULL
   colnames(dfUsers)<-c("Alumno",milestones)
-
+  dfUsers$Alumno <- factor(dfUsers$Alumno,
+                           levels=levels(dfActionsSortedMilestones$Alumno),
+                           ordered=T)
+  
   (dfObsItems_xUser_ext <<- dfUsers)
 }
 
@@ -1052,7 +1056,10 @@ generatedStudentsMilestonesEv <- function (studentsObsMilestones,dfMilestonesEv)
     for(j in 1:nrow(dfMilestonesEv)) {
       df <- cbind(df,as.logical(eval(parse(text=evTests[j]))))
     }              
-    colnames(df)<-c("student",evNames)
+    colnames(df)<-c("Alumno",evNames)
+    df$Alumno <- factor(as.character(df$Alumno),
+                        levels=levels(studentsObsMilestones$Alumno),
+                        ordered=T)
   }
   
   df$grades <- (rowSums(df[,2:length(df)])/(length(df)-1))*100
@@ -1106,8 +1113,8 @@ visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
   theme_remove_all <- theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   
   g <- ggplot(df,aes(x=OItems, y=Percent)) +
-    geom_bar(stat="identity", color="black", alpha=.2, fill="skyblue")+
-    labs(x="Work Indicator", y="% Performing Users")+
+    geom_bar(stat="identity", color="black", fill="springgreen")+
+    labs(x="Work Indicator", y="Performance, in %")+
     coord_cartesian(ylim= c(0, 100)) +
    theme_bw() + theme_remove_all +
    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
@@ -1117,27 +1124,51 @@ visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
 }
 
 visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
-  if (!is.null(bMilestones)) {
-    require(gplots)
+  if (is.null(bMilestones)) return(NULL)
+  
+  nMilestones<-data.matrix(bMilestones[,-1])
+  if(!is.null(labels)) {
+    rownames(nMilestones)<-labels
+  } else {
+    rownames(nMilestones)<-bMilestones[,1]
+  }
+  mode(nMilestones)<-"numeric"
+  
+  colHM<-c("orangered1","springgreen")
+
+  bMilestonesL <- pivot_longer(bMilestones,-1,
+                               names_to = "WorkIndicator",
+                               values_to = "Achieved")
+  bMilestonesL$Alumno <- factor(as.character(bMilestonesL$Alumno),
+                                levels=levels(bMilestones$Alumno),
+                                ordered=T)
+  
+  g <- ggplot(data = bMilestonesL, aes(x = Alumno, y = WorkIndicator)) + 
+    theme_bw() +
+    geom_tile(aes(fill=Achieved), width=0.9, height=0.9) +
+    labs(x ="User", y= "Work Indicator") +
+    theme(axis.title = element_text(size=14),
+          axis.text= element_text(size=11),
+          legend.title = element_text(size=14),
+          legend.text= element_text(size=11),
+          axis.text.x=element_text(angle = 90, vjust = 0.5),
+          axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+    scale_fill_manual(values=colHM) +
+    scale_y_discrete(limits=rev(levels(factor(bMilestonesL$WorkIndicator))))
+  
+  if(nrow(bMilestones) > 50) g <- g +
+    theme(axis.text.x = element_blank())
+  if(ncol(bMilestones) - 1 > 30) g <- g +
+    theme(axis.text.y = element_blank())
+  g
     
-    nMilestones<-data.matrix(bMilestones[,-1])
-    if(!is.null(labels)) {
-      rownames(nMilestones)<-labels
-    } else {
-      rownames(nMilestones)<-bMilestones[,1]
-    }
-    mode(nMilestones)<-"numeric"
-    
-    colHM<-c("#EEEEEEFF","skyblue")
-    
-    heatmap.2(nMilestones,dendrogram="row",Colv=NULL,Rowv=TRUE,margins=c(6,6),
-              cexRow=0.6,cexCol=0.8,breaks=c(-0.5,0.5,1.5),key=FALSE,trace="none",
-              scale="none",col=colHM,
-              colsep=0:ncol(nMilestones)-1,rowsep=0:nrow(nMilestones)-1,
-              lmat=rbind(c(4,3),c(2,1)), 
-              lhei=c(0.5,9.5),
-              lwid=c(2,8))
-  }	
+  # heatmap.2(nMilestones,dendrogram="row",Colv=NULL,Rowv=TRUE,margins=c(6,6),
+  #           cexRow=0.6,cexCol=0.8,breaks=c(-0.5,0.5,1.5),key=FALSE,trace="none",
+  #           scale="none",col=colHM,
+  #           colsep=0:ncol(nMilestones)-1,rowsep=0:nrow(nMilestones)-1,
+  #           lmat=rbind(c(4,3),c(2,1)), 
+  #           lhei=c(0.5,9.5),
+  #           lwid=c(2,8))
 }
 
 ## Functions not yet used
@@ -1148,7 +1179,7 @@ gradeDistribution <- function(dfStudentsMilestonesEv=NA) {
     geom_histogram(color="black", alpha=.2, fill="skyblue", binwidth=5, boundary = 0) + 
     geom_vline(aes(xintercept=mean(dfStudentsMilestonesEv)), linetype="dashed", size=1) +
     geom_rug(alpha=.5) +
-    labs(x="Grades", y="Frequency")+theme_bw()
+    labs(x="Grades", y="Frequency") + theme_bw()
 }
 
 nActVStoTVSGrade <- function (dfStudents=NULL, dfStudentsMilestones=NULL, id=NULL){

@@ -198,7 +198,7 @@ shinyServer(function(input, output, session) {
   output$timeheat <-renderPlot({
     if(is.null(dfImport())) return(NULL)
     g <- ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=TimeInDate)) + 
+      geom_tile(aes(fill=TimeInDate),width=0.9) + 
       labs(x="User", y="Date") +
       theme(axis.title = element_text(size=14),
             axis.text= element_text(size=11),
@@ -294,7 +294,7 @@ shinyServer(function(input, output, session) {
   output$circsuserheat <-renderPlot({
     if(is.null(dfACxStudDate())) return(NULL)
     g <- ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=NumCircu)) +
+      geom_tile(aes(fill=NumCircu), width=0.9) +
       labs(x ="User", y= "Date") +
       theme(axis.title = element_text(size=14),
             axis.text= element_text(size=11),
@@ -1033,12 +1033,7 @@ shinyServer(function(input, output, session) {
     ))
     observeEvent(input$closeG, {
       removeModal()
-      
     })
   }) 
-  
-
-  
-  
 })
 
