@@ -334,7 +334,7 @@ shinyServer(function(input, output, session) {
       Alumno = levels(dfACxStudDate()$Alumno))
     dfACxSD <- merge(dfACxSD,dfACxStudDate(),all=T)
     
-    dfACxSD$Alumno <- factor(dfACxsD$Alumno,
+    dfACxSD$Alumno <- factor(dfACxSD$Alumno,
                              levels(dfACxStudDate()$Alumno),
                              ordered=T)
   
