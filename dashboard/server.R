@@ -23,14 +23,25 @@ shinyServer(function(input, output, session) {
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
     tab <- tab[order(-tab)]
-    data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
+    df1 <- data.frame(Circuit=dfActionCircuit()$CircuitoNormalizado,
+                      Measure=dfActionCircuit()$Measure)
+    df1 <- df1[!duplicated(df1$Circuit),]
+    df <- data.frame(Circuit = names(tab), TimesTested = as.integer(tab),
+               stringsAsFactors = FALSE)
+    df <- merge(df,df1)
+    df <- df[order(df$TimesTested, decreasing=T),]
   })
   
   tabSCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoSimplificado))
     tab <- tab[order(-tab)]
-    data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
-  })
+    df1 <- data.frame(Circuit=dfActionCircuit()$CircuitoSimplificado,
+                      Measure=dfActionCircuit()$Measure)
+    df1 <- df1[!duplicated(df1$Circuit),]
+    df <- data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
+    df <- merge(df,df1)
+    df <- df[order(df$TimesTested, decreasing=T),]
+})
   
   ## Work Indicators ####
   dfMilestonesDef<-reactive({
@@ -190,14 +201,28 @@ shinyServer(function(input, output, session) {
 ## Total Time vs Date (Dygraph) ####
   output$dygraph <-renderDygraph({
     if(is.null(dfACxDate())) return(NULL)
+    if(nrow(dfACxDate())==1) return(NULL)
+    
     createPlot_TimexDate(dfACxDate())
   })
 
 
 ## Time on task vs User per Date -- HeatMap ####
   output$timeheat <-renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    g <- ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
+    if(is.null(dfACxStudDate())) return(NULL)
+
+    dfACxSD <- expand.grid(Dates=as.character(
+      seq(min(as.Date(dfACxStudDate()$Dates)),max(as.Date(dfACxStudDate()$Dates)),by=1)),
+      Alumno = levels(dfACxStudDate()$Alumno))
+    dfACxSD <- merge(dfACxSD,dfACxStudDate(),all=T)
+    
+    dfACxSD$Alumno <- factor(dfACxSD$Alumno,
+                             levels(dfACxStudDate()$Alumno),
+                             ordered=T)
+    
+    g <- dfACxSD %>%  
+      mutate (TimeInDate = round(TimeInDate/60, digits=2)) %>% 
+      ggplot(aes(x = Alumno, y = Dates)) + theme_bw() +
       geom_tile(aes(fill=TimeInDate),width=0.9) + 
       labs(x="User", y="Date") +
       theme(axis.title = element_text(size=14),
@@ -206,10 +231,12 @@ shinyServer(function(input, output, session) {
             legend.text= element_text(size=11),
             axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
-      scale_fill_viridis(name="Time, in h",direction=-1)
-    if(length(dfACxStudDate()$Alumno) > 50) g <- g +
+      scale_fill_viridis(name="Time, in h",direction=-1,
+                         na.value=rgb(1,1,1,0))
+
+    if(length(unique(dfACxStudDate()$Alumno)) > 50) g <- g +
       theme(axis.text.x = element_blank())
-    if(length(dfACxStudDate()$Dates) > 30) g <- g +
+    if(length(unique(dfACxStudDate()$Dates)) > 30) g <- g +
       theme(axis.text.y = element_blank())
     g
   })
@@ -226,7 +253,7 @@ shinyServer(function(input, output, session) {
   
   output$plot_poin <- renderText({
     if(is.null(dfImport())) return(NULL)
-    dat <- data.frame(ids=dfACxStudDate()$TimeInDate)
+    dat <- data.frame(ids=dfACxStudDate()$TimeInDate/60)
     dat$toT <- dfACxStudDate()$Alumno
     dat$nAc <- dfACxStudDate()$Dates
     dat <- as.data.frame(dat)
@@ -289,11 +316,31 @@ shinyServer(function(input, output, session) {
     if(is.null(dfImport())) return(NULL)
     plotDistribution(dfACxStud()$NumCircu, xlabel="Experiments per User")
   })
+
+## Circuits per date ####
+  output$dygraph2 <-renderDygraph({
+    if(is.null(dfACxDate())) return(NULL)
+    if(nrow(dfACxDate())==1) return(NULL)
+    
+    createPlot_ExpxDate(dfACxDate())
+  })
   
 ## Experiments per User and Date -- Heat map ####
   output$circsuserheat <-renderPlot({
     if(is.null(dfACxStudDate())) return(NULL)
-    g <- ggplot(data = dfACxStudDate(), aes(x = Alumno, y = Dates)) + theme_bw() +
+    
+    dfACxSD <- expand.grid(Dates=as.character(
+      seq(min(as.Date(dfACxStudDate()$Dates)),max(as.Date(dfACxStudDate()$Dates)),by=1)),
+      Alumno = levels(dfACxStudDate()$Alumno))
+    dfACxSD <- merge(dfACxSD,dfACxStudDate(),all=T)
+    
+    dfACxSD$Alumno <- factor(dfACxsD$Alumno,
+                             levels(dfACxStudDate()$Alumno),
+                             ordered=T)
+  
+    # dfACxSD[is.na(dfACxSD)] <- 0
+    
+    g <- ggplot(data = dfACxSD, aes(x = Alumno, y = Dates)) + theme_bw() +
       geom_tile(aes(fill=NumCircu), width=0.9) +
       labs(x ="User", y= "Date") +
       theme(axis.title = element_text(size=14),
@@ -302,10 +349,12 @@ shinyServer(function(input, output, session) {
             legend.text= element_text(size=11),
             axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-      scale_fill_viridis(name="Experiments",direction=-1)
-    if(length(dfACxStudDate()$Alumno) > 50) g <- g +
+      scale_fill_viridis(name="Experiments",direction=-1,
+                         na.value=rgb(1,1,1,0))
+    
+    if(length(unique(dfACxStudDate()$Alumno)) > 50) g <- g +
       theme(axis.text.x = element_blank())
-    if(length(dfACxStudDate()$Dates) > 30) g <- g +
+    if(length(unique(dfACxStudDate()$Dates)) > 30) g <- g +
       theme(axis.text.y = element_blank())
     g
   })
@@ -479,12 +528,7 @@ shinyServer(function(input, output, session) {
     g
   })
   
-## Circuits per date ####
-  output$dygraph2 <-renderDygraph({
-    if(is.null(dfACxDate())) return(NULL)
-    createPlot_ExpxDate(dfACxDate())
-  })
-  
+
 ### >> NUMBER OF CIRCUITS VS TIME ON TASK ####
 ## Number of circuits vs time ####
     output$nActionsVStoT <- renderPlot({
@@ -646,9 +690,21 @@ shinyServer(function(input, output, session) {
       return(selectInput("ct_circuit", "Select a circuit...", c("No data available")))
     else {
       if(input$simplified_common) {
-        return(selectInput("ct_circuit", "Select a circuit...", tabSCircuits()$Circuit))
+        return(selectInput("ct_circuit", "Select a circuit...", 
+                           if("" %in% tabSCircuits()$Circuit) {
+                             c("- Empty circuit"="",
+                               tabSCircuits()$Circuit)
+                           } else {
+                             tabSCircuits()$Circuit
+                           }))
       } else {
-        return(selectInput("ct_circuit", "Select a circuit...", tabNCircuits()$Circuit))
+        return(selectInput("ct_circuit", "Select a circuit...", 
+                           if("" %in% tabNCircuits()$Circuit) {
+                             c("- Empty circuit"="",
+                               tabNCircuits()$Circuit)
+                           } else {
+                             tabNCircuits()$Circuit
+                           }))
       }
     }})
   
@@ -731,9 +787,21 @@ shinyServer(function(input, output, session) {
       return(selectInput("ncu_circuit", "Select a circuit...", c("No data available")))
     else {
       if(input$simplified_common) {
-        return(selectInput("ncu_circuit", "Select a circuit...", tabSCircuits()$Circuit))
+        return(selectInput("ncu_circuit", "Select a circuit...", 
+                           if("" %in% tabSCircuits()$Circuit) {
+                             c("- Empty circuit"="",
+                               tabSCircuits()$Circuit)
+                           } else {
+                             tabSCircuits()$Circuit
+                           }))
       } else {
-        return(selectInput("ncu_circuit", "Select a circuit...", tabNCircuits()$Circuit))
+        return(selectInput("ncu_circuit", "Select a circuit...",
+                           if("" %in% tabNCircuits()$Circuit) {
+                             c("- Empty circuit"="",
+                               tabNCircuits()$Circuit)
+                           } else {
+                             tabNCircuits()$Circuit
+                           }))
       }
     }})
   
@@ -765,7 +833,7 @@ shinyServer(function(input, output, session) {
             axis.text= element_text(size=11),
             axis.text.x=element_text(angle = 90, vjust = 0.5),
             axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-      labs(x = "User", y= "Number of Unique Circuits")
+      labs(x = "User", y= "Times Tested")
     
     if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
     
@@ -935,7 +1003,7 @@ shinyServer(function(input, output, session) {
 
   
   
-  
+## List of unique circuits ####  
   output$lcn_circuits <- renderDataTable({
     if(is.null(dfImport())) return(NULL)
     
@@ -947,7 +1015,7 @@ shinyServer(function(input, output, session) {
         arrange(desc(TimTes)) %>%
         select(CircuitoSimplificado,TimTes)
       
-      names(df5)[names(df5) == 'CircuitoSimplificado'] <- 'Simplified Circuits'
+      names(df5)[names(df5) == 'CircuitoSimplificado'] <- 'Simplified Circuit'
       names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
     } else {
       df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>%
@@ -955,18 +1023,22 @@ shinyServer(function(input, output, session) {
         arrange(desc(TimTes)) %>%
         select(CircuitoNormalizado,TimTes)
       
-      names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuits'
+      names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuit'
       names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
     }
    
     datatable(df5)
   })
-  
+
+## History of circuits ####    
   output$hc_circuits <- renderDataTable({
     if(is.null(dfImport())) return(NULL)
     
-    df6 <-dfActionCircuit() [dfActionCircuit()$Alumno == input$ns_student,] %>%
-      select(Time,FechaHoraEnvio,Circuito) %>% mutate(Time=round(Time,digits = 2))
+    df6 <-dfActionCircuit()[dfActionCircuit()$Alumno == input$ns_student,] %>%
+      mutate(Time=round(Time,digits = 2),
+             `Sent Date`=FechaHoraEnvio,
+             `Coded Circuit`= Circuito) %>% 
+      select(Time,`Sent Date`,`Coded Circuit`,Measure)
    
     datatable(df6)
   })

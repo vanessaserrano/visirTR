@@ -562,16 +562,26 @@ aggreg_xDate <- function(dfAC_xStudDate) {
 ## Time vs Date ####
 createPlot_TimexDate <- function(dfACxD) {
   if(is.null(dfACxD)) return(NULL)
-  Totaltimebydate2 <-dfACxD %>% 
-    mutate(Time=round(TotalTime,digits = 2))
-  Tot <- zoo(Totaltimebydate2$Time,Totaltimebydate2$Dates)
-  Tot <- as.data.frame(Tot)
-  colnames(Tot) <- "Totaltime"
   
-  dygraph(Tot) %>% dyAxis("y",rangePad=c(-0.05),label = "Time, in h") %>%
-    dySeries("Totaltime", label = "Time, in h",axis="y")  %>%
-    dyOptions(axisLineWidth = 1.5,drawGrid = FALSE, axisLabelFontSize=11) %>%
-    dyLegend(width = 400)%>% dyRangeSelector()
+  Totaltimebydate2 <- dfACxD %>% 
+    mutate(Time=round(TotalTime,digits = 2))
+  
+  tt <- data.frame(Dates = as.character(seq(min(as.Date(Totaltimebydate2$Dates)),
+                                    max(as.Date(Totaltimebydate2$Dates)), by=1)))
+  Totaltimebydate2 <- merge(Totaltimebydate2,tt,all=T)
+  Totaltimebydate2[is.na(Totaltimebydate2)] <- 0
+  
+  Totaltimebydate2$Dates <- as.Date(Totaltimebydate2$Dates, tz="GMT")
+  
+  Tot <- xts(Totaltimebydate2$Time, Totaltimebydate2$Dates)
+  colnames(Tot) <- "Time"
+  
+  dygraph(Tot) %>%
+    dyAxis("y",rangePad=2,label = "Time, in h") %>%
+    dySeries("Time", label = "Time, in h", axis="y")  %>%
+    dyOptions(axisLineWidth = 1.5,drawGrid = FALSE, 
+              useDataTimezone = FALSE, axisLabelFontSize=11) %>%
+    dyLegend(width = 400) %>% dyRangeSelector()
 }
 
 ## Circuits Timeline vs User ####
@@ -585,12 +595,22 @@ createPlot_TimexDate <- function(dfACxD) {
 
 ## Experiments per Date ####
 createPlot_ExpxDate <- function(dfACxD) {
-  ses<- zoo(dfACxD$NumExp,dfACxD$Dates)
-  Totcircu<-as.data.frame(ses)
+  if(is.null(dfACxD)) return(NULL)
   
-  dygraph(Totcircu) %>% dyAxis("y",rangePad=c(-0.05),label = "Experiments") %>%
+  tt <- data.frame(Dates = as.character(seq(min(as.Date(dfACxD$Dates)),
+                                            max(as.Date(dfACxD$Dates)), by=1)))
+  dfACxD1 <- merge(dfACxD,tt,all=T)
+  dfACxD1[is.na(dfACxD1)] <- 0
+
+  dfACxD1$Dates <- as.Date(dfACxD1$Dates, tz="GMT")
+  
+  ses<- xts(dfACxD1$NumExp,dfACxD1$Dates)
+  colnames(ses) <- "ses"
+
+  dygraph(ses) %>% dyAxis("y",rangePad=c(-0.05),label = "Experiments") %>%
     dySeries("ses", label = "Experiments",axis="y") %>% 
-    dyOptions(axisLineWidth = 1.5, drawGrid = FALSE, axisLabelFontSize=11) %>%
+    dyOptions(axisLineWidth = 1.5, drawGrid = FALSE,
+              useDataTimezone=FALSE, axisLabelFontSize=11) %>%
     dyLegend(width = 400)%>% dyRangeSelector()
 }
 
