@@ -23,23 +23,21 @@ shinyServer(function(input, output, session) {
   tabNCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoNormalizado))
     tab <- tab[order(-tab)]
-    df1 <- data.frame(Circuit=dfActionCircuit()$CircuitoNormalizado,
-                      Measure=dfActionCircuit()$Measure)
-    df1 <- df1[!duplicated(df1$Circuit),]
+    # df1 <- data.frame(Circuit=dfActionCircuit()$CircuitoNormalizado)
+    # df1 <- df1[!duplicated(df1$Circuit),]
     df <- data.frame(Circuit = names(tab), TimesTested = as.integer(tab),
                stringsAsFactors = FALSE)
-    df <- merge(df,df1)
+    # df <- merge(df,df1)
     df <- df[order(df$TimesTested, decreasing=T),]
   })
   
   tabSCircuits <- reactive({
     tab <- table(na.omit(dfActionCircuit()$CircuitoSimplificado))
     tab <- tab[order(-tab)]
-    df1 <- data.frame(Circuit=dfActionCircuit()$CircuitoSimplificado,
-                      Measure=dfActionCircuit()$Measure)
-    df1 <- df1[!duplicated(df1$Circuit),]
+    # df1 <- data.frame(Circuit=dfActionCircuit()$CircuitoSimplificado)
+    # df1 <- df1[!duplicated(df1$Circuit),]
     df <- data.frame(Circuit = names(tab), TimesTested = as.integer(tab),stringsAsFactors = FALSE) 
-    df <- merge(df,df1)
+    # df <- merge(df,df1)
     df <- df[order(df$TimesTested, decreasing=T),]
 })
   
@@ -268,11 +266,11 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.factor(res$nAc))
     responset <- unique(as.factor(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to see the time dedicated.") 
+      return ("Place your mouse over a data point to see user, date and time dedicated.") 
     else
       return (paste("User Id:",responset[1],"\n",
                    "Date:",responsec[1],"\n",
-                   "Time (in h):",response[1]))
+                   "Time, in h:",response[1]))
     
   })
   
@@ -386,7 +384,7 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.factor(res$nAc))
     responset <- unique(as.factor(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to see the number of experiments.") 
+      return ("Place your mouse over a data point to see user, date and number of experiments.") 
     else
       return (paste("User Id:",responset[1],"\n",
                     "Date:",responsec[1],"\n",
@@ -405,9 +403,9 @@ shinyServer(function(input, output, session) {
       geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
                 data=dfACxStud(), color="grey") + 
       geom_point(size = 4, alpha = 0.5) +
-      labs(x="Time, in h") +
+      labs(y="Time, in h", x = "User") +
       scale_color_manual(values = gra) +
-      scale_shape_manual(values= c(95,95,95,13)) + labs(x = "User")  +
+      scale_shape_manual(values= c(95,95,95,13)) +
       theme(panel.background = element_rect(fill=NA), 
             panel.border = element_rect(colour="black",fill=NA),
             panel.grid.major.x = element_line(linetype=0),
@@ -530,7 +528,7 @@ shinyServer(function(input, output, session) {
   
 
 ### >> NUMBER OF CIRCUITS VS TIME ON TASK ####
-## Number of circuits vs time ####
+## Number of experiments vs time ####
     output$nActionsVStoT <- renderPlot({
     if(is.null(dfImport())) return(NULL)
     
@@ -541,7 +539,7 @@ shinyServer(function(input, output, session) {
     
     ggplot(dfACxStud(), aes(x=TotalTime, y=NumCircu))  +  
       geom_point(size = 3, alpha = 0.4) + 
-      labs(x = "Time (in h)", y = "Number of Circuits") +
+      labs(x = "Time, in h", y = "Number of Experiments") +
       geom_hline(yintercept = mean(dfACxStud()$NumCircu), color="#fbada7")+
       geom_vline(xintercept = mean(dfACxStud()$TotalTime), color="#66d9dc") +
       geom_text(aes(x = (meanTT + maxTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
@@ -580,11 +578,11 @@ shinyServer(function(input, output, session) {
     responsec <- unique(as.numeric(res$nAc))
     responset <- unique(as.numeric(res$toT))
     if(length(response)==0)
-      return ("Place your mouse over a data point to identify the user.\n\n") 
+      return ("Place your mouse over a data point to identify user, time and number of experiments.\n\n") 
     else
       return (paste("User Id:",response[1],"\n",
-                    "Number of circuts:",responsec[1],"\n",
-                    "Time (in h):",responset[1]))
+                    "Number of Experiments:",responsec[1],"\n",
+                    "Time, in h:",responset[1]))
   })
   
 ## Number of unique circuits vs time ####
@@ -598,7 +596,7 @@ shinyServer(function(input, output, session) {
     maxNC <- max(dfACxStud()$NumNCircu)
     
     g <- ggplot(dfACxStud(), aes(x=TotalTime, y=NumNCircu)) +  geom_point(size = 3, alpha = 0.4) + 
-      labs(x = "Time (in h)", y = "Number of Normalized Circuits") + theme_bw() +
+      labs(x = "Time, in h", y = "Number of Normalized Circuits") + theme_bw() +
       geom_hline(yintercept = meanNC, color="#fbada7") +
       geom_vline(xintercept = meanTT, color="#66d9dc") + 
       geom_text(aes(x = (maxTT + meanTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
@@ -612,7 +610,7 @@ shinyServer(function(input, output, session) {
       maxNC <- max(dfACxStud()$NumSCircu)
       
       g <- ggplot(dfACxStud(), aes(x=TotalTime, y=NumSCircu)) +  geom_point(size = 3, alpha = 0.4) + 
-        labs(x = "Time (in h)", y = "Number of Simplified Circuits") + theme_bw() +
+        labs(x = "Time, in h", y = "Number of Simplified Circuits") + theme_bw() +
         geom_hline(yintercept = meanNC, color="#fbada7") +
         geom_vline(xintercept = meanTT, color="#66d9dc") + 
         geom_text(aes(x = (maxTT + meanTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
@@ -779,7 +777,7 @@ shinyServer(function(input, output, session) {
       return (paste("User:",response[1]))
   })
   
-  ## Number of Circuits vs User ####
+  ## Circuit per User ####
   output$ntc_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
     
@@ -826,7 +824,6 @@ shinyServer(function(input, output, session) {
     grafntcdata[is.na(grafntcdata)] <- 0
     
 
-    
     g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
       geom_bar(stat="identity",width = 0.7,fill="steelblue") +
       theme(axis.title = element_text(size=14),
@@ -886,12 +883,12 @@ shinyServer(function(input, output, session) {
   output$timstud <- renderValueBox({
     if(is.null(dfACxStud())) return( valueBox(
       "--", 
-      "Total Time (in h)",color = "blue"))
+      "Total Time, in h",color = "blue"))
     else { 
       df <-dfACxStud()
       valueBox(
         value = df$TotalTime[df$Alumno == input$ns_student],
-        "Total Time (in h)",color = "blue")
+        "Total Time, in h",color = "blue")
     }
   }) 
   
@@ -975,7 +972,7 @@ shinyServer(function(input, output, session) {
   output$numerror <- renderValueBox({
     if(is.null(dfACxStud())) return( valueBox(
       "--", 
-      "Errors in measurement",color = "blue"))
+      "Errors in Measurement",color = "blue"))
     
     df <- dfACxStud()
     valueBox(

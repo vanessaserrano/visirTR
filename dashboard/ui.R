@@ -174,14 +174,14 @@ ui <- dashboardPage(
                                        dataTableOutput("cc_circuits"), 
                                        height=480, width=12))
                  ),
-                 tabPanel("Circuits in Timeline",
+                 tabPanel("Circuit in Timeline",
                           fluidRow(box(status="primary",
                                        htmlOutput("ct_selectCircuit"),
                                        uiOutput("ct_plotu"),
                                        verbatimTextOutput("ct_plot_point"),
                                        height=540, width=12))
                  ),
-                 tabPanel("Number of Circuits vs User",
+                 tabPanel("Circuit per User",
                           fluidRow(box(status="primary",
                                        htmlOutput("ntc_selectCircuit"),
                                        uiOutput("ntc_plotu"),

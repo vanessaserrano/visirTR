@@ -94,7 +94,8 @@ normalizarCircuito<-function(x) {
   for(i in 1:length(componentes)) {
     conectores <- strsplit(componentes[i], " ")[[1]]
     
-    if(conectores[2] > conectores[3]) {
+    if(conectores[2] > conectores[3] & 
+       conectores[1] %in% c("W_X", "R_X", "L_X", "C_X")) {
       aux <- conectores[3]
       conectores[3] <- conectores[2]
       conectores[2] <- aux
@@ -1133,7 +1134,7 @@ visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
   theme_remove_all <- theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   
   g <- ggplot(df,aes(x=OItems, y=Percent)) +
-    geom_bar(stat="identity", color="black", fill="springgreen")+
+    geom_bar(stat="identity", color="black", fill="#00a676")+
     labs(x="Work Indicator", y="Performance, in %")+
     coord_cartesian(ylim= c(0, 100)) +
    theme_bw() + theme_remove_all +
@@ -1154,7 +1155,7 @@ visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
   }
   mode(nMilestones)<-"numeric"
   
-  colHM<-c("orangered1","springgreen")
+  colHM<-c("#ff7c74","#00a676")
 
   bMilestonesL <- pivot_longer(bMilestones,-1,
                                names_to = "WorkIndicator",
