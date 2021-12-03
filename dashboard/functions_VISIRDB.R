@@ -1065,7 +1065,7 @@ generatedStudentsMilestonesEv <- function (studentsObsMilestones,dfMilestonesEv)
 
   if(is.null(dfMilestonesEv)) {
     df<-studentsObsMilestones
-    colnames(df)[1]<-"student"
+    # colnames(df)[1]<-"student"
   } else {
     df <- data.frame(as.character(studentsObsMilestones[,1]))
     om <- studentsObsMilestones[,-1]
