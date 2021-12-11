@@ -1,0 +1,10 @@
+milNames	evTests
+E1_RT	om['O01_4R']&om['OT1_RT']
+E2_IT	om['O01_4R']&om['OT2B_IT_MM']
+E3_VT	om['O01_4R']&om['OT3_VT']
+E4_VR3	om['O01_4R']&om['OT4_VR3']
+E5_VR1	om['O01_4R']&om['OT5_VR1']
+E6_VR2	om['O01_4R']&om['OT6_VR2']
+E7_VR4	om['O01_4R']&om['OT7_VR4']
+E8_I1	om['O01_4R']&om['OT8B_I1']
+E9_I2	om['O01_4R']&om['OT9_I2']

@@ -1,0 +1,15 @@
+milNames	regExps	logTests
+O00_GND	GND VDCCOM_1_1	TRUE
+O01_4R	<simplifiedCircuit>.*R_X.*R_X.*R_X.*R_X.*</simplifiedCircuit>	TRUE
+OT1_RT	<result>(.*)</result>.*<measure>resis</measure>	 as.numeric(m[[1]])>=6200&as.numeric(m[[1]])<=6250
+OT2A_IT	<result>(.*)</result>.*<measure>dc cu</measure>	abs(as.numeric(m[[1]]))>=0.0015&abs(as.numeric(m[[1]]))<=0.0017
+OT2B_IT_MM	<simplifiedCircuit>.*(IPROBE_1_1 VDC[+]25V_1_1)|(IPROBE_1_2 VDC[+]25V_1_1).*</simplifiedCircuit><result>(.*)</result>.*<measure>dc cu</measure>	abs(as.numeric(m[[3]]))>=0.0015&abs(as.numeric(m[[3]]))<=0.0017
+OT2C_IT_4R	<simplifiedCircuit>.*R_X.*R_X.*R_X.*R_X.*</simplifiedCircuit>.*<result>(.*)</result>.*<measure>dc cu</measure>	as.numeric(m[[1]])>=0.0015&as.numeric(m[[1]])<=0.0017
+OT3_VT	<result>(.*)</result>.*<measure>dc vo</measure>	 as.numeric(m[[1]])>=9.7&as.numeric(m[[1]])<=10.3
+OT4_VR3	<result>(.*)</result>.*<measure>dc vo</measure>	as.numeric(m[[1]])>=8.3&as.numeric(m[[1]])<=8.5
+OT5_VR1	<result>(.*)</result>.*<measure>dc vo</measure>	as.numeric(m[[1]])>=0.76&as.numeric(m[[1]])<=0.77
+OT6_VR2	<result>(.*)</result>.*<measure>dc vo</measure>	as.numeric(m[[1]])>=7.6&as.numeric(m[[1]])<=7.7
+OT7_VR4	<result>(.*)</result>.*<measure>dc vo</measure>	as.numeric(m[[1]])>=1.58&as.numeric(m[[1]])<=1.6
+OT8A_I1	<result>(.*)</result>.*<measure>dc cu</measure>	as.numeric(m[[1]])>=0.00074&as.numeric(m[[1]])<=0.00076
+OT8B_I1	GND VDCCOM_1_1.*<result>(.*)</result>.*<voltage>(.*)</voltage><measure>dc cu</measure>	as.numeric(m[[1]])>=0.00074&as.numeric(m[[1]])<=0.00076&as.numeric(m[[2]])>=9.99&as.numeric(m[[2]])<=10
+OT9_I2	<result>(.*)</result>.*<measure>dc cu</measure>	as.numeric(m[[1]])>=0.000825&as.numeric(m[[1]])<=0.00085
