@@ -1134,13 +1134,15 @@ visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
   theme_remove_all <- theme(axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
   
   g <- ggplot(df,aes(x=OItems, y=Percent)) +
-    geom_bar(stat="identity", color="black", fill="#00a676")+
+    geom_bar(stat="identity", color=NA, fill="#00a676")+
     labs(x="Work Indicator", y="Performance, in %")+
-    coord_cartesian(ylim= c(0, 100)) +
-   theme_bw() + theme_remove_all +
-   theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
-           axis.title = element_text(size=14),
-           axis.text= element_text(size=11))
+    scale_x_discrete(limits=rev(levels(as.factor(df$OItems)))) +
+    scale_y_continuous(limits = c(0,100), expand=c(0.01,0.01)) +
+    coord_flip() +
+    theme_bw() + theme_remove_all +
+    theme(plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "lines"),
+             axis.title = element_text(size=14),
+             axis.text= element_text(size=11))
   g
 }
 

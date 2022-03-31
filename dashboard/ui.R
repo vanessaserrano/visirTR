@@ -14,7 +14,6 @@ for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 source("functions_VISIRDB.R")
 
 
-
 ui <- dashboardPage( 
   skin="yellow",
   dashboardHeader(
