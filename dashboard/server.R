@@ -120,7 +120,7 @@ shinyServer(function(input, output, session) {
   })
   output$evmilestonesData <- renderText({
     if(is.null(dfMilestonesEvDef())) {
-      "<em>Evaluation milestones to be loaded... use the control on the left if needed. Observation milestones, if available, will be used for evaluation.</em>"
+      "<em>Evaluation milestones to be loaded... use the control on the left if needed. Observation items, if available, will be used for evaluation.</em>"
     } else {
       paste("Read ",nrow(dfMilestonesEvDef()),
             " evaluation milestones<br />", paste(dfMilestonesEvDef()[,1],collapse = ", "), sep="")
