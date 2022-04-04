@@ -1,7 +1,8 @@
 options(install.packages.check.source = "no",
         shiny.maxRequestSize=5*1024^3)
 
-pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
+pckgs<-c("rmarkdown","pander",
+         "shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","DT","gplots",
          "xts","dygraphs","scales",
          "formattable","treemap","viridis","cat","gsubfn","vroom")
@@ -59,8 +60,8 @@ ui <- dashboardPage(
     tabItems(
       tabItem("browsedata", 
         fluidRow(
-          box(title = "Data Input", status = "warning", solidHeader = TRUE, width = 4,
-              collapsible = TRUE,
+          box(title = "Data Input", status = "warning", solidHeader = TRUE, 
+              width = 4, collapsible = FALSE,
               fileInput('logsImport', 'Log File'),
               fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
               fileInput('evMilestonesImport', 'Evaluation Milestones (optional)', accept = c('text/plain','.txt'))
@@ -73,7 +74,10 @@ ui <- dashboardPage(
               valueBoxOutput("mindate",width = 6),
               valueBoxOutput("maxdate",width = 6)),
             box(solidHeader = TRUE, width = NULL, htmlOutput("milestonesData")),
-            box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData")))
+            box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData"))),
+          box(solidHeader = TRUE, 
+              width = 11, collapsible = FALSE,
+              actionButton("cmdReport", "Create Printable Report", width="100%"))
         ),
 ),
 

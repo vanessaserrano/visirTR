@@ -1,0 +1,33 @@
+---
+title: "VISIR-DB Report"
+author: "VISIR-DB"
+date: "3/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, results = 'hide', message = FALSE, warning = FALSE, error = FALSE}
+pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
+         "knitr","rmarkdown",
+         "tidyverse","XML","DT","gplots",
+         "xts","dygraphs","scales",
+         "formattable","treemap","viridis","cat","gsubfn","vroom")
+pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
+pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
+for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/",
+         quiet=TRUE, type="binary")}
+for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
+```
+
+## Data Set Main Features
+
+The analyzed data set includes `r nrow(dfActionTime_ext)` actions from `r min(as.POSIXct(dfActionTime_ext$FechaHoraEnvio))` to `r max(as.POSIXct(dfActionTime_ext$FechaHoraEnvio))`.
+
+There are `r length(unique(dfActionTime_ext$Alumno))` unique users in the data set.
+
+Their IDs are...<br />
+`r paste(unique(dfActionTime_ext$Alumno), sep="; ")`.
+

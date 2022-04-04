@@ -74,29 +74,29 @@ shinyServer(function(input, output, session) {
     getdfOIColors(dfMilestonesDef(),dfMilestonesEvDef())
   })
   
-  dfObsItemsLong <- reactive({
-    dfObsLong <- dfActionsMilestones()
-    if(is.null(dfObsLong)) return(NULL)
-    if(input$checkbox) 
-      dfObsLong <- rename(dfObsLong,student=user) %>% select(-filename)
-    else
-      dfObsLong <- rename(dfObsLong,student=filename) %>% select(-user)
-    
-    dfObsLong <- dfObsLong %>% 
-      select(-application,-action,-session,-type,-param_name,-xml,
-             -param_value,-diff_time,-xml_cum) %>% 
-      gather("milestone","check",-(1:5)) %>% filter(check==TRUE) %>% 
-      select(-check)
-    dfObsLong <- dfObsLong %>% arrange(student,number)
-    
-    dfObsLong$numMil <- 1
-    for(i in 2:nrow(dfObsLong)) {
-      dfObsLong$numMil[i] <- 
-        ifelse(dfObsLong$student[i]==dfObsLong$student[i-1],
-               dfObsLong$numMil[i-1]+1,1)
-    }
-    dfObsLong
-  })
+  # dfObsItemsLong <- reactive({
+  #   dfObsLong <- dfActionsMilestones()
+  #   if(is.null(dfObsLong)) return(NULL)
+  #   if(input$checkbox) 
+  #     dfObsLong <- rename(dfObsLong,student=user) %>% select(-filename)
+  #   else
+  #     dfObsLong <- rename(dfObsLong,student=filename) %>% select(-user)
+  #   
+  #   dfObsLong <- dfObsLong %>% 
+  #     select(-application,-action,-session,-type,-param_name,-xml,
+  #            -param_value,-diff_time,-xml_cum) %>% 
+  #     gather("milestone","check",-(1:5)) %>% filter(check==TRUE) %>% 
+  #     select(-check)
+  #   dfObsLong <- dfObsLong %>% arrange(student,number)
+  #   
+  #   dfObsLong$numMil <- 1
+  #   for(i in 2:nrow(dfObsLong)) {
+  #     dfObsLong$numMil[i] <- 
+  #       ifelse(dfObsLong$student[i]==dfObsLong$student[i-1],
+  #              dfObsLong$numMil[i-1]+1,1)
+  #   }
+  #   dfObsLong
+  # })
   
 
 #### DATA INPUT ####
@@ -128,7 +128,6 @@ shinyServer(function(input, output, session) {
   })
 
 ## Values ####  
-
   output$numStudents <- renderValueBox({
     valueBox(
       ifelse(is.null(dfImport()),"--",
@@ -150,6 +149,22 @@ shinyServer(function(input, output, session) {
              "First logged date", color = "blue")
   })
   
+### Report ####
+observeEvent(input$cmdReport, {
+  if(is.null(dfActionTime()) |
+     is.null(dfACxDate()) | is.null(dfACxDate()) |
+     is.null(dfStudentsMilestonesEv())) {
+    showModal(modalDialog(
+      title = "Report not available!",
+      "Log file and work indicators (observation items and optionally 
+      evaluation milestones) data have to be loaded so a report 
+      can be produced.",
+      easyClose = TRUE
+    ))
+  } else {
+    showReport()
+  }
+})
   
 #### GLOBAL RESULTS ####
 ### >> TIME ####

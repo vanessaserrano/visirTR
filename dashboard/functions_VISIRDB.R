@@ -1217,3 +1217,10 @@ nActVStoTVSGrade <- function (dfStudents=NULL, dfStudentsMilestones=NULL, id=NUL
       colors=c("red4","red","white","green","forestgreen"),values=c(0,.4,.5,.6,1))+theme_bw()
 }
 
+#### REPORT ####
+showReport <- function() {
+  reportName <- paste0("reportVISIRDB_",
+                       format(Sys.time(),"%Y%m%d%H%M%S"), ".html")
+  rmarkdown::render("reportVISIRDB.Rmd", output_file=reportName)
+  pander::openFileInOS(reportName)
+}
