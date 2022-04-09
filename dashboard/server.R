@@ -44,8 +44,10 @@ shinyServer(function(input, output, session) {
   ## Work Indicators ####
   dfMilestonesDef<-reactive({
     inFile <- input$obsItemsImport
-    if (is.null(inFile)) return(NULL) else
+    if (is.null(inFile)) return(NULL) else {
+      oiFileName_ext <<- inFile$name
       return(read.table(inFile$datapath, header=TRUE, sep="\t", quote=""))
+    }
   })
   
   dfActionsMilestones <- reactive({
@@ -62,8 +64,10 @@ shinyServer(function(input, output, session) {
   
   dfMilestonesEvDef<-reactive({
     inFile <- input$evMilestonesImport
-    if (is.null(inFile)) return(NULL) else
+    if (is.null(inFile)) return(NULL) else {
+      emFileName_ext <<- inFile$name
       return(read.table(inFile$datapath, header=TRUE, sep="\t", quote=""))
+    }
   })
   
   dfStudentsMilestonesEv <- reactive({
@@ -152,7 +156,8 @@ shinyServer(function(input, output, session) {
 ### Report ####
 observeEvent(input$cmdReport, {
   if(is.null(dfActionTime()) |
-     is.null(dfACxDate()) | is.null(dfACxDate()) |
+     is.null(dfACxDate()) | is.null(dfACxStud()) |
+     is.null(dfACxStudDate()) |
      is.null(dfStudentsMilestonesEv())) {
     showModal(modalDialog(
       title = "Report not available!",

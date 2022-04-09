@@ -18,7 +18,10 @@ source("functions_VISIRDB.R")
 ui <- dashboardPage( 
   skin="yellow",
   dashboardHeader(
-    title="VISIR-DB"
+    title="VISIR-DB",
+    tags$li(class = "dropdown",
+            style = "padding:10px;",
+            actionButton("cmdReport", "Create Global Report"))
   ),
   dashboardSidebar(
     sidebarMenu(
@@ -74,10 +77,7 @@ ui <- dashboardPage(
               valueBoxOutput("mindate",width = 6),
               valueBoxOutput("maxdate",width = 6)),
             box(solidHeader = TRUE, width = NULL, htmlOutput("milestonesData")),
-            box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData"))),
-          box(solidHeader = TRUE, 
-              width = 11, collapsible = FALSE,
-              actionButton("cmdReport", "Create Printable Report", width="100%"))
+            box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData")))
         ),
 ),
 

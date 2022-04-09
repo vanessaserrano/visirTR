@@ -1,7 +1,6 @@
 ---
 title: "VISIR-DB Report"
 author: "VISIR-DB"
-date: "3/4/2022"
 output: html_document
 ---
 
@@ -10,9 +9,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, echo = FALSE, results = 'hide', message = FALSE, warning = FALSE, error = FALSE}
-pckgs<-c("shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
+pckgs<-c("shiny","shinyjs","shinythemes", "shinydashboard",
          "knitr","rmarkdown",
-         "tidyverse","XML","DT","gplots",
+         "tidyverse", "ggthemes", "ggrepel",
+         "XML","DT","gplots",
          "xts","dygraphs","scales",
          "formattable","treemap","viridis","cat","gsubfn","vroom")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
@@ -24,10 +24,291 @@ for(pckg in pckgs2Load) {library(pckg,character.only = TRUE)}
 
 ## Data Set Main Features
 
-The analyzed data set includes `r nrow(dfActionTime_ext)` actions from `r min(as.POSIXct(dfActionTime_ext$FechaHoraEnvio))` to `r max(as.POSIXct(dfActionTime_ext$FechaHoraEnvio))`.
+The analyzed data set, **`r logFileName_ext`**, includes `r nrow(dfActionTime_ext)` actions from `r min(as.POSIXct(dfActionTime_ext$FechaHoraEnvio))` to `r max(as.POSIXct(dfActionTime_ext$FechaHoraEnvio))`.
 
-There are `r length(unique(dfActionTime_ext$Alumno))` unique users in the data set.
-
-Their IDs are...<br />
+### Users
+There are `r length(unique(dfActionTime_ext$Alumno))` unique users in the data set. Their IDs are...<br />
 `r paste(unique(dfActionTime_ext$Alumno), sep="; ")`.
+
+### Work Indicators
+There are `r ncol(dfObsItems_xUser_ext) - 1` observation items in **`r oiFileName_ext`**: <br />`r paste(colnames(dfObsItems_xUser_ext[,-1]), sep="; ")`.
+
+``` {r, echo=F, include = T, results="asis"}
+emExist <- exists("emFileName_ext") 
+cat(ifelse(!emExist,"<!--",""))
+```
+
+There are `r ncol(dfEvMilestones_xUser_ext) - 2` evaluation milestones in **`r ifelse(emExist,emFileName_ext,"")`**: <br /> `r paste(colnames(dfEvMilestones_xUser_ext[,-c(1,ncol(dfEvMilestones_xUser_ext))]), sep="; ")`.
+
+``` {r, echo=F, include = T, results="asis"}
+cat(ifelse(!emExist, "-->", "<!--"))
+```
+
+Evaluation milestones are not loaded and observation milestones will be used instead.
+
+``` {r, echo=F, include = T, results="asis"}
+cat(ifelse(emExist, "-->", ""))
+```
+
+
+## Global Results
+
+### Time
+
+#### Time on Task Distribution
+
+``` {r, echo=F}
+plotDistribution(sumxStud_ext$TotalTime, xlabel="Time per User, in h")
+```
+
+#### Time on Task vs User per Date -- HeatMap
+
+``` {r, echo=F}
+dfACxSD <- expand.grid(Dates=as.character(
+      seq(min(as.Date(sumxStudDate_ext$Dates)),
+          max(as.Date(sumxStudDate_ext$Dates)),by=1)),
+      Alumno = levels(sumxStudDate_ext$Alumno))
+
+dfACxSD <- merge(dfACxSD,sumxStudDate_ext,all=T)
+dfACxSD$Alumno <- factor(dfACxSD$Alumno,
+                             levels(sumxStudDate_ext$Alumno),
+                             ordered=T)
+g <- dfACxSD %>%  
+  mutate (TimeInDate = round(TimeInDate/60, digits=2)) %>% 
+  ggplot(aes(x = Alumno, y = Dates)) + theme_bw() +
+  geom_tile(aes(fill=TimeInDate),width=0.9) + 
+  labs(x="User", y="Date") +
+  theme(axis.title = element_text(size=14),
+        axis.text= element_text(size=11),
+        legend.position = "top",
+        legend.title = element_text(size=14),
+        legend.text= element_text(size=11),
+        axis.text.x=element_text(angle = 90, vjust = 0.5),
+        axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+  scale_fill_viridis(name="Time, in h",direction=-1,
+                     na.value=rgb(1,1,1,0))
+
+if(length(unique(sumxStudDate_ext$Alumno)) > 30) g <- g +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5, size = 9)) 
+if(length(unique(sumxStudDate_ext$Alumno)) > 50) g <- g +
+  theme(axis.text.x = element_blank())
+if(length(unique(sumxStudDate_ext$Dates)) > 30) g <- g +
+  theme(axis.text.y = element_blank())
+g
+
+```
+
+### Experiments
+
+#### Experimental Timelines
+
+```{r, echo=F}
+gra=c("red","green","blue","black")
+
+g <- dfActionCircuit_ext %>% mutate (Time = round(Time/60, digits=2)) %>% 
+  ggplot(aes(x = Alumno, y = Time, 
+             color = Measure, shape= Measure)) + 
+  geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
+            data=sumxStud_ext, color="grey") + 
+  geom_point(size = 4, alpha = 0.5) +
+  labs(y="Time, in h", x = "User") +
+  scale_color_manual(values = gra) +
+  scale_shape_manual(values= c(95,95,95,13)) +
+  theme(panel.background = element_rect(fill=NA), 
+        panel.border = element_rect(colour="black",fill=NA),
+        panel.grid.major.x = element_line(linetype=0),
+        panel.grid.major.y = element_line(colour="lightgray",linetype="solid"),
+        legend.key=element_blank(),
+        legend.position= "top",
+        legend.title = element_text(size=14),
+        legend.text= element_text(size=11),
+        axis.title = element_text(size=14),
+        axis.text= element_text(size=11),
+        axis.text.x=element_text(angle = 90, vjust = 0.5))+
+  guides(color = guide_legend(override.aes = list(size=9)))  
+
+if(nrow(sumxStud_ext)>30) g <- g +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5, size = 9))         
+
+if(nrow(sumxStud_ext)>50) g <- g + theme(axis.text.x = element_blank())
+
+g
+```
+
+#### Experiments per User and Date -- Heat map
+
+```{r, echo=F}
+dfACxSD <- expand.grid(
+  Dates=as.character(
+      seq(min(as.Date(sumxStudDate_ext$Dates)),
+          max(as.Date(sumxStudDate_ext$Dates)),by=1)),
+  Alumno = levels(sumxStudDate_ext$Alumno))
+dfACxSD <- merge(dfACxSD,sumxStudDate_ext,all=T)
+
+dfACxSD$Alumno <- factor(dfACxSD$Alumno,
+                         levels(sumxStudDate_ext$Alumno),
+                         ordered=T)
+
+g <- ggplot(data = dfACxSD, aes(x = Alumno, y = Dates)) + theme_bw() +
+  geom_tile(aes(fill=NumCircu), width=0.9) +
+  labs(x ="User", y= "Date") +
+  theme(axis.title = element_text(size=14),
+        axis.text= element_text(size=11),
+        legend.position = "top",
+        legend.title = element_text(size=14),
+        legend.text= element_text(size=11),
+        axis.text.x=element_text(angle = 90, vjust = 0.5),
+        axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+  scale_fill_viridis(name="Experiments",direction=-1,
+                     na.value=rgb(1,1,1,0))
+
+if(length(unique(sumxStudDate_ext$Alumno)) > 30) g <- g +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5, size = 9)) 
+if(length(unique(sumxStudDate_ext$Alumno)) > 50) g <- g +
+  theme(axis.text.x = element_blank())
+if(length(unique(sumxStudDate_ext$Dates)) > 30) g <- g +
+  theme(axis.text.y = element_blank())
+g
+```
+
+### Experiments vs Time 
+
+#### Number of Experiments vs Time
+
+```{r, echo=F}
+meanTT <- mean(sumxStud_ext$TotalTime)
+meanNC <- mean(sumxStud_ext$NumCircu)
+maxTT <- max(sumxStud_ext$TotalTime)
+maxNC <- max(sumxStud_ext$NumCircu)
+
+ggplot(sumxStud_ext, aes(x=TotalTime, y=NumCircu))  +  
+  geom_point(size = 3, alpha = 0.4) + 
+  labs(x = "Time, in h", y = "Number of Experiments") +
+  geom_hline(yintercept = meanNC, color="#fbada7")+
+  geom_vline(xintercept = meanTT, color="#66d9dc") +
+  geom_text(aes(x = (meanTT + maxTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
+  geom_text(aes(x = meanTT, y= (meanNC + maxNC)/2, label=round(meanTT,digits = 2))) + 
+  geom_text_repel(aes(label=Alumno)) +
+  theme_bw() + 
+  theme(axis.title = element_text(size=14),
+        axis.text= element_text(size=11),
+        axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+```
+
+## Circuit-based Analysis
+
+### Measurement Types
+The data set includes `r nrow(dfActionCircuit_ext)` circuits, which can be traced to the following measurement types:
+
+```{r, echo=F}
+df <- as.data.frame(table(dfActionCircuit_ext$Measure))
+colnames(df) <- c("Measurement", "Count")
+kable(df)
+```
+
+### Common Circuits
+
+The 10 top common normalized circuits are 
+
+```{r, echo=F}
+tab <- table(na.omit(dfActionCircuit_ext$CircuitoNormalizado))
+tab <- tab[order(-tab)]
+df <- data.frame(Circuit = names(tab), TimesTested = as.integer(tab),
+               stringsAsFactors = FALSE)
+df <- df[order(df$TimesTested, decreasing=T),][1:10, ]
+kable(df)
+```
+
+
+The 10 top common simplified circuits are 
+
+```{r, echo=F}
+tab <- table(na.omit(dfActionCircuit_ext$CircuitoSimplificado))
+tab <- tab[order(-tab)]
+df <- data.frame(Circuit = names(tab), TimesTested = as.integer(tab),
+               stringsAsFactors = FALSE)
+df <- df[order(df$TimesTested, decreasing=T),][1:10, ]
+kable(df)
+```
+
+
+### Common Errors
+
+The 10 top common normalized circuits which are detected as errors, are 
+
+```{r, echo=F}
+tab <- table(na.omit(dfActionCircuit_ext$CircuitoNormalizado[
+  dfActionCircuit_ext$Measure=="Error"]))
+tab <- tab[order(-tab)]
+df <- data.frame(Circuit = names(tab), TimesTested = as.integer(tab),
+               stringsAsFactors = FALSE)
+df <- df[order(df$TimesTested, decreasing=T),][1:10, ]
+kable(df)
+```
+
+
+## Work Indicators
+
+### Observation Items
+
+#### Group Performance
+
+```{r, echo=F}
+visirtrMilestonesDifficulty(dfObsItems_xUser_ext)
+```  
+
+#### Performance per User
+
+```{r, echo=F}
+g <- visirtrHeatMapAchievedMilestonePerId(dfObsItems_xUser_ext,labels=NULL) +
+  theme(legend.position = "top",
+        legend.title=element_text(size=14),
+        legend.text=element_text(size=11))
+
+if(length(unique(dfObsItems_xUser_ext$Alumno)) > 30) g <- g +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5, size = 9)) 
+if(length(unique(dfObsItems_xUser_ext$Alumno)) > 50) g <- g +
+  theme(axis.text.x = element_blank())
+g
+
+```
+
+### Evaluation Milestones
+
+#### Group Performance
+
+```{r, echo=F}
+visirtrMilestonesDifficulty(dfEvMilestones_xUser_ext[, -ncol(dfEvMilestones_xUser_ext)])
+```  
+
+#### Performance per User
+
+```{r, echo=F}
+g <- visirtrHeatMapAchievedMilestonePerId(
+  dfEvMilestones_xUser_ext[, -ncol(dfEvMilestones_xUser_ext)],
+  labels=NULL) + theme(legend.position = "top",
+                       legend.title=element_text(size=14),
+                       legend.text=element_text(size=11))
+
+if(length(unique(dfEvMilestones_xUser_ext$Alumno)) > 30) g <- g +
+  theme(axis.text.x=element_text(angle = 90, vjust = 0.5, size = 9)) 
+if(length(unique(dfEvMilestones_xUser_ext$Alumno)) > 50) g <- g +
+  theme(axis.text.x = element_blank())
+g
+
+```
+
+
+## User-specific Results
+
+The summarized results for the `r nrow(sumxStud_ext)` users are shown in the table below, in alphabetical order.
+
+```{r, echo=F}
+df <- merge(sumxStud_ext,dfEvMilestones_xUser_ext)
+df <- df[,c(1:2,4,8:11, ncol(df))]
+colnames(df) <- c("User", "Time on Task", "Number of Experiments",
+                  "Errors", "Current", "Voltage", "Resistance", 
+                  "Grade")
+kable(df)
+```
 

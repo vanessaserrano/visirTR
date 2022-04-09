@@ -269,7 +269,8 @@ simplificarCircuito <- function(circuito){
 ### >> DATASETS ####
 import_dfActions <- function(inFile) {
   if (is.null(inFile)) return(NULL)
-  
+
+  logFileName_ext <<- inFile$name  
   df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
               col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
                           "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
