@@ -213,7 +213,7 @@ ui <- dashboardPage(
                     valueBoxOutput("numvoltag",width = 3),
                     valueBoxOutput("numerror",width = 3))
                 ),
-                tabPanel("List of Unique Ciruits",
+                tabPanel("List of Unique Circuits",
                  fluidRow(
                    box(status="primary",
                      checkboxInput("simplified_list","Check to use simplified circuits (normalized circuits when unchecked)"),

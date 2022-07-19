@@ -692,6 +692,7 @@ observeEvent(input$cmdReport, {
 ## Common circuits ####
   output$cc_circuits <- renderDataTable({
     if(is.null(dfImport())) return(NULL)
+    
     #g <- datatable(tabNCircuits())
     g <- tabNCircuits()
     names(g)[names(g) == 'Circuit'] <- 'Normalized Circuits'
@@ -704,6 +705,8 @@ observeEvent(input$cmdReport, {
 
 ## Circuit in timeline ####
   output$ct_selectCircuit <- renderUI({
+    if(is.null(dfImport())) return(NULL)
+    
     if(is.null(tabNCircuits())) 
       return(selectInput("ct_circuit", "Select a circuit...", c("No data available")))
     else {
@@ -767,6 +770,7 @@ observeEvent(input$cmdReport, {
   
   output$ct_plotu <- renderUI({
     if(is.null(dfImport())) return(NULL)
+    
     plotOutput("ct_plotu_chart", height=400,
                hover = hoverOpts(
                  id = "ct_plotu_hover",
@@ -777,6 +781,7 @@ observeEvent(input$cmdReport, {
   
   output$ct_plot_point <- renderText({
     if(is.null(dfImport())) return(NULL)
+    
     dat <- data.frame(ids=dfActionCircuit()$Alumno)
     dat$toT <- dfActionCircuit()$Alumno
     dat$nAc <- dfActionCircuit()$Time
@@ -825,6 +830,7 @@ observeEvent(input$cmdReport, {
   
   output$ntc_plotu_chart <- renderPlot({
     if(is.null(dfImport())) return(NULL)
+    
     grafntcdata <- dfActionCircuit()
  
     if(is.null(input$ncu_circuit)) {
@@ -859,6 +865,7 @@ observeEvent(input$cmdReport, {
   
   output$ntc_plotu <- renderUI({
     if(is.null(dfImport())) return(NULL)
+    
     plotOutput("ntc_plotu_chart", height=400)
   })
   
@@ -868,6 +875,7 @@ observeEvent(input$cmdReport, {
   
   output$spr_selectStudent <- renderUI({
     if(is.null(dfImport())) return(NULL)
+    
     if(is.null(tabNStudents())) 
       return(selectInput("ns_student", "Select a user...", c("No data available")))
     else {
@@ -878,7 +886,6 @@ observeEvent(input$cmdReport, {
 
   output$numStudActions <- renderValueBox({
     if(is.null(dfImport())) return( valueBox(
-      
       "--", 
       "Actions",color = "blue"))
     else {  
@@ -914,7 +921,6 @@ observeEvent(input$cmdReport, {
   
   output$numcircuit <- renderValueBox({
     if(is.null(dfACxStud())) return( valueBox(
-      
       "--", 
       "Experiments",color = "blue"))
     else { 
@@ -1090,14 +1096,14 @@ observeEvent(input$cmdReport, {
 #### HELP ####  
   observeEvent(input$"StrucInfo", {
     showModal(modalDialog(title = "Dashboard Structure",
-                          HTML("This dashboard is divided in 4 folders: <br/> <b> Data Input </b> <br/> Data loading and
-                                      main information <br/> <b> Global Results </b> <br/>
-                                     Global information about the time spent and the circuits performed by users <br/>
-                                    <b> Circuit-based Analysis </b> <br/> Detailed information about each of the circuits
-                                    performed <br/> <b> User-specific Results </b> <br/> Detailed information about the actions performed
-                                    by each of the users
+                          HTML("This dashboard is divided in 4 folders: <br/>
+                          <b> Data Input </b> <br/> Data loading and main information <br/>
+                          <b> Global Results </b> <br/> Global information about the time spent and the circuits performed by users <br/>
+                          <b> Circuit-based Analysis </b> <br/> Detailed information about each of the circuits performed <br/>
+                          <b> User-specific Results </b> <br/> Detailed information about the actions performed by each of the users <br/>
+                          <b> Work Indicators </b> <br/> Performance analyses of the group and per user <br/> 
                                      "),
-                           footer = tagList(actionButton("closeDS", "OK"))
+                          footer = tagList(actionButton("closeDS", "OK"))
     ))
     observeEvent(input$closeDS, {
       removeModal()
@@ -1107,18 +1113,22 @@ observeEvent(input$cmdReport, {
   
   observeEvent(input$"Glossary", {
     showModal(modalDialog(title = "Glossary of Terms",
-                          HTML(" <b> User:</b> A person who uses VISIR, can be a student or not <br/>
-                                         <b> Action:</b> User interactions with the client that generate a message on the server <br/>
-                               <b> Circuit:</b> Set of electrical components as placed and connected in the breadboard <br/>
-                               <b> Normalized Circuit:</b> Standardization of the circuits to achieve a representation independent of the position in the breadboard <br/>
-                               <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
-                               <b> Time:</b> The indefinite continued progress of the user in each of his interactions with VISIR, time events with large gaps of time have been neglected  <br/>
-                               <b> Timeline:</b> Sequence of actions distributed over time <br/>
-                               <b> Measurement:</b> Each of the posible actions performed in a circuit <br/>
+                          HTML("<b> Action:</b> User interactions with the client that generate a message on the server <br/>
+                                <b> Circuit:</b> Set of electrical components as placed and connected in the breadboard <br/>
+                                <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
+                                <b> Evaluation Milestone: </b> logical combinations of observation items to grade students' performance <br/>  
+                                <b> Experiment: </b> A circuit and its instrumental settings <br/>
+                                <b> Measure:</b> Each of the posible magnitudes that can be determined in a circuit <br/>
+                                <b> Observation Item: </b> A priori steps in the resolution process and/or potential errors<br/> 
+                                <b> Normalized Circuit:</b> Standardization of the circuits to achieve a representation independent of the position in the breadboard <br/>
+                                <b> Time:</b> The indefinite continued progress of the user in each of his interactions with VISIR, time events with large gaps of time have been neglected  <br/>
+                                <b> Timeline:</b> Sequence of actions distributed over time <br/>
+                                <b> User:</b> A person who uses VISIR, can be a student or not <br/>
+                               
                                
                                
                                "),
-                           footer = tagList(actionButton("closeG", "OK"))
+                          footer = tagList(actionButton("closeG", "OK"))
     ))
     observeEvent(input$closeG, {
       removeModal()
