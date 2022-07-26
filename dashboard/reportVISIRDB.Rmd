@@ -38,13 +38,13 @@ emExist <- exists("emFileName_ext")
 cat(ifelse(!emExist,"<!--",""))
 ```
 
-There are `r ncol(dfEvMilestones_xUser_ext) - 2` evaluation milestones in **`r ifelse(emExist,emFileName_ext,"")`**: <br /> `r paste(colnames(dfEvMilestones_xUser_ext[,-c(1,ncol(dfEvMilestones_xUser_ext))]), sep="; ")`.
+There are `r ncol(dfEvMilestones_xUser_ext) - 2` assessment milestones in **`r ifelse(emExist,emFileName_ext,"")`**: <br /> `r paste(colnames(dfEvMilestones_xUser_ext[,-c(1,ncol(dfEvMilestones_xUser_ext))]), sep="; ")`.
 
 ``` {r, echo=F, include = T, results="asis"}
 cat(ifelse(!emExist, "-->", "<!--"))
 ```
 
-Evaluation milestones are not loaded and observation milestones will be used instead.
+Assessment milestones are not loaded and observation milestones will be used instead.
 
 ``` {r, echo=F, include = T, results="asis"}
 cat(ifelse(emExist, "-->", ""))
@@ -273,7 +273,7 @@ g
 
 ```
 
-### Evaluation Milestones
+### Assessment Milestones
 
 #### Group Performance
 

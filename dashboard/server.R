@@ -124,10 +124,10 @@ shinyServer(function(input, output, session) {
   })
   output$evmilestonesData <- renderText({
     if(is.null(dfMilestonesEvDef())) {
-      "<em>Evaluation milestones to be loaded... use the control on the left if needed. Observation items, if available, will be used for evaluation.</em>"
+      "<em>Assessment milestones to be loaded... use the control on the left if needed. Observation items, if available, will be used for evaluation.</em>"
     } else {
       paste("Read ",nrow(dfMilestonesEvDef()),
-            " evaluation milestones<br />", paste(dfMilestonesEvDef()[,1],collapse = ", "), sep="")
+            " assessment milestones<br />", paste(dfMilestonesEvDef()[,1],collapse = ", "), sep="")
     }
   })
 
@@ -162,7 +162,7 @@ observeEvent(input$cmdReport, {
     showModal(modalDialog(
       title = "Report not available!",
       "Log file and work indicators (observation items and optionally 
-      evaluation milestones) data have to be loaded so a report 
+      assessment milestones) data have to be loaded so a report 
       can be produced.",
       easyClose = TRUE
     ))
@@ -1079,7 +1079,7 @@ observeEvent(input$cmdReport, {
     visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
   })
   
-### >> EVALUATION MILESTONES ####
+### >> ASSESSMENT MILESTONES ####
   output$evproportionbars <- renderPlot ({
     if(is.null(dfStudentsMilestonesEv())) return(NULL)
     visirtrMilestonesDifficulty(
@@ -1116,7 +1116,7 @@ observeEvent(input$cmdReport, {
                           HTML("<b> Action:</b> User interactions with the client that generate a message on the server <br/>
                                 <b> Circuit:</b> Set of electrical components as placed and connected in the breadboard <br/>
                                 <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
-                                <b> Evaluation Milestone: </b> logical combinations of observation items to grade students' performance <br/>  
+                                <b> Assessment Milestone: </b> logical combinations of observation items to grade students' performance <br/>  
                                 <b> Experiment: </b> A circuit and its instrumental settings <br/>
                                 <b> Measure:</b> Each of the posible magnitudes that can be determined in a circuit <br/>
                                 <b> Observation Item: </b> A priori steps in the resolution process and/or potential errors<br/> 

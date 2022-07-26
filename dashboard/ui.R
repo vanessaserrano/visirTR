@@ -52,7 +52,7 @@ ui <- dashboardPage(
         menuSubItem("User Results",tabName = "usresults")),
       menuItem("Work Indicators",icon = icon("folder"), startExpanded  = FALSE,
                menuSubItem("Observation Items",tabName = "obsitems"),
-               menuSubItem("Evaluation Milestones",tabName = "evmil")),
+               menuSubItem("Assessment Milestones",tabName = "evmil")),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = FALSE,
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
                actionButton("Glossary", "Glossary of Terms",icon =  NULL, style='width:175px'))
@@ -67,7 +67,7 @@ ui <- dashboardPage(
               width = 4, collapsible = FALSE,
               fileInput('logsImport', 'Log File'),
               fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
-              fileInput('evMilestonesImport', 'Evaluation Milestones (optional)', accept = c('text/plain','.txt'))
+              fileInput('evMilestonesImport', 'Assessment Milestones (optional)', accept = c('text/plain','.txt'))
           ),
           column(width = 7,
             box(solidHeader = TRUE, width = NULL, htmlOutput("logFiles")),
