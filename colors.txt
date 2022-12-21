@@ -1,0 +1,4 @@
+orange-light: #F39C12
+orange-dark: #E08E0B
+blue-light: #0073B7
+blue-dark: #1E282C

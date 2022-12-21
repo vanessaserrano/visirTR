@@ -37,9 +37,22 @@ ui <- dashboardPage(
       #StrucInfo {background-color:#ffda5b}
       #Glossary {background-color:#ffda5b}
       .skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a
-                         {color: #fff; background: #1e282c; border-left-color: #1e282c;}
+                         {color: #000fff; background: #001F3F; border-left-color: #001F3F;}
       .small-box p {font-size: 14px;}
       .small-box h3 {font-size: 30px;}
+      span#loadingReady.shiny-image-output.shiny-bound-output img,
+      span#actionsReady.shiny-image-output.shiny-bound-output img,
+      span#timeReady.shiny-image-output.shiny-bound-output img,
+      span#circuitsReady.shiny-image-output.shiny-bound-output img,
+      span#studentsReady.shiny-image-output.shiny-bound-output img,
+      span#workingReady.shiny-image-output.shiny-bound-output img {background-color:#0073B7;}
+      span#loadingReady.shiny-image-output.shiny-bound-output.recalculating img,
+      span#actionsReady.shiny-image-output.shiny-bound-output.recalculating img,
+      span#timeReady.shiny-image-output.shiny-bound-output.recalculating img,
+      span#circuitsReady.shiny-image-output.shiny-bound-output.recalculating img,
+      span#studentsReady.shiny-image-output.shiny-bound-output.recalculating img,
+      span#workingReady.shiny-image-output.shiny-bound-output.recalculating img {background-color:#ff0000;}
+      
       ')),
       menuItem("Data Input",icon = icon("home"), tabName = "browsedata"),
       menuItem("Global Results",icon = icon("folder"), startExpanded = FALSE,
@@ -77,8 +90,19 @@ ui <- dashboardPage(
               valueBoxOutput("mindate",width = 6),
               valueBoxOutput("maxdate",width = 6)),
             box(solidHeader = TRUE, width = NULL, htmlOutput("milestonesData")),
-            box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData")))
-        ),
+            box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData"))
+          ),
+          box(
+            fluidRow(width=NULL, align="center",
+              imageOutput("loadingReady", width="100px", height="100px", inline=T),
+              imageOutput("actionsReady", width="100px", height="100px", inline=T),
+              imageOutput("timeReady", width="100px", height="100px", inline=T),
+              imageOutput("circuitsReady", width="100px", height="100px", inline=T),
+              imageOutput("studentsReady", width="100px", height="100px", inline=T),
+              imageOutput("workingReady", width="100px", height="100px", inline=T)),
+            width=12, align="center"
+          )
+        )
 ),
 
       tabItem("timeana",
@@ -91,7 +115,13 @@ ui <- dashboardPage(
               valueBoxOutput("totaltimespend",width = 3)
             ),
             fluidRow(
-              box(status="primary",plotOutput("timstu"), height=480, width=12)
+              box(status="primary", 
+                  # tags$img(src = "working.gif", width=80, height=80,
+                  #          style = "position:absolute;top:40px;left:50%;
+                  #                   margin-left:-40px;margin-top:0px;"),
+                  plotOutput("timstu"),
+                  height=480, width=12)
+              
             )
           ),
           tabPanel( "Time per Date",

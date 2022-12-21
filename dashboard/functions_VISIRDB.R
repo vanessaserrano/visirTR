@@ -267,15 +267,64 @@ simplificarCircuito <- function(circuito){
 
 #### PUBLIC FUNCTIONS ####
 ### >> DATASETS ####
-import_dfActions <- function(inFile) {
+import_logFile <- function(inFile,sessionID) {
   if (is.null(inFile)) return(NULL)
-
+  
+  # status$init <- T
   logFileName_ext <<- inFile$name  
-  df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
-              col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
-                          "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
-              col_types="ccccccc", escape_double = T, escape_backslash = F)
+  
+  lines <- vroom_lines(inFile$datapath, n_max = 100)
+  clines <- grepl(",",lines)
+  linesToSkip <- min(which(clines)) - 1
+  
+  df <- vroom(inFile$datapath, col_names=F, delim=",", skip=linesToSkip,
+              quote="\"", n_max=10)
+  
+  if (ncol(df) == 7) {
+    df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+                col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                            "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
+                col_types="ccccccc", escape_double = T, escape_backslash = F,
+                skip = linesToSkip)
+  } else {
+    df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+                col_names=c("TBR", "Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                            "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
+                col_types="cccccccc", escape_double = T, escape_backslash = F,
+                skip = linesToSkip)
+    df <- df[,-1]
+  }
+
+  status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
+  save(status, file=paste0(sessionID,"_loa.rda"))  
+  df
+}
+
+create_dfActions <- function(df,sessionID) {
+  if (is.null(df)) return(NULL)
+
   df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  df$DatosEnviadosXML <- gsub("\n","", df$DatosEnviadosXML, fixed=T)
+  df$DatosRecibidosXML <- gsub("\n","", df$DatosRecibidosXML, fixed=T)
+  
+  df <- df[!duplicated(paste(df$Alumno,
+                             df$Sesion,
+                             df$FechaHoraEnvio,
+                             df$DatosEnviadosXML,
+                             df$DatosRecibidosXML)),]
+  
+  # filtering for DC
+  sel <- !grepl("VFGENA_1_1",df$DatosEnviadosXML) &
+    !grepl("D_X",df$DatosEnviadosXML) &
+    !grepl("C_X",df$DatosEnviadosXML) &
+    !grepl("L_X",df$DatosEnviadosXML) &
+    !grepl("OP_X",df$DatosEnviadosXML) &
+    !grepl("POT_X",df$DatosEnviadosXML) &
+    !grepl(" PROBE",df$DatosEnviadosXML)
+  df <- df[sel,]
+
+  status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
+  save(status, file=paste0(sessionID,"_imp.rda"))  
   (dfImport_ext <<- df)
 }
 
@@ -294,6 +343,7 @@ create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
   vecDiffTimeCum<-rep(0, numAcciones)
   vecDiffTimeCumReal<-rep(0, numAcciones)
   
+  Sys.sleep(1)  
   for(i in 2:numAcciones) {
     if(dfVISIR_accionesOrdenado$Alumno[i]==dfVISIR_accionesOrdenado$Alumno[i-1]) {
       thisTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i]),
@@ -310,6 +360,8 @@ create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
       vecDiffTimeCumReal[i]<-0
     }
   }
+  Sys.sleep(1)  
+  
   dfVISIR_accionesOrdenado$TiempoDesdeAccionAnterior <- vecDiffTime / 60
   dfVISIR_accionesOrdenado$TiempoAcumulado <- vecDiffTimeCum / 60
   dfVISIR_accionesOrdenado$TiempoAcumuladoCorregido <- vecDiffTimeCumReal / 60
@@ -529,7 +581,7 @@ aggreg_dfActionCircuit_xStud <- function (dfActions, dfActionCircuit) {
   (sumxStud_ext <<- zz)
 }
 
-aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos) {
+aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos, sessionID) {
   if(is.null(dfAccionesTiempo) || is.null(dfCircuitos)) return(NULL)
   
   sumxStudDate <- dfAccionesTiempo %>%  group_by(Alumno,Dates) %>%
@@ -548,7 +600,9 @@ aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos) {
               .groups="drop")
   sumxStudDate <- merge(sumxStudDate,circxStudDate,all=TRUE)
   sumxStudDate[is.na(sumxStudDate)] <- 0
-  
+
+  status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
+  save(status, file=paste0(sessionID,"_std.rda"))   
   (sumxStudDate_ext <<- sumxStudDate)
 }
 

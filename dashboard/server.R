@@ -1,17 +1,51 @@
-shinyServer(function(input, output, session) {
+function(input, output, session) {
+  sessionID <- format(Sys.time(),"%Y%m%d%H%M%S")
+  
   session$onSessionEnded(function() {
+    files <- dir(pattern="[0-9]{14}.*[.]rda")
+    file.remove(files)
     stopApp()
   })
-  
+
+  # status <- reactiveValues()
+  # status$init <- F
+  # status$loaded <- F
+  # 
+  # observe({
+  #   if(status$init) {
+  #     dfImport <- function() NULL
+  #     print("init")
+  #     status$loaded <- T
+  #     status$init <- F
+  #   }})
+  # 
+  # observe({
+  #   if(status$loaded) {
+  #     dfImport <- reactive({create_dfActions(dfLoadLog(),sessionID)})
+  #     print("loaded")
+  #     status$loaded <- F
+  #   }})
+
 #### DEFINITIONS & CALCULATIONS ####
 ## Action & Student data ####
-  dfImport<-reactive({import_dfActions(input$logsImport)})
+  dfLoadLog <- reactive({
+    import_logFile(input$logsImport,sessionID)
+  })
+
+  dfImport <- reactive({create_dfActions(dfLoadLog(),sessionID)})
   dfActionTime <- reactive({create_dfActionTime(dfImport(), timeLimit = 900)})
   dfActionCircuit <- reactive({create_dfActionCircuit(dfActionTime())})
   dfACxStud <- reactive({aggreg_dfActionCircuit_xStud(dfActionTime(),dfActionCircuit())})
-  dfACxStudDate <- reactive({aggreg_dfActionCircuit_xStudDate(dfActionTime(),dfActionCircuit())})
-  dfACxDate <- reactive({aggreg_xDate(dfACxStudDate())})
-  
+  dfACxStudDate <- reactive({aggreg_dfActionCircuit_xStudDate(dfActionTime(),dfActionCircuit(),sessionID)})
+  dfACxDate <- reactivePoll(1000, session,
+    function() {
+      if (file.exists(paste0(sessionID,"_std.rda")))
+        file.info(paste0(sessionID,"_std.rda"))$mtime[1]
+      else
+        ""
+    },                           
+    function() {aggreg_xDate(dfACxStudDate())})
+
   ## Normalized Circuits ####  
   tabNStudents <- reactive({
     tab <- dfACxStud()
@@ -135,23 +169,60 @@ shinyServer(function(input, output, session) {
   output$numStudents <- renderValueBox({
     valueBox(
       ifelse(is.null(dfImport()),"--",
-             format(length(unique(dfImport()$Alumno)),format="d",big.mark="")), 
+             format(length(unique(isolate(dfImport()$Alumno))),format="d",big.mark="")), 
       "Users", color = "blue")
   })
   output$numActions <- renderValueBox({
     valueBox(
-      ifelse(is.null(dfImport()),"--",
-             format(length(dfImport()$Alumno),format="d",big.mark="")), 
+      ifelse(is.null(dfImport()),"--", 
+             format(length(isolate(dfImport()$Alumno)),format="d",big.mark="")), 
       "Actions", color = "blue")
   })
   output$maxdate <- renderValueBox({
-    valueBox(value = ifelse(is.null(dfImport()),"--",max(dfImport()$Dates)), width = 4, 
-             "Last logged date", color = "blue")
+    valueBox(value = ifelse(is.null(dfImport()),"--",max(isolate(dfImport()$Dates))),
+             width = 4, "Last logged date", color = "blue")
   })
   output$mindate <- renderValueBox({
-    valueBox(value = ifelse(is.null(dfImport()),"--",min(dfImport()$Dates)),width = 4, 
-             "First logged date", color = "blue")
+    valueBox(value = ifelse(is.null(dfImport()),"--",min(isolate(dfImport()$Dates))),
+             width = 4, "First logged date", color = "blue")
   })
+
+### Ready ####
+  output$loadingReady <- renderImage({
+    if(is.null(dfLoadLog()) | T) Sys.sleep(1)
+      list(src="./www/light.png",
+           width=50, height=50)}, deleteFile=FALSE)
+
+  output$actionsReady <- renderImage({
+    if(is.null(dfImport()) | T) Sys.sleep(1)
+      list(src="./www/light.png",
+           width=50, height=50)}, deleteFile=FALSE)
+  
+  output$timeReady <- renderImage({
+    if(is.null(dfActionTime()) | T) Sys.sleep(1)
+      list(src="./www/light.png",
+           width=50, height=50)}, deleteFile=FALSE)
+  
+  output$circuitsReady <- renderImage({
+    if(is.null(dfActionCircuit()) | T) Sys.sleep(1)
+      list(src="./www/light.png",
+           width=50, height=50)}, deleteFile=FALSE)
+  
+  output$studentsReady <- renderImage({
+    if(is.null(dfACxDate()) | T) Sys.sleep(1)
+      list(src="./www/light.png",
+           width=50, height=50)}, deleteFile=FALSE)
+  
+  output$workingReady <- renderImage({
+    if(is.null(dfStudentsMilestonesEv()) | T) Sys.sleep(1)
+      list(src="./www/light.png",
+           width=50, height=50)}, deleteFile=FALSE)
+  
+  
+  # output$circuitsReady <- renderPlot(NULL)
+  # output$usersReady  <- renderPlot(NULL)
+  # output$timeReady  <- renderPlot(NULL)
+  # output$indicatorsReady  <- renderPlot(NULL)
   
 ### Report ####
 observeEvent(input$cmdReport, {
@@ -214,7 +285,7 @@ observeEvent(input$cmdReport, {
     if(is.null(dfACxStud())) return(NULL)
     plotDistribution(dfACxStud()$TotalTime, xlabel="Time per User, in h")
   })
-
+  
     
 ## Total Time vs Date (Dygraph) ####
   output$dygraph <-renderDygraph({
@@ -1096,7 +1167,7 @@ observeEvent(input$cmdReport, {
 #### HELP ####  
   observeEvent(input$"StrucInfo", {
     showModal(modalDialog(title = "Dashboard Structure",
-                          HTML("This dashboard is divided in 4 folders: <br/>
+                          HTML("This dashboard is divided into five folders: <br/>
                           <b> Data Input </b> <br/> Data loading and main information <br/>
                           <b> Global Results </b> <br/> Global information about the time spent and the circuits performed by users <br/>
                           <b> Circuit-based Analysis </b> <br/> Detailed information about each of the circuits performed <br/>
@@ -1113,19 +1184,25 @@ observeEvent(input$cmdReport, {
   
   observeEvent(input$"Glossary", {
     showModal(modalDialog(title = "Glossary of Terms",
-                          HTML("<b> Action:</b> User interactions with the client that generate a message on the server <br/>
-                                <b> Circuit:</b> Set of electrical components as placed and connected in the breadboard <br/>
+                          HTML("<b> User:</b> A person who uses VISIR, can be a student or not <br/>
                                 <b> Date:</b> Day of the month or year in which the user interact with the client <br/>
-                                <b> Assessment Milestone: </b> logical combinations of observation items to grade students' performance <br/>  
-                                <b> Experiment: </b> A circuit and its instrumental settings <br/>
-                                <b> Measure:</b> Each of the posible magnitudes that can be determined in a circuit <br/>
+                                <b> Action:</b> User interactions with the client that generate a message on the server <br/>
+                                <br/>
                                 <b> Observation Item: </b> A priori steps in the resolution process and/or potential errors<br/> 
-                                <b> Normalized Circuit:</b> Standardization of the circuits to achieve a representation independent of the position in the breadboard <br/>
-                                <b> Time:</b> The indefinite continued progress of the user in each of his interactions with VISIR, time events with large gaps of time have been neglected  <br/>
+                                <b> Assessment Milestone: </b> Logical combinations of observation items to grade students' performance <br/>  
+                                <br/>
+                                <b> Time:</b> Span of time from the user first action to the current interaction with VISIR;
+                                large gaps in time between consecutive actions are discounted <br/>
                                 <b> Timeline:</b> Sequence of actions distributed over time <br/>
-                                <b> User:</b> A person who uses VISIR, can be a student or not <br/>
-                               
-                               
+                                <br/>
+                                <b> Experiment: </b> A circuit and its instrumental settings, as performed when interacting with VISIR <br/>
+                                <b> Circuit:</b> Set of electrical components as placed and connected in the breadboard <br/>
+                                <b> Normalized Circuit:</b> Standardization of a circuit to achieve identical representations for 
+                                circuits with the same components connected in the same manner <br/>
+                                <b> Simplified Circuit:</b> Standardization of a circuit to achieve identical representations for 
+                                circuits with the same components connected in the same manner in the fragment being measured <br/>
+                                <b> Measure:</b> Each of the posible magnitudes that can be determined in a circuit <br/>
+                                
                                
                                "),
                           footer = tagList(actionButton("closeG", "OK"))
@@ -1134,5 +1211,5 @@ observeEvent(input$cmdReport, {
       removeModal()
     })
   }) 
-})
+}
 
