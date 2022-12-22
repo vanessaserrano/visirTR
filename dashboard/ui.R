@@ -20,6 +20,9 @@ ui <- dashboardPage(
   dashboardHeader(
     title="VISIR-DB",
     tags$li(class = "dropdown",
+            style = "padding:16px; margin:auto;",
+            textOutput("inProgress", inline =T)),
+    tags$li(class = "dropdown",
             style = "padding:10px;",
             actionButton("cmdReport", "Create Global Report"))
   ),
@@ -52,6 +55,15 @@ ui <- dashboardPage(
       span#circuitsReady.shiny-image-output.shiny-bound-output.recalculating img,
       span#studentsReady.shiny-image-output.shiny-bound-output.recalculating img,
       span#workingReady.shiny-image-output.shiny-bound-output.recalculating img {background-color:#ff0000;}
+      
+      span#inProgress.shiny-text-output.shiny-bound-output {opacity:0.0;}
+      span#inProgress.shiny-text-output.shiny-bound-output.recalculating {color:#001F3F; font-weight:600;
+        animation: blinker 1s infinite;}
+      
+      @keyframes blinker {
+        from { opacity: 1.0; }
+        30% { opacity: 0.3; }
+        to { opacity: 1.0; }}
       
       ')),
       menuItem("Data Input",icon = icon("home"), tabName = "browsedata"),
@@ -93,7 +105,9 @@ ui <- dashboardPage(
             box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData"))
           ),
           box(
-            fluidRow(width=NULL, align="center",
+            fluidRow(width=NULL, 
+                     tags$div("Data processing is finished when all indicators are BLUE.")),
+            fluidRow(Width=NULL, align="center",
               imageOutput("loadingReady", width="100px", height="100px", inline=T),
               imageOutput("actionsReady", width="100px", height="100px", inline=T),
               imageOutput("timeReady", width="100px", height="100px", inline=T),

@@ -7,6 +7,13 @@ function(input, output, session) {
     stopApp()
   })
 
+  output$inProgress <- renderText({
+    if(is.null(dfLoadLog()) | is.null(dfImport()) |
+       is.null(dfActionCircuit()) | is.null(dfACxDate()) |
+       is.null(dfStudentsMilestonesEv())| T)
+    "DATA BEING PROCESSED... PLEASE WAIT."
+  })
+  
   # status <- reactiveValues()
   # status$init <- F
   # status$loaded <- F
@@ -189,35 +196,52 @@ function(input, output, session) {
 
 ### Ready ####
   output$loadingReady <- renderImage({
+    if(is.null(input$logsImport)) return(
+      list(src="./www/redlight.png",
+           width=30, height=30))
     if(is.null(dfLoadLog()) | T) Sys.sleep(1)
       list(src="./www/light.png",
-           width=50, height=50)}, deleteFile=FALSE)
+           width=30, height=30)}, deleteFile=FALSE)
 
   output$actionsReady <- renderImage({
+    if(is.null(input$logsImport)) return(
+      list(src="./www/redlight.png",
+           width=30, height=30))
     if(is.null(dfImport()) | T) Sys.sleep(1)
       list(src="./www/light.png",
-           width=50, height=50)}, deleteFile=FALSE)
+           width=30, height=30)}, deleteFile=FALSE)
   
   output$timeReady <- renderImage({
+    if(is.null(input$logsImport)) return(
+      list(src="./www/redlight.png",
+           width=30, height=30))
     if(is.null(dfActionTime()) | T) Sys.sleep(1)
       list(src="./www/light.png",
-           width=50, height=50)}, deleteFile=FALSE)
+           width=30, height=30)}, deleteFile=FALSE)
   
   output$circuitsReady <- renderImage({
+    if(is.null(input$logsImport)) return(
+      list(src="./www/redlight.png",
+           width=30, height=30))
     if(is.null(dfActionCircuit()) | T) Sys.sleep(1)
       list(src="./www/light.png",
-           width=50, height=50)}, deleteFile=FALSE)
+           width=30, height=30)}, deleteFile=FALSE)
   
   output$studentsReady <- renderImage({
+    if(is.null(input$logsImport)) return(
+      list(src="./www/redlight.png",
+           width=30, height=30))
     if(is.null(dfACxDate()) | T) Sys.sleep(1)
       list(src="./www/light.png",
-           width=50, height=50)}, deleteFile=FALSE)
+           width=30, height=30)}, deleteFile=FALSE)
   
   output$workingReady <- renderImage({
+    if(is.null(input$logsImport)) return(
+      list(src="./www/redlight.png",
+           width=30, height=30))
     if(is.null(dfStudentsMilestonesEv()) | T) Sys.sleep(1)
       list(src="./www/light.png",
-           width=50, height=50)}, deleteFile=FALSE)
-  
+           width=30, height=30)}, deleteFile=FALSE)
   
   # output$circuitsReady <- renderPlot(NULL)
   # output$usersReady  <- renderPlot(NULL)
