@@ -5,7 +5,8 @@ pckgs<-c("rmarkdown","pander",
          "shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","DT","gplots",
          "xts","dygraphs","scales",
-         "formattable","treemap","viridis","cat","gsubfn","vroom")
+         "formattable","treemap","viridis","cat","gsubfn","vroom",
+         "parallel")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/",
@@ -106,7 +107,7 @@ ui <- dashboardPage(
           ),
           box(
             fluidRow(width=NULL, 
-                     tags$div("Data processing is finished when all indicators are BLUE.")),
+                     tags$div("Data processing is finished when all indicators below are BLUE")),
             fluidRow(Width=NULL, align="center",
               imageOutput("loadingReady", width="100px", height="100px", inline=T),
               imageOutput("actionsReady", width="100px", height="100px", inline=T),

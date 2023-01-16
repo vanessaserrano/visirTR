@@ -9,9 +9,9 @@ function(input, output, session) {
 
   output$inProgress <- renderText({
     if(is.null(dfLoadLog()) | is.null(dfImport()) |
-       is.null(dfActionCircuit()) | is.null(dfACxDate()) |
+       is.null(dfActionCircuit()) | is.null(dfACxDate()) | is.null(dfACxStud()) |
        is.null(dfStudentsMilestonesEv())| T)
-    "DATA BEING PROCESSED... PLEASE WAIT."
+    "DATA BEING PROCESSED... PLEASE WAIT"
   })
   
   # status <- reactiveValues()
@@ -35,23 +35,13 @@ function(input, output, session) {
 
 #### DEFINITIONS & CALCULATIONS ####
 ## Action & Student data ####
-  dfLoadLog <- reactive({
-    import_logFile(input$logsImport,sessionID)
-  })
-
+  dfLoadLog <- reactive({import_logFile(input$logsImport,sessionID)})
   dfImport <- reactive({create_dfActions(dfLoadLog(),sessionID)})
   dfActionTime <- reactive({create_dfActionTime(dfImport(), timeLimit = 900)})
   dfActionCircuit <- reactive({create_dfActionCircuit(dfActionTime())})
   dfACxStud <- reactive({aggreg_dfActionCircuit_xStud(dfActionTime(),dfActionCircuit())})
   dfACxStudDate <- reactive({aggreg_dfActionCircuit_xStudDate(dfActionTime(),dfActionCircuit(),sessionID)})
-  dfACxDate <- reactivePoll(1000, session,
-    function() {
-      if (file.exists(paste0(sessionID,"_std.rda")))
-        file.info(paste0(sessionID,"_std.rda"))$mtime[1]
-      else
-        ""
-    },                           
-    function() {aggreg_xDate(dfACxStudDate())})
+  dfACxDate <- reactive({aggreg_xDate(dfACxStudDate())})
 
   ## Normalized Circuits ####  
   tabNStudents <- reactive({

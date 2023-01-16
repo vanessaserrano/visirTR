@@ -130,11 +130,23 @@ normalizarCircuito<-function(x) {
 
 
 normalizarCircuitos<-function(x) {
-  y <- character(length(x))
-  for (i in 1:length(x)) {
-    y[i]<-normalizarCircuito(x[i])
-  }
-  return(y)
+  
+  # y <- character(length(x))
+  # for (i in 1:length(x)) {
+  #   y[i]<-normalizarCircuito(x[i])
+  # }
+  # return(y)
+  # nCores <- detectCores() %/% 2
+  
+  nCores <- detectCores()-1
+  # coresSel <- rep(1:nCores,each=ceiling(length(x)/nCores))
+  
+  cl <- makeCluster(nCores)
+  clusterExport(cl, list("perm","replaceMany","normalizarCircuito"))
+  y <- parSapply(cl, x, function(x) sapply(x,normalizarCircuito),
+                 chunk.size = ceiling(length(x)/nCores))
+  stopCluster(cl)
+  y
 }
 
 esCircuitoCerrado <- function(x) {
@@ -269,25 +281,27 @@ simplificarCircuito <- function(circuito){
 ### >> DATASETS ####
 import_logFile <- function(inFile,sessionID) {
   if (is.null(inFile)) return(NULL)
+  print(paste("pre-Log-",format(Sys.time(),"%Y%m%d%H%M%S")))
   
   # status$init <- T
   logFileName_ext <<- inFile$name  
+  filePath <- inFile$datapath
   
-  lines <- vroom_lines(inFile$datapath, n_max = 100)
+  lines <- vroom_lines(filePath, n_max = 20)
   clines <- grepl(",",lines)
   linesToSkip <- min(which(clines)) - 1
   
-  df <- vroom(inFile$datapath, col_names=F, delim=",", skip=linesToSkip,
+  df <- vroom(filePath, col_names=F, delim=",", skip=linesToSkip,
               quote="\"", n_max=10)
   
   if (ncol(df) == 7) {
-    df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+    df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
                 col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
                             "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
                 col_types="ccccccc", escape_double = T, escape_backslash = F,
                 skip = linesToSkip)
   } else {
-    df <- vroom(inFile$datapath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+    df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
                 col_names=c("TBR", "Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
                             "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
                 col_types="cccccccc", escape_double = T, escape_backslash = F,
@@ -295,14 +309,16 @@ import_logFile <- function(inFile,sessionID) {
     df <- df[,-1]
   }
 
-  status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
-  save(status, file=paste0(sessionID,"_loa.rda"))  
+  # status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
+  # save(status, file=paste0(sessionID,"_loa.rda"))  
+  print(paste("post-Log-",format(Sys.time(),"%Y%m%d%H%M%S")))
   df
 }
 
 create_dfActions <- function(df,sessionID) {
   if (is.null(df)) return(NULL)
-
+  print(paste("pre-Act-",format(Sys.time(),"%Y%m%d%H%M%S")))
+  
   df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
   df$DatosEnviadosXML <- gsub("\n","", df$DatosEnviadosXML, fixed=T)
   df$DatosRecibidosXML <- gsub("\n","", df$DatosRecibidosXML, fixed=T)
@@ -312,7 +328,7 @@ create_dfActions <- function(df,sessionID) {
                              df$FechaHoraEnvio,
                              df$DatosEnviadosXML,
                              df$DatosRecibidosXML)),]
-  
+
   # filtering for DC
   sel <- !grepl("VFGENA_1_1",df$DatosEnviadosXML) &
     !grepl("D_X",df$DatosEnviadosXML) &
@@ -323,13 +339,15 @@ create_dfActions <- function(df,sessionID) {
     !grepl(" PROBE",df$DatosEnviadosXML)
   df <- df[sel,]
 
-  status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
-  save(status, file=paste0(sessionID,"_imp.rda"))  
+  # status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
+  # save(status, file=paste0(sessionID,"_imp.rda"))  
+  print(paste("post-Act-",format(Sys.time(),"%Y%m%d%H%M%S")))
   (dfImport_ext <<- df)
 }
 
 create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
   if(is.null(dfVISIR_acciones)) return(NULL)
+  print(paste("pre-Time-",format(Sys.time(),"%Y%m%d%H%M%S")))
   
   numAcciones<-nrow(dfVISIR_acciones)
   dfVISIR_accionesOrdenado <- dfVISIR_acciones[
@@ -343,7 +361,6 @@ create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
   vecDiffTimeCum<-rep(0, numAcciones)
   vecDiffTimeCumReal<-rep(0, numAcciones)
   
-  Sys.sleep(1)  
   for(i in 2:numAcciones) {
     if(dfVISIR_accionesOrdenado$Alumno[i]==dfVISIR_accionesOrdenado$Alumno[i-1]) {
       thisTime<-as.numeric(as.POSIXct(as.character(dfVISIR_accionesOrdenado$FechaHoraEnvio[i]),
@@ -360,7 +377,8 @@ create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
       vecDiffTimeCumReal[i]<-0
     }
   }
-  Sys.sleep(1)  
+  # Sys.sleep(1)  
+  print(paste("mid-Time-",format(Sys.time(),"%Y%m%d%H%M%S")))
   
   dfVISIR_accionesOrdenado$TiempoDesdeAccionAnterior <- vecDiffTime / 60
   dfVISIR_accionesOrdenado$TiempoAcumulado <- vecDiffTimeCum / 60
@@ -375,11 +393,13 @@ create_dfActionTime <- function (dfVISIR_acciones, timeLimit = 900) {
   dfVISIR_accionesOrdenado$Alumno <- factor(dfVISIR_accionesOrdenado$Alumno, 
                                             levels=ordenAlumnos$Alumno, ordered=TRUE)
 
+  print(paste("post-Time-",format(Sys.time(),"%Y%m%d%H%M%S")))
   (dfActionTime_ext <<- dfVISIR_accionesOrdenado)
 }
 
 create_dfActionCircuit <- function (dfActionTime) {
   if(is.null(dfActionTime)) return(NULL)
+  print(paste("pre-AC-",format(Sys.time(),"%Y%m%d%H%M%S")))
   
   dfVISIR_accionesOrdenado <- dfActionTime
   numAcciones<-nrow(dfVISIR_accionesOrdenado)
@@ -403,7 +423,8 @@ create_dfActionCircuit <- function (dfActionTime) {
   }
   # Aquellos circuitos distintos de EsCircuito deben ser NA
   dfVISIR_accionesOrdenado$NumCircuito[!dfVISIR_accionesOrdenado$EsCircuito]<-NA 
-
+  print(paste("mid1-AC-",format(Sys.time(),"%Y%m%d%H%M%S")))
+  
   dfVISIR_accionesCircuito <- dfVISIR_accionesOrdenado[dfVISIR_accionesOrdenado$EsCircuito,] 
   
   tempCircuitos<-as.character(rep(NA,numCircuitos))
@@ -466,6 +487,8 @@ create_dfActionCircuit <- function (dfActionTime) {
   
   dfVISIR_accionesCircuito$Circuito<-substring(dfVISIR_accionesCircuito$Circuito,2)
 
+  print(paste("mid2-AC-",format(Sys.time(),"%Y%m%d%H%M%S")))
+  
   tempCircuitoNormalizado <- normalizarCircuitos(dfVISIR_accionesCircuito$Circuito)
 
   dfVISIR_accionesCircuito$CircuitoNormalizado <- tempCircuitoNormalizado
@@ -473,6 +496,8 @@ create_dfActionCircuit <- function (dfActionTime) {
   vecCircuitoCerrado <- sapply(dfVISIR_accionesCircuito$Circuito, esCircuitoCerrado)
   dfVISIR_accionesCircuito$EsCircuitoCerrado <- vecCircuitoCerrado
 
+  print(paste("mid3-AC-",format(Sys.time(),"%Y%m%d%H%M%S")))
+  
   vecMMMal <- grepl("(?:DMM_V.*DMM_A)|(?:DMM_A.*DMM_V)",
                     dfVISIR_accionesCircuito$CircuitoNormalizado)  
   vecMMOKV <- !vecMMMal & grepl("(?:DMM_V.*DMM_V)|(?:DMM_1_.*DMM_1_)|(?:DMM_2_.*DMM_2_)",
@@ -541,6 +566,8 @@ create_dfActionCircuit <- function (dfActionTime) {
   # Cálculo Relación
   dfVISIR_accionesCircuito$RatioResVol <- dfVISIR_accionesCircuito$Resultado / dfVISIR_accionesCircuito$Voltaje
   
+  print(paste("mid4-AC-",format(Sys.time(),"%Y%m%d%H%M%S")))
+  
   # Circuito Significativo (Simplificado)
   for (i in 1:nrow(dfVISIR_accionesCircuito)){
     dfVISIR_accionesCircuito$CircuitoSimplificado[i] <- simplificarCircuito(as.character(dfVISIR_accionesCircuito$CircuitoNormalizado[i]))
@@ -554,12 +581,13 @@ create_dfActionCircuit <- function (dfActionTime) {
                             "<voltage>", dfVISIR_accionesCircuito$Voltaje, "</voltage>",
                             "<measure>", dfVISIR_accionesCircuito$Medida, "</measure>", sep="")
   
+  print(paste("post-AC-",format(Sys.time(),"%Y%m%d%H%M%S")))
   (dfActionCircuit_ext <<- dfVISIR_accionesCircuito)
 }
 
 aggreg_dfActionCircuit_xStud <- function (dfActions, dfActionCircuit) {
   if(is.null(dfActions) || is.null(dfActionCircuit)) return(NULL)
-  
+  print(paste("pre-ACxStud-",format(Sys.time(),"%Y%m%d%H%M%S")))
   zz <- dfActions %>% group_by(Alumno) %>% 
     summarise(TotalTime=max(TiempoAcumuladoCorregido),.groups="drop") %>% 
     mutate(TotalTime=round(TotalTime/60,digits = 2))    #in hours
@@ -577,12 +605,14 @@ aggreg_dfActionCircuit_xStud <- function (dfActions, dfActionCircuit) {
                                      .groups = "drop")
   zz <- merge(zz,zz1,all=TRUE)
   zz[is.na(zz)] <- 0
-  
+  print(paste("post-ACxStud-",format(Sys.time(),"%Y%m%d%H%M%S")))
   (sumxStud_ext <<- zz)
 }
 
 aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos, sessionID) {
   if(is.null(dfAccionesTiempo) || is.null(dfCircuitos)) return(NULL)
+
+  print(paste("pre-ACxStudDate-",format(Sys.time(),"%Y%m%d%H%M%S")))
   
   sumxStudDate <- dfAccionesTiempo %>%  group_by(Alumno,Dates) %>%
     arrange(Alumno,Dates) %>%
@@ -601,13 +631,17 @@ aggreg_dfActionCircuit_xStudDate <- function (dfAccionesTiempo, dfCircuitos, ses
   sumxStudDate <- merge(sumxStudDate,circxStudDate,all=TRUE)
   sumxStudDate[is.na(sumxStudDate)] <- 0
 
-  status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
-  save(status, file=paste0(sessionID,"_std.rda"))   
+  # status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
+  # save(status, file=paste0(sessionID,"_std.rda"))   
+  print(paste("post-ACxStudDate-",format(Sys.time(),"%Y%m%d%H%M%S")))
+  
   (sumxStudDate_ext <<- sumxStudDate)
 }
 
 aggreg_xDate <- function(dfAC_xStudDate) {
   if(is.null(dfAC_xStudDate)) return(NULL)
+  
+  print(paste("ACxDate-",format(Sys.time(),"%Y%m%d%H%M%S")))
   
   (sumxDate_ext <<- dfAC_xStudDate %>% group_by(Dates) %>% 
      summarise(NumExp = sum(NumExp),
