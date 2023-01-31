@@ -185,53 +185,53 @@ function(input, output, session) {
   })
 
 ### Ready ####
-  output$loadingReady <- renderImage({
-    if(is.null(input$logsImport)) return(
-      list(src="./www/redlight.png",
-           width=30, height=30))
-    if(is.null(dfLoadLog()) | T) Sys.sleep(1)
-      list(src="./www/light.png",
-           width=30, height=30)}, deleteFile=FALSE)
-
-  output$actionsReady <- renderImage({
-    if(is.null(input$logsImport)) return(
-      list(src="./www/redlight.png",
-           width=30, height=30))
-    if(is.null(dfImport()) | T) Sys.sleep(1)
-      list(src="./www/light.png",
-           width=30, height=30)}, deleteFile=FALSE)
-  
-  output$timeReady <- renderImage({
-    if(is.null(input$logsImport)) return(
-      list(src="./www/redlight.png",
-           width=30, height=30))
-    if(is.null(dfActionTime()) | T) Sys.sleep(1)
-      list(src="./www/light.png",
-           width=30, height=30)}, deleteFile=FALSE)
-  
-  output$circuitsReady <- renderImage({
-    if(is.null(input$logsImport)) return(
-      list(src="./www/redlight.png",
-           width=30, height=30))
-    if(is.null(dfActionCircuit()) | T) Sys.sleep(1)
-      list(src="./www/light.png",
-           width=30, height=30)}, deleteFile=FALSE)
-  
-  output$studentsReady <- renderImage({
-    if(is.null(input$logsImport)) return(
-      list(src="./www/redlight.png",
-           width=30, height=30))
-    if(is.null(dfACxDate()) | T) Sys.sleep(1)
-      list(src="./www/light.png",
-           width=30, height=30)}, deleteFile=FALSE)
-  
-  output$workingReady <- renderImage({
-    if(is.null(input$logsImport)) return(
-      list(src="./www/redlight.png",
-           width=30, height=30))
-    if(is.null(dfStudentsMilestonesEv()) | T) Sys.sleep(1)
-      list(src="./www/light.png",
-           width=30, height=30)}, deleteFile=FALSE)
+  # output$loadingReady <- renderImage({
+  #   if(is.null(input$logsImport)) return(
+  #     list(src="./www/redlight.png",
+  #          width=30, height=30))
+  #   if(is.null(dfLoadLog()) | T) Sys.sleep(1)
+  #     list(src="./www/light.png",
+  #          width=30, height=30)}, deleteFile=FALSE)
+  # 
+  # output$actionsReady <- renderImage({
+  #   if(is.null(input$logsImport)) return(
+  #     list(src="./www/redlight.png",
+  #          width=30, height=30))
+  #   if(is.null(dfImport()) | T) Sys.sleep(1)
+  #     list(src="./www/light.png",
+  #          width=30, height=30)}, deleteFile=FALSE)
+  # 
+  # output$timeReady <- renderImage({
+  #   if(is.null(input$logsImport)) return(
+  #     list(src="./www/redlight.png",
+  #          width=30, height=30))
+  #   if(is.null(dfActionTime()) | T) Sys.sleep(1)
+  #     list(src="./www/light.png",
+  #          width=30, height=30)}, deleteFile=FALSE)
+  # 
+  # output$circuitsReady <- renderImage({
+  #   if(is.null(input$logsImport)) return(
+  #     list(src="./www/redlight.png",
+  #          width=30, height=30))
+  #   if(is.null(dfActionCircuit()) | T) Sys.sleep(1)
+  #     list(src="./www/light.png",
+  #          width=30, height=30)}, deleteFile=FALSE)
+  # 
+  # output$studentsReady <- renderImage({
+  #   if(is.null(input$logsImport)) return(
+  #     list(src="./www/redlight.png",
+  #          width=30, height=30))
+  #   if(is.null(dfACxDate()) | T) Sys.sleep(1)
+  #     list(src="./www/light.png",
+  #          width=30, height=30)}, deleteFile=FALSE)
+  # 
+  # output$workingReady <- renderImage({
+  #   if(is.null(input$logsImport)) return(
+  #     list(src="./www/redlight.png",
+  #          width=30, height=30))
+  #   if(is.null(dfStudentsMilestonesEv()) | T) Sys.sleep(1)
+  #     list(src="./www/light.png",
+  #          width=30, height=30)}, deleteFile=FALSE)
   
   # output$circuitsReady <- renderPlot(NULL)
   # output$usersReady  <- renderPlot(NULL)
@@ -300,6 +300,14 @@ observeEvent(input$cmdReport, {
     plotDistribution(dfACxStud()$TotalTime, xlabel="Time per User, in h")
   })
   
+  output$timstu_explained <- renderText({
+    if(is.null(dfACxStud())) return(NULL)
+    
+    "This chart shows the distribution of time of work of the VISIR users 
+    (idle times larger than 15 minutes are discounted). It allows estimating the
+    usual completion of the VISIR activities. Average time of work is presented as
+    a dashed vertical line."
+  })
     
 ## Total Time vs Date (Dygraph) ####
   output$dygraph <-renderDygraph({
@@ -1154,27 +1162,54 @@ observeEvent(input$cmdReport, {
 #### WORK INDICATORS ####  
 ### >> OBSERVATION ITEMS ####
   output$proportionbars <- renderPlot ({
-    if(is.null(dfStudentsMilestones())) return(NULL)
-    visirtrMilestonesDifficulty(dfStudentsMilestones())
+    if(is.null(dfStudentsMilestones())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                        vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                        size=5)+theme_void()
+    } else {
+      visirtrMilestonesDifficulty(dfStudentsMilestones())
+    }
   })
   
   #Heatmap
   output$heatmap <- renderPlot({
-    if(is.null(dfStudentsMilestones())) return(NULL)
-    visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
+    if(is.null(dfStudentsMilestones())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
+    }
   })
   
 ### >> ASSESSMENT MILESTONES ####
   output$evproportionbars <- renderPlot ({
-    if(is.null(dfStudentsMilestonesEv())) return(NULL)
-    visirtrMilestonesDifficulty(
-      dfStudentsMilestonesEv()[,-ncol(dfStudentsMilestonesEv())])
+    if(is.null(dfStudentsMilestonesEv())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      visirtrMilestonesDifficulty(dfStudentsMilestonesEv()[,-ncol(dfStudentsMilestonesEv())])
+    }
   })
   
   #Heatmap
   output$evheatmap <- renderPlot({
-    if(is.null(dfStudentsMilestonesEv())) return(NULL)
-    visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL)
+    if(is.null(dfStudentsMilestonesEv())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL)
+    }
   })
   
 

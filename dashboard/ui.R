@@ -104,18 +104,18 @@ ui <- dashboardPage(
               valueBoxOutput("maxdate",width = 6)),
             box(solidHeader = TRUE, width = NULL, htmlOutput("milestonesData")),
             box(solidHeader = TRUE, width = NULL, htmlOutput("evmilestonesData"))
-          ),
-          box(
-            fluidRow(width=NULL, 
-                     tags$div("Data processing is finished when all indicators below are BLUE")),
-            fluidRow(Width=NULL, align="center",
-              imageOutput("loadingReady", width="100px", height="100px", inline=T),
-              imageOutput("actionsReady", width="100px", height="100px", inline=T),
-              imageOutput("timeReady", width="100px", height="100px", inline=T),
-              imageOutput("circuitsReady", width="100px", height="100px", inline=T),
-              imageOutput("studentsReady", width="100px", height="100px", inline=T),
-              imageOutput("workingReady", width="100px", height="100px", inline=T)),
-            width=12, align="center"
+          # ),
+          # box(
+          #   fluidRow(width=NULL, 
+          #            tags$div("Data processing is finished when all indicators below are BLUE")),
+          #   fluidRow(Width=NULL, align="center",
+          #     imageOutput("loadingReady", width="100px", height="100px", inline=T),
+          #     imageOutput("actionsReady", width="100px", height="100px", inline=T),
+          #     imageOutput("timeReady", width="100px", height="100px", inline=T),
+          #     imageOutput("circuitsReady", width="100px", height="100px", inline=T),
+          #     imageOutput("studentsReady", width="100px", height="100px", inline=T),
+          #     imageOutput("workingReady", width="100px", height="100px", inline=T)),
+          #   width=12, align="center"
           )
         )
 ),
@@ -135,7 +135,9 @@ ui <- dashboardPage(
                   #          style = "position:absolute;top:40px;left:50%;
                   #                   margin-left:-40px;margin-top:0px;"),
                   plotOutput("timstu"),
-                  height=480, width=12)
+                  tags$br(),
+                  textOutput("timstu_explained"),
+                  height=600, width=12)
               
             )
           ),
@@ -276,7 +278,6 @@ ui <- dashboardPage(
           tabBox(height=480, width=12,
                  tabPanel("Group Performance",
                           fluidRow(box(status="primary", plotOutput("proportionbars"),height=480, width=12)
-                            
                           )),
                  tabPanel("Performance per User",fluidRow(box(status="primary", plotOutput("heatmap"),
                                                  height=480, width=12))))),
@@ -285,7 +286,6 @@ ui <- dashboardPage(
           tabBox(height=480, width=12,
                  tabPanel("Group Performance",
                           fluidRow(box(status="primary", plotOutput("evproportionbars"),height=480, width=12)
-                                   
                           )),
                  tabPanel("Performance per User",fluidRow(box(status="primary", plotOutput("evheatmap"),
                                                  height=480, width=12)))))
