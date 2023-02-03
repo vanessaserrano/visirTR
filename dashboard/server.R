@@ -296,70 +296,128 @@ observeEvent(input$cmdReport, {
   })
   
   output$timstu <- renderPlot({
-    if(is.null(dfACxStud())) return(NULL)
-    plotDistribution(dfACxStud()$TotalTime, xlabel="Time per User, in h")
+    if(is.null(dfACxStud())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      plotDistribution(dfACxStud()$TotalTime, xlabel="Time per User, in h")
+    }
   })
   
   output$timstu_explained <- renderText({
     if(is.null(dfACxStud())) return(NULL)
     
-    "This chart shows the distribution of time of work of the VISIR users 
+    paste0("This chart shows the distribution of time of work of the VISIR users 
     (idle times larger than 15 minutes are discounted). It allows estimating the
-    usual completion of the VISIR activities. Average time of work is presented as
-    a dashed vertical line."
+    usual completion of the VISIR activities. Average time of work (",
+    InfovalueBoxMeT(dfACxStud()),
+    " h) is 
+    presented as a dashed vertical line. For the pool of users, time of work goes
+    from ",
+    InfovalueBoxMinT(dfACxStud()),
+    " h to ",
+    InfovalueBoxMaxT(dfACxStud()),
+    " h.")
   })
     
 ## Total Time vs Date (Dygraph) ####
+  output$dygraph_ui <- renderUI({
+    if(is.null(dfACxDate()))  {
+      plotOutput("dygraph_gg")
+    } else {
+      if(nrow(dfACxDate())==1)  {
+        plotOutput("dygraph_gg")
+      } else {
+        dygraphOutput("dygraph")
+      }
+    }
+  })
+  
   output$dygraph <-renderDygraph({
+        createPlot_TimexDate(dfACxDate())
+  })
+
+  output$dygraph_gg <-renderPlot({
+    if(is.null(dfACxDate()))  {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T,
+                 size=5)+theme_void()
+    } else {
+      if(nrow(dfACxDate())==1)  {
+        ggplot()+
+          coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+          annotate("text", x=-1, y=1,
+                   vjust=1, hjust=0, label='bold("THIS CHART IS ONLY AVAILABLE IF DATA EXPAND OVER MORE THAN ONE DAY")', parse=T, 
+                   size=5)+theme_void()
+      }
+    }
+  })
+  
+  output$dygraph_explained <- renderText({
     if(is.null(dfACxDate())) return(NULL)
     if(nrow(dfACxDate())==1) return(NULL)
     
-    createPlot_TimexDate(dfACxDate())
+    paste0("This chart shows total time of work per date. Time frame can be adjusted by
+            using the slider at the bottom of the chart.")
+    
   })
-
-
+  
+  
 ## Time on task vs User per Date -- HeatMap ####
   output$timeheat <-renderPlot({
-    if(is.null(dfACxStudDate())) return(NULL)
-
-    dfACxSD <- expand.grid(Dates=as.character(
-      seq(min(as.Date(dfACxStudDate()$Dates)),max(as.Date(dfACxStudDate()$Dates)),by=1)),
-      Alumno = levels(dfACxStudDate()$Alumno))
-    dfACxSD <- merge(dfACxSD,dfACxStudDate(),all=T)
-    
-    dfACxSD$Alumno <- factor(dfACxSD$Alumno,
-                             levels(dfACxStudDate()$Alumno),
-                             ordered=T)
-    
-    g <- dfACxSD %>%  
-      mutate (TimeInDate = round(TimeInDate/60, digits=2)) %>% 
-      ggplot(aes(x = Alumno, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=TimeInDate),width=0.9) + 
-      labs(x="User", y="Date") +
-      theme(axis.title = element_text(size=14),
-            axis.text= element_text(size=11),
-            legend.title = element_text(size=14),
-            legend.text= element_text(size=11),
-            axis.text.x=element_text(angle = 90, vjust = 0.5),
-            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
-      scale_fill_viridis(name="Time, in h",direction=-1,
-                         na.value=rgb(1,1,1,0))
-
-    if(length(unique(dfACxStudDate()$Alumno)) > 50) g <- g +
-      theme(axis.text.x = element_blank())
-    if(length(unique(dfACxStudDate()$Dates)) > 30) g <- g +
-      theme(axis.text.y = element_blank())
-    g
+    if(is.null(dfACxStudDate()))  {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      dfACxSD <- expand.grid(Dates=as.character(
+        seq(min(as.Date(dfACxStudDate()$Dates)),max(as.Date(dfACxStudDate()$Dates)),by=1)),
+        Alumno = levels(dfACxStudDate()$Alumno))
+      dfACxSD <- merge(dfACxSD,dfACxStudDate(),all=T)
+      
+      dfACxSD$Alumno <- factor(dfACxSD$Alumno,
+                               levels(dfACxStudDate()$Alumno),
+                               ordered=T)
+      
+      g <- dfACxSD %>%  
+        mutate (TimeInDate = round(TimeInDate/60, digits=2)) %>% 
+        ggplot(aes(x = Alumno, y = Dates)) + theme_bw() +
+        geom_tile(aes(fill=TimeInDate),width=0.9) + 
+        labs(x="User", y="Date") +
+        theme(axis.title = element_text(size=14),
+              axis.text= element_text(size=11),
+              legend.title = element_text(size=14),
+              legend.text= element_text(size=11),
+              axis.text.x=element_text(angle = 90, vjust = 0.5),
+              axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))+
+        scale_fill_viridis(name="Time, in h",direction=-1,
+                           na.value=rgb(1,1,1,0))
+  
+      if(length(unique(dfACxStudDate()$Alumno)) > 50) g <- g +
+        theme(axis.text.x = element_blank())
+      if(length(unique(dfACxStudDate()$Dates)) > 30) g <- g +
+        theme(axis.text.y = element_blank())
+      g
+    }
   })
   
   output$plot <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    plotOutput("timeheat", height=400,
+    if(is.null(dfACxStudDate())) {
+      plotOutput("timeheat")
+    } else {
+      plotOutput("timeheat", height=400,
                hover = hoverOpts(
                  id = "plot_hovernAct",
                  delay = 100,
-                 nullOutside = T)
-    )
+                 nullOutside = T))
+    }
   })
   
   output$plot_poin <- renderText({
@@ -381,10 +439,25 @@ observeEvent(input$cmdReport, {
     if(length(response)==0)
       return ("Place your mouse over a data point to see user, date and time dedicated.") 
     else
-      return (paste("User Id:",responset[1],"\n",
-                   "Date:",responsec[1],"\n",
-                   "Time, in h:",response[1]))
+      return (paste("User Id:",responset[1],"\t",
+                   "Date:",responsec[1],"\t",
+                   "Time, in h:",round(as.numeric(response[1]),2)))
     
+  })
+  
+  output$timeheat_explained <- renderText({
+    if(is.null(dfACxStudDate())) return(NULL)
+    
+    maxDateStud <- dfACxStudDate() %>% .[which.max(.$TimeInDate),]
+    
+    paste0("This chart shows the time of work per user and date. Darker colors 
+    indicate larger amounts of working time. The highest peak of work intensity can be seen on ",
+    maxDateStud$Dates, 
+    " where user ",
+    maxDateStud$Alumno,
+    " spent ",
+    round(maxDateStud$TimeInDate,0),
+    " min using VISIR.")
   })
   
   

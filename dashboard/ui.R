@@ -142,12 +142,19 @@ ui <- dashboardPage(
             )
           ),
           tabPanel( "Time per Date",
-            fluidRow(box(status="primary",dygraphOutput("dygraph"), height=480, width=12))
+            fluidRow(box(status="primary",uiOutput("dygraph_ui"),
+                         tags$br(),
+                         textOutput("dygraph_explained"),
+                         height=600, width=12))
           ),
           tabPanel( "Time per User and Date",
             fluidRow(
-              box(status="primary",uiOutput("plot"),verbatimTextOutput("plot_poin"), 
-                  height=480, width=12)
+              box(status="primary",
+                  verbatimTextOutput("plot_poin"),
+                  uiOutput("plot"),
+                  tags$br(),
+                  textOutput("timeheat_explained"),
+                  height=600, width=12)
             )
           )
         )  
