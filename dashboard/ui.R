@@ -171,19 +171,33 @@ ui <- dashboardPage(
                                  valueBoxOutput("numuniquecirc",width = 3)
                                ),
                                fluidRow(
-                                 box(status="primary",plotOutput("circdist"), height=480, width=12)
+                                 box(status="primary",plotOutput("circdist"),
+                                     tags$br(),
+                                     textOutput("circdist_explained"),
+                                     height=600, width=12)
                                )
                      ),
                      tabPanel( "Experiments per Date",
-                               fluidRow(box(status="primary",dygraphOutput("dygraph2"), height=480, width=12))),
+                               fluidRow(box(status="primary",
+                                            uiOutput("dygraph2_ui"),
+                                            tags$br(),
+                                            textOutput("dygraph2_explained"),
+                                            height=600, width=12))),
                      tabPanel( "Experiments per User and Date",
-                               fluidRow(box(status="primary",uiOutput("plotui"),verbatimTextOutput("plot_points"), height=480, width=12))),
+                               fluidRow(box(status="primary",
+                                            verbatimTextOutput("plot_points"),
+                                            uiOutput("plotui"),
+                                            tags$br(),
+                                            textOutput("circsuserheat_explained"),
+                                            height=600, width=12))),
                      tabPanel( "Experimental Timelines",
                                fluidRow(box(status="primary",
                                             checkboxInput("timeline_facet","Show facetted"),
-                                            uiOutput("plotu"),
                                             verbatimTextOutput("plot_point"),
-                                            height=540, width=12))),
+                                            uiOutput("plotu"),
+                                            tags$br(),
+                                            textOutput("timelineus_explained"),
+                                            height=600, width=12))),
                      tabPanel("Unique Circuits Distribution", 
                               fluidRow(
                                 box(status="primary",checkboxInput("simplified_distribution","Check to use simplified circuits (normalized circuits when unchecked)"),
@@ -196,7 +210,10 @@ ui <- dashboardPage(
                               ),
                               fluidRow(
                                 box(status="primary",
-                                    plotOutput("circdistN"), height=390, width=12)
+                                    plotOutput("circdistN"),
+                                    tags$br(),
+                                    textOutput("circdistN_explained"),
+                                    height=600, width=12)
                               )  
                      )
               )

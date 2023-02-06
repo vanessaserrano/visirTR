@@ -497,60 +497,129 @@ observeEvent(input$cmdReport, {
   
 # Plot  
   output$circdist <- renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    plotDistribution(dfACxStud()$NumCircu, xlabel="Experiments per User")
+    if(is.null(dfImport())) {
+      ggplot()+
+      coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+      annotate("text", x=-1, y=1,
+               vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+               size=5)+theme_void()
+    } else {
+      plotDistribution(dfACxStud()$NumCircu, xlabel="Experiments per User")
+    }
   })
 
-## Circuits per date ####
-  output$dygraph2 <-renderDygraph({
-    if(is.null(dfACxDate())) return(NULL)
-    if(nrow(dfACxDate())==1) return(NULL)
+  output$circdist_explained <- renderText({
+    if(is.null(dfACxStud())) return(NULL)
     
+    paste0("This chart shows the distribution of the number of experiments per user.
+           Average number of experiments (",
+           InfovalueBoxMeanExp(dfACxStud()),
+           ") is 
+    presented as a dashed vertical line. For the pool of users, the number of experiments goes
+    from ",
+           InfovalueBoxMinExp(dfACxStud()),
+           " to ",
+           InfovalueBoxMaxExp(dfACxStud()),
+           ".")
+  })
+  
+  
+## Circuits per date (Dygraph) ####
+  output$dygraph2_ui <- renderUI({
+    if(is.null(dfACxDate()))  {
+      plotOutput("dygraph2_gg")
+    } else {
+      if(nrow(dfACxDate())==1)  {
+        plotOutput("dygraph2_gg")
+      } else {
+        dygraphOutput("dygraph2")
+      }
+    }
+  })
+  
+  output$dygraph2 <-renderDygraph({
     createPlot_ExpxDate(dfACxDate())
   })
   
+  output$dygraph2_gg <-renderPlot({
+    if(is.null(dfACxDate()))  {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T,
+                 size=5)+theme_void()
+    } else {
+      if(nrow(dfACxDate())==1)  {
+        ggplot()+
+          coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+          annotate("text", x=-1, y=1,
+                   vjust=1, hjust=0, label='bold("THIS CHART IS ONLY AVAILABLE IF DATA EXPAND OVER MORE THAN ONE DAY")', parse=T, 
+                   size=5)+theme_void()
+      }
+    }
+  })
+  
+  output$dygraph2_explained <- renderText({
+    if(is.null(dfACxDate())) return(NULL)
+    if(nrow(dfACxDate())==1) return(NULL)
+    
+    paste0("This chart shows the number of experiments per date. Time frame can be adjusted by
+            using the slider at the bottom of the chart.")
+    
+  })  
+  
+    
 ## Experiments per User and Date -- Heat map ####
   output$circsuserheat <-renderPlot({
-    if(is.null(dfACxStudDate())) return(NULL)
+    if(is.null(dfACxStudDate())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      dfACxSD <- expand.grid(Dates=as.character(
+        seq(min(as.Date(dfACxStudDate()$Dates)),max(as.Date(dfACxStudDate()$Dates)),by=1)),
+        Alumno = levels(dfACxStudDate()$Alumno))
+      dfACxSD <- merge(dfACxSD,dfACxStudDate(),all=T)
+      
+      dfACxSD$Alumno <- factor(dfACxSD$Alumno,
+                               levels(dfACxStudDate()$Alumno),
+                               ordered=T)
     
-    dfACxSD <- expand.grid(Dates=as.character(
-      seq(min(as.Date(dfACxStudDate()$Dates)),max(as.Date(dfACxStudDate()$Dates)),by=1)),
-      Alumno = levels(dfACxStudDate()$Alumno))
-    dfACxSD <- merge(dfACxSD,dfACxStudDate(),all=T)
-    
-    dfACxSD$Alumno <- factor(dfACxSD$Alumno,
-                             levels(dfACxStudDate()$Alumno),
-                             ordered=T)
-  
-    # dfACxSD[is.na(dfACxSD)] <- 0
-    
-    g <- ggplot(data = dfACxSD, aes(x = Alumno, y = Dates)) + theme_bw() +
-      geom_tile(aes(fill=NumCircu), width=0.9) +
-      labs(x ="User", y= "Date") +
-      theme(axis.title = element_text(size=14),
-            axis.text= element_text(size=11),
-            legend.title = element_text(size=14),
-            legend.text= element_text(size=11),
-            axis.text.x=element_text(angle = 90, vjust = 0.5),
-            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-      scale_fill_viridis(name="Experiments",direction=-1,
-                         na.value=rgb(1,1,1,0))
-    
-    if(length(unique(dfACxStudDate()$Alumno)) > 50) g <- g +
-      theme(axis.text.x = element_blank())
-    if(length(unique(dfACxStudDate()$Dates)) > 30) g <- g +
-      theme(axis.text.y = element_blank())
-    g
+      # dfACxSD[is.na(dfACxSD)] <- 0
+      
+      g <- ggplot(data = dfACxSD, aes(x = Alumno, y = Dates)) + theme_bw() +
+        geom_tile(aes(fill=NumCircu), width=0.9) +
+        labs(x ="User", y= "Date") +
+        theme(axis.title = element_text(size=14),
+              axis.text= element_text(size=11),
+              legend.title = element_text(size=14),
+              legend.text= element_text(size=11),
+              axis.text.x=element_text(angle = 90, vjust = 0.5),
+              axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+        scale_fill_viridis(name="Experiments",direction=-1,
+                           na.value=rgb(1,1,1,0))
+      
+      if(length(unique(dfACxStudDate()$Alumno)) > 50) g <- g +
+        theme(axis.text.x = element_blank())
+      if(length(unique(dfACxStudDate()$Dates)) > 30) g <- g +
+        theme(axis.text.y = element_blank())
+      g
+    }
   })
   
   output$plotui <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    plotOutput("circsuserheat", height=400,
+    if(is.null(dfImport())) {
+      plotOutput("circsuserheat")
+    } else {
+      plotOutput("circsuserheat", height=400,
                hover = hoverOpts(
                  id = "plot_hovernAct",
                  delay = 100,
                  nullOutside = T)
-    )
+      )
+    }
   })
   
   output$plot_points <- renderText({
@@ -572,65 +641,89 @@ observeEvent(input$cmdReport, {
     if(length(response)==0)
       return ("Place your mouse over a data point to see user, date and number of experiments.") 
     else
-      return (paste("User Id:",responset[1],"\n",
-                    "Date:",responsec[1],"\n",
+      return (paste("User Id:",responset[1],"\t",
+                    "Date:",responsec[1],"\t",
                     "Experiments:",response[1]))
   })
   
-
+  output$circsuserheat_explained <- renderText({
+    if(is.null(dfACxStudDate())) return(NULL)
+    
+    maxDateStud <- dfACxStudDate() %>% .[which.max(.$NumExp),]
+    
+    paste0("This chart shows the number of experiments per user and date. Darker colors 
+    indicate more experiments performed. The highest peak of performance can be seen on ",
+           maxDateStud$Dates, 
+           " where user ",
+           maxDateStud$Alumno,
+           " performed ",
+           maxDateStud$NumExp,
+           " VISIR experiments.")
+  })
+  
 ## Experimental Timelines ####
   output$timelineus <-renderPlot({
-    if(is.null(dfActionCircuit())) return(NULL)
-    gra=c("red","green","blue","black")
-    
-    g <- dfActionCircuit() %>% mutate (Time = round(Time/60, digits=2)) %>% 
-      ggplot(aes(x = Alumno, y = Time, 
-                 color = Measure, shape= Measure)) + 
-      geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
-                data=dfACxStud(), color="grey") + 
-      geom_point(size = 4, alpha = 0.5) +
-      labs(y="Time, in h", x = "User") +
-      scale_color_manual(values = gra) +
-      scale_shape_manual(values= c(95,95,95,13)) +
-      theme(panel.background = element_rect(fill=NA), 
-            panel.border = element_rect(colour="black",fill=NA),
-            panel.grid.major.x = element_line(linetype=0),
-            panel.grid.major.y = element_line(colour="lightgray",linetype="solid"),
-            legend.key=element_blank(),
-            legend.title = element_text(size=14),
-            legend.text= element_text(size=11),
-            axis.title = element_text(size=14),
-            axis.text= element_text(size=11),
-            axis.text.x=element_text(angle = 90, vjust = 0.5))+
-      guides(color = guide_legend(override.aes = list(size=9)))  
-             
-    if(input$timeline_facet) {
-      g <- g + facet_wrap(~Measure,nrow=2) +
-        theme(axis.text.x = element_blank(),
-              strip.text= element_text(size=14),
-              legend.position = "none")
+    if(is.null(dfActionCircuit())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      gra=c("red","green","blue","black")
+      
+      g <- dfActionCircuit() %>% mutate (Time = round(Time/60, digits=2)) %>% 
+        ggplot(aes(x = Alumno, y = Time, 
+                   color = Measure, shape= Measure)) + 
+        geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
+                  data=dfACxStud(), color="grey") + 
+        geom_point(size = 4, alpha = 0.5) +
+        labs(y="Time, in h", x = "User") +
+        scale_color_manual(values = gra) +
+        scale_shape_manual(values= c(95,95,95,13)) +
+        theme(panel.background = element_rect(fill=NA), 
+              panel.border = element_rect(colour="black",fill=NA),
+              panel.grid.major.x = element_line(linetype=0),
+              panel.grid.major.y = element_line(colour="lightgray",linetype="solid"),
+              legend.key=element_blank(),
+              legend.title = element_text(size=14),
+              legend.text= element_text(size=11),
+              axis.title = element_text(size=14),
+              axis.text= element_text(size=11),
+              axis.text.x=element_text(angle = 90, vjust = 0.5))+
+        guides(color = guide_legend(override.aes = list(size=9)))  
+               
+      if(input$timeline_facet) {
+        g <- g + facet_wrap(~Measure,nrow=2) +
+          theme(axis.text.x = element_blank(),
+                strip.text= element_text(size=14),
+                legend.position = "none")
+      }
+      
+      if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
+      
+      g
     }
-    
-    if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
-    
-    g
   })
   
   output$plotu <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    plotOutput("timelineus", height=400,
+    if(is.null(dfImport())) {
+      plotOutput("timelineus")
+    } else {
+      plotOutput("timelineus", height=400,
                hover = hoverOpts(
                  id = "plot_hovernAct",
                  delay = 100,
                  nullOutside = T)
-    )
+      )
+    }
   })
   
   output$plot_point <- renderText({
     if(is.null(dfImport())) return(NULL)
     dat <- data.frame(ids=dfActionCircuit()$Alumno)
     dat$toT <- dfActionCircuit()$Alumno
-    dat$nAc <- dfActionCircuit()$Time
+    dat$nAc <- dfActionCircuit()$Time/60
     dat <- as.data.frame(dat)
     
     res <- nearPoints(dat, input$plot_hovernAct, 
@@ -703,13 +796,20 @@ observeEvent(input$cmdReport, {
     
 # Plot  
   output$circdistN <- renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    g <- plotDistribution(dfACxStud()$NumNCircu, xlabel="Normalized Circuits per User")
-    
-    if(input$simplified_distribution) {
-      g <- plotDistribution(dfACxStud()$NumSCircu, xlabel="Simplified Circuits per User")
+    if(is.null(dfImport())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      g <- plotDistribution(dfACxStud()$NumNCircu, xlabel="Normalized Circuits per User")
+      
+      if(input$simplified_distribution) {
+        g <- plotDistribution(dfACxStud()$NumSCircu, xlabel="Simplified Circuits per User")
+      }
+      g
     }
-    g
   })
   
 
@@ -950,7 +1050,7 @@ observeEvent(input$cmdReport, {
     
     dat <- data.frame(ids=dfActionCircuit()$Alumno)
     dat$toT <- dfActionCircuit()$Alumno
-    dat$nAc <- dfActionCircuit()$Time
+    dat$nAc <- dfActionCircuit()$Time/60
     dat <- as.data.frame(dat)
     
     res <- nearPoints(dat, input$ct_plotu_hover, 
