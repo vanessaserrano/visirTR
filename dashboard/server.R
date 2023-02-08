@@ -739,6 +739,16 @@ observeEvent(input$cmdReport, {
       return ("In the non-facetted chart, place your mouse over a data point to identify the user.") 
     else
       return (paste("User:",response[1]))
+  })
+  
+  output$timelineus_explained <- renderText({
+    if(is.null(dfActionCircuit())) return(NULL)
+    
+    paste0("This chart shows the experiments performed by each user within their timeline.
+            The experiment are represented by different markers according to the measurement taken.
+            The line chart indicates the total time of work per user. The facetted version
+            (checkbox at the top-left) presents each type of measurement in a different plot.
+            Users are ordered by ascending total time of work.")
   }) 
   
 ## Unique Circuits ####
@@ -812,39 +822,72 @@ observeEvent(input$cmdReport, {
     }
   })
   
+  output$circdistN_explained <- renderText({
+    if(is.null(dfACxStud())) return(NULL)
+    
+    paste0("This chart shows the distribution of the number of unique circuits per user.
+           Average number of ",
+           ifelse(input$simplified_distribution,
+                  "simplified","normalized"),
+           " circuits (",
+           ifelse(input$simplified_distribution,
+                  InfovalueBoxMeanSimp(dfACxStud()),
+                  InfovalueBoxMeanNorm(dfACxStud())),
+           ") is presented as a dashed vertical line. For the pool of users, the number of ",
+           ifelse(input$simplified_distribution,
+                  "simplified","normalized"),
+            " circuits goes from ",
+           ifelse(input$simplified_distribution,
+                  InfovalueBoxMinSimp(dfACxStud()),
+                  InfovalueBoxMinNorm(dfACxStud())),
+           " to ",
+           ifelse(input$simplified_distribution,
+                  InfovalueBoxMaxSimp(dfACxStud()),
+                  InfovalueBoxMaxNorm(dfACxStud())),
+           ".")
+  })
+  
 
 ### >> NUMBER OF CIRCUITS VS TIME ON TASK ####
 ## Number of experiments vs time ####
     output$nActionsVStoT <- renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    
-    meanTT <- mean(dfACxStud()$TotalTime)
-    meanNC <- mean(dfACxStud()$NumCircu)
-    maxTT <- max(dfACxStud()$TotalTime)
-    maxNC <- max(dfACxStud()$NumCircu)
-    
-    ggplot(dfACxStud(), aes(x=TotalTime, y=NumCircu))  +  
-      geom_point(size = 3, alpha = 0.4) + 
-      labs(x = "Time, in h", y = "Number of Experiments") +
-      geom_hline(yintercept = mean(dfACxStud()$NumCircu), color="#fbada7")+
-      geom_vline(xintercept = mean(dfACxStud()$TotalTime), color="#66d9dc") +
-      geom_text(aes(x = (meanTT + maxTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
-      geom_text(aes(x = meanTT, y= (meanNC + maxNC)/2, label=round(meanTT,digits = 2))) + 
-      theme_bw() + 
-      theme(axis.title = element_text(size=14),
-            axis.text= element_text(size=11),
-            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
-
+    if(is.null(dfImport())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      meanTT <- mean(dfACxStud()$TotalTime)
+      meanNC <- mean(dfACxStud()$NumCircu)
+      maxTT <- max(dfACxStud()$TotalTime)
+      maxNC <- max(dfACxStud()$NumCircu)
+      
+      ggplot(dfACxStud(), aes(x=TotalTime, y=NumCircu))  +  
+        geom_point(size = 3, alpha = 0.4) + 
+        labs(x = "Time, in h", y = "Number of Experiments") +
+        geom_hline(yintercept = mean(dfACxStud()$NumCircu), color="#fbada7")+
+        geom_vline(xintercept = mean(dfACxStud()$TotalTime), color="#66d9dc") +
+        geom_text(aes(x = (meanTT + maxTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
+        geom_text(aes(x = meanTT, y= (meanNC + maxNC)/2, label=round(meanTT,digits = 2))) + 
+        theme_bw() + 
+        theme(axis.title = element_text(size=14),
+              axis.text= element_text(size=11),
+              axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+    }
   })
 
   output$plotuinAct <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    plotOutput("nActionsVStoT", height=350,
-               hover = hoverOpts(
-                 id = "plot_hovernAct",
-                 delay = 100,
-                 nullOutside = T)
-    )
+    if(is.null(dfImport())) {
+      plotOutput("nActionsVStoT")
+    } else {
+      plotOutput("nActionsVStoT", height=350,
+                 hover = hoverOpts(
+                   id = "plot_hovernAct",
+                   delay = 100,
+                   nullOutside = T)
+      )
+    }
   })
   
   output$plot_pointsnAct <- renderText({
@@ -866,37 +909,41 @@ observeEvent(input$cmdReport, {
     if(length(response)==0)
       return ("Place your mouse over a data point to identify user, time and number of experiments.\n\n") 
     else
-      return (paste("User Id:",response[1],"\n",
-                    "Number of Experiments:",responsec[1],"\n",
+      return (paste("User Id:",response[1],"\t",
+                    "Number of Experiments:",responsec[1],"\t",
                     "Time, in h:",responset[1]))
+  })
+  
+  output$nActionsVStoT_explained <- renderText({
+    if(is.null(dfACxStud())) return(NULL)
+    
+    paste0("This chart shows the relationship between the number of experiments
+           and the total time or work. Each marker corresponds to one user.
+           Average number of experiments (",
+           round(mean(dfACxStud()$NumCircu),2),
+           ") is presented as a red horizontal line. 
+           Average total time of work per user (",
+           round(mean(dfACxStud()$TotalTime),2),
+           " h) is presented as a blue vertical line.")
   })
   
 ## Number of unique circuits vs time ####
   output$nActionsVStoTnorm <- renderPlot({
-    if(is.null(dfACxStud())) return(NULL)
-    
-    meanTT <- mean(dfACxStud()$TotalTime)
-    maxTT <- max(dfACxStud()$TotalTime)
-    
-    meanNC <- mean(dfACxStud()$NumNCircu)
-    maxNC <- max(dfACxStud()$NumNCircu)
-    
-    g <- ggplot(dfACxStud(), aes(x=TotalTime, y=NumNCircu)) +  geom_point(size = 3, alpha = 0.4) + 
-      labs(x = "Time, in h", y = "Number of Normalized Circuits") + theme_bw() +
-      geom_hline(yintercept = meanNC, color="#fbada7") +
-      geom_vline(xintercept = meanTT, color="#66d9dc") + 
-      geom_text(aes(x = (maxTT + meanTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
-      geom_text(aes(x = meanTT, y= (maxNC + meanNC)/2, label=round(meanTT, digits = 2))) +
-      theme(axis.title = element_text(size=14),
-            axis.text= element_text(size=11),
-            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
-  
-    if(input$simplified_time) {
-      meanNC <- mean(dfACxStud()$NumSCircu)
-      maxNC <- max(dfACxStud()$NumSCircu)
+    if(is.null(dfACxStud())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
+    } else {
+      meanTT <- mean(dfACxStud()$TotalTime)
+      maxTT <- max(dfACxStud()$TotalTime)
       
-      g <- ggplot(dfACxStud(), aes(x=TotalTime, y=NumSCircu)) +  geom_point(size = 3, alpha = 0.4) + 
-        labs(x = "Time, in h", y = "Number of Simplified Circuits") + theme_bw() +
+      meanNC <- mean(dfACxStud()$NumNCircu)
+      maxNC <- max(dfACxStud()$NumNCircu)
+      
+      g <- ggplot(dfACxStud(), aes(x=TotalTime, y=NumNCircu)) +  geom_point(size = 3, alpha = 0.4) + 
+        labs(x = "Time, in h", y = "Number of Normalized Circuits") + theme_bw() +
         geom_hline(yintercept = meanNC, color="#fbada7") +
         geom_vline(xintercept = meanTT, color="#66d9dc") + 
         geom_text(aes(x = (maxTT + meanTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
@@ -904,20 +951,38 @@ observeEvent(input$cmdReport, {
         theme(axis.title = element_text(size=14),
               axis.text= element_text(size=11),
               axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
-    }
     
-    g
+      if(input$simplified_time) {
+        meanNC <- mean(dfACxStud()$NumSCircu)
+        maxNC <- max(dfACxStud()$NumSCircu)
+        
+        g <- ggplot(dfACxStud(), aes(x=TotalTime, y=NumSCircu)) +  geom_point(size = 3, alpha = 0.4) + 
+          labs(x = "Time, in h", y = "Number of Simplified Circuits") + theme_bw() +
+          geom_hline(yintercept = meanNC, color="#fbada7") +
+          geom_vline(xintercept = meanTT, color="#66d9dc") + 
+          geom_text(aes(x = (maxTT + meanTT)/2, y= meanNC, label=round(meanNC,digits = 2))) +
+          geom_text(aes(x = meanTT, y= (maxNC + meanNC)/2, label=round(meanTT, digits = 2))) +
+          theme(axis.title = element_text(size=14),
+                axis.text= element_text(size=11),
+                axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0)))
+      }
+      
+      g
+    }
   })
   
 
   output$plotuinActnorm <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    plotOutput("nActionsVStoTnorm", height=350,
-               hover = hoverOpts(
-                 id = "plot_hovernAct",
-                 delay = 100,
-                 nullOutside = T)
-    )
+    if(is.null(dfImport())) {
+      plotOutput("nActionsVStoTnorm")
+    } else {
+      plotOutput("nActionsVStoTnorm", height=350,
+                 hover = hoverOpts(
+                   id = "plot_hovernAct",
+                   delay = 100,
+                   nullOutside = T)
+      )
+    }
   })
   
   output$plot_pointsnActnorm <- renderText({
@@ -948,11 +1013,30 @@ observeEvent(input$cmdReport, {
     if(length(response)==0)
       return ("Place your mouse over a data point to identify the user.\n\n") 
     else
-      return (paste("User Id:",response[1],"\n",
-                    g,responsec[1],"\n",
+      return (paste("User Id:",response[1],"\t",
+                    g,responsec[1],"\t",
                     "Time (in h):",responset[1]))
   })
 
+  output$nActionsVStoTnorm_explained <- renderText({
+    if(is.null(dfACxStud())) return(NULL)
+    
+    paste0("This chart shows the relationship between the number of unique circuits
+           and the total time or work. Each marker corresponds to one user.
+           Average number of ",
+           ifelse(input$simplified_time,
+                  "simplified","normalized"),
+           " circuits (",
+           ifelse(input$simplified_time,
+                  InfovalueBoxMeanSimp(dfACxStud()),
+                  InfovalueBoxMeanNorm(dfACxStud())),
+           ") is presented as a red horizontal line. 
+           Average total time of work per user (",
+           round(mean(dfACxStud()$TotalTime),2),
+           " h) is presented as a blue vertical line.")
+  })
+  
+  
 #### CIRCUIT-BASED RESULTS ####
 ### >> COMMON CIRCUITS ####
 ## Common circuits ####
@@ -1424,9 +1508,10 @@ observeEvent(input$cmdReport, {
                                 <b> Simplified Circuit:</b> Standardization of a circuit to achieve identical representations for 
                                 circuits with the same components connected in the same manner in the fragment being measured <br/>
                                 <b> Measure:</b> Each of the posible magnitudes that can be determined in a circuit <br/>
-                                
-                               
-                               "),
+      
+                               <br/>Additional information can be found at 
+                               <a href='http://asistembe2.iqs.edu/visirtr/index.htm' target='_blank'>
+                               http://asistembe2.iqs.edu/visirtr/index.htm</a>."),
                           footer = tagList(actionButton("closeG", "OK"))
     ))
     observeEvent(input$closeG, {

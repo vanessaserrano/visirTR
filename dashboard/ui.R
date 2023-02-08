@@ -223,14 +223,21 @@ ui <- dashboardPage(
         tabBox(height=480, width=12,
           tabPanel( "Experiments vs Time",
             fluidRow(
-              box(status="primary",uiOutput("plotuinAct"),verbatimTextOutput("plot_pointsnAct"), height=480, width=12)
+              box(status="primary",
+                  verbatimTextOutput("plot_pointsnAct"),
+                  uiOutput("plotuinAct"),
+                  textOutput("nActionsVStoT_explained"),
+                  height=600, width=12)
             )
           ),
           
           tabPanel("Unique Circuits vs Time",
             fluidRow(
               box(status="primary",checkboxInput("simplified_time","Check to use simplified circuits (normalized circuits when unchecked)"),
-                  uiOutput("plotuinActnorm"),verbatimTextOutput("plot_pointsnActnorm"), height=480, width=12)
+                  verbatimTextOutput("plot_pointsnActnorm"),
+                  uiOutput("plotuinActnorm"),
+                  textOutput("nActionsVStoTnorm_explained"),
+                  height=600, width=12)
             )
           )
         )
