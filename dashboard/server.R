@@ -1041,18 +1041,35 @@ observeEvent(input$cmdReport, {
 ### >> COMMON CIRCUITS ####
 ## Common circuits ####
   output$cc_circuits <- renderDataTable({
-    if(is.null(dfImport())) return(NULL)
-    
-    #g <- datatable(tabNCircuits())
-    g <- tabNCircuits()
-    names(g)[names(g) == 'Circuit'] <- 'Normalized Circuits'
-    
-    if(input$simplified_common) {g <- tabSCircuits()
-    names(g)[names(g) == 'Circuit'] <- 'Simplified Circuits'
+    if (is.null(dfImport())) {
+      datatable(data.frame(character(0)), 
+              class="display",
+              colnames = '')
+    } else { 
+      #g <- datatable(tabNCircuits())
+      g <- tabNCircuits()
+      names(g)[names(g) == 'Circuit'] <- 'Normalized Circuits'
+      
+      if(input$simplified_common) {g <- tabSCircuits()
+      names(g)[names(g) == 'Circuit'] <- 'Simplified Circuits'
+      }
+      g
     }
-    g
   })
 
+  output$cc_circuits_explained <- renderText({
+    if(is.null(dfImport())) return(NULL)
+    
+    paste0("This table lists the ",
+           ifelse(input$simplified_common,
+                  "simplified","normalized"),
+           " circuits sorted by decreasing frequency in the log data. ",
+           ifelse(input$simplified_common,
+                  paste0("An empty simplified circuit means a circuit with",
+                  " errors in the connection on the multimeter."),
+                  ""))
+  })
+  
 ## Circuit in timeline ####
   output$ct_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
@@ -1080,53 +1097,60 @@ observeEvent(input$cmdReport, {
     }})
   
   output$ct_plotu_chart <- renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    
-    gra <- c("grey","red")
-    
-    grafdata <- dfActionCircuit() %>% mutate (Time = round(Time/60, digits=2))
-    
-    if(is.null(input$ct_circuit)) {
-      grafdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
+    if(is.null(dfImport())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
     } else {
-      if(input$simplified_common) {
-        grafdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ct_circuit
+      gra <- c("grey","red")
+      
+      grafdata <- dfActionCircuit() %>% mutate (Time = round(Time/60, digits=2))
+      
+      if(is.null(input$ct_circuit)) {
+        grafdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
       } else {
-        grafdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ct_circuit
+        if(input$simplified_common) {
+          grafdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ct_circuit
+        } else {
+          grafdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ct_circuit
+        }
       }
+      
+      g <- ggplot(grafdata, aes(x = Alumno, y = Time,
+                                         color = sel, shape= sel)) + 
+        geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
+                  data=dfACxStud(), color="grey") + 
+        geom_point(size = 4, alpha = 0.5) +  
+        labs(y="Time, in h") +
+        scale_color_manual(values = gra) +
+        scale_shape_manual(values= c(95,1)) + labs(x = "User")  +
+        theme(panel.background = element_rect(fill=NA), 
+              panel.border = element_rect(colour="black",fill=NA),
+              panel.grid.major.x = element_line(linetype=0),
+              panel.grid.major.y = element_line(colour="lightgray",linetype="solid"),
+              legend.position="none",
+              axis.title = element_text(size=14),
+              axis.text= element_text(size=11),
+              axis.text.x=element_text(angle = 90, vjust = 0.5)) 
+  
+      if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
+      
+      g
     }
-    
-    g <- ggplot(grafdata, aes(x = Alumno, y = Time,
-                                       color = sel, shape= sel)) + 
-      geom_line(aes(x=Alumno, y=TotalTime, color=NULL, shape=NULL, group=1),
-                data=dfACxStud(), color="grey") + 
-      geom_point(size = 4, alpha = 0.5) +  
-      labs(y="Time, in h") +
-      scale_color_manual(values = gra) +
-      scale_shape_manual(values= c(95,1)) + labs(x = "User")  +
-      theme(panel.background = element_rect(fill=NA), 
-            panel.border = element_rect(colour="black",fill=NA),
-            panel.grid.major.x = element_line(linetype=0),
-            panel.grid.major.y = element_line(colour="lightgray",linetype="solid"),
-            legend.position="none",
-            axis.title = element_text(size=14),
-            axis.text= element_text(size=11),
-            axis.text.x=element_text(angle = 90, vjust = 0.5)) 
-
-    if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
-    
-    g
   })
   
   output$ct_plotu <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    
-    plotOutput("ct_plotu_chart", height=400,
-               hover = hoverOpts(
-                 id = "ct_plotu_hover",
-                 delay = 100,
-                 nullOutside = T)
-    )
+    if(is.null(dfImport())) {
+      plotOutput("ct_plotu_chart", height=400)
+    } else {
+      plotOutput("ct_plotu_chart", height=400,
+                 hover = hoverOpts(
+                   id = "ct_plotu_hover",
+                   delay = 100,
+                   nullOutside = T))
+    }
   })
   
   output$ct_plot_point <- renderText({
@@ -1179,43 +1203,47 @@ observeEvent(input$cmdReport, {
     }})
   
   output$ntc_plotu_chart <- renderPlot({
-    if(is.null(dfImport())) return(NULL)
-    
-    grafntcdata <- dfActionCircuit()
- 
-    if(is.null(input$ncu_circuit)) {
-      grafntcdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
+    if(is.null(dfImport())) {
+      ggplot()+
+        coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
+        annotate("text", x=-1, y=1,
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE WHEN LOG DATA ARE LOADED")', parse=T, 
+                 size=5)+theme_void()
     } else {
-      if(input$simplified_common) {
-        grafntcdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ncu_circuit
+      grafntcdata <- dfActionCircuit()
+   
+      if(is.null(input$ncu_circuit)) {
+        grafntcdata$sel <- rep(FALSE,nrow(dfActionCircuit()))
       } else {
-        grafntcdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ncu_circuit
+        if(input$simplified_common) {
+          grafntcdata$sel <- dfActionCircuit()$CircuitoSimplificado == input$ncu_circuit
+        } else {
+          grafntcdata$sel <- dfActionCircuit()$CircuitoNormalizado == input$ncu_circuit
+        }
       }
+      
+      grafntcdata <- grafntcdata %>% group_by(Alumno) %>%
+        summarise(Len=sum(sel,na.rm=TRUE),.groups="drop")
+  
+      grafntcdata <- merge(sumxStud_ext, grafntcdata, all=T)
+      grafntcdata[is.na(grafntcdata)] <- 0
+      
+  
+      g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
+        geom_bar(stat="identity",width = 0.7,fill="steelblue") +
+        theme(axis.title = element_text(size=14),
+              axis.text= element_text(size=11),
+              axis.text.x=element_text(angle = 90, vjust = 0.5),
+              axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
+        labs(x = "User", y= "Times Tested")
+      
+      if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
+      
+      g
     }
-    
-    grafntcdata <- grafntcdata %>% group_by(Alumno) %>%
-      summarise(Len=sum(sel,na.rm=TRUE),.groups="drop")
-
-    grafntcdata <- merge(sumxStud_ext, grafntcdata, all=T)
-    grafntcdata[is.na(grafntcdata)] <- 0
-    
-
-    g <- ggplot(grafntcdata,aes(x=Alumno, y=Len)) + theme_bw() +
-      geom_bar(stat="identity",width = 0.7,fill="steelblue") +
-      theme(axis.title = element_text(size=14),
-            axis.text= element_text(size=11),
-            axis.text.x=element_text(angle = 90, vjust = 0.5),
-            axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0))) +
-      labs(x = "User", y= "Times Tested")
-    
-    if(nrow(dfACxStud())>50) g <- g + theme(axis.text.x = element_blank())
-    
-    g
   })
   
   output$ntc_plotu <- renderUI({
-    if(is.null(dfImport())) return(NULL)
-    
     plotOutput("ntc_plotu_chart", height=400)
   })
   
@@ -1378,42 +1406,51 @@ observeEvent(input$cmdReport, {
   
 ## List of unique circuits ####  
   output$lcn_circuits <- renderDataTable({
-    if(is.null(dfImport())) return(NULL)
-    
-    df5 <-dfActionCircuit()[dfActionCircuit()$Alumno == input$ns_student,]
-    
-    if(input$simplified_list) {
-      df5 <- df5 %>% group_by(Alumno,CircuitoSimplificado) %>% 
-        summarise(TimTes=length(CircuitoSimplificado),.groups="drop") %>% 
-        arrange(desc(TimTes)) %>%
-        select(CircuitoSimplificado,TimTes)
+    if(is.null(dfImport())) {
+      datatable(data.frame(character(0)), 
+                class="display",
+                colnames = '')
+    } else { 
       
-      names(df5)[names(df5) == 'CircuitoSimplificado'] <- 'Simplified Circuit'
-      names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
-    } else {
-      df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>%
-        summarise(TimTes=length(CircuitoNormalizado),.groups="drop") %>%
-        arrange(desc(TimTes)) %>%
-        select(CircuitoNormalizado,TimTes)
+      df5 <-dfActionCircuit()[dfActionCircuit()$Alumno == input$ns_student,]
       
-      names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuit'
-      names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+      if(input$simplified_list) {
+        df5 <- df5 %>% group_by(Alumno,CircuitoSimplificado) %>% 
+          summarise(TimTes=length(CircuitoSimplificado),.groups="drop") %>% 
+          arrange(desc(TimTes)) %>%
+          select(CircuitoSimplificado,TimTes)
+        
+        names(df5)[names(df5) == 'CircuitoSimplificado'] <- 'Simplified Circuit'
+        names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+      } else {
+        df5 <- df5 %>% group_by(Alumno,CircuitoNormalizado) %>%
+          summarise(TimTes=length(CircuitoNormalizado),.groups="drop") %>%
+          arrange(desc(TimTes)) %>%
+          select(CircuitoNormalizado,TimTes)
+        
+        names(df5)[names(df5) == 'CircuitoNormalizado'] <- 'Normalized Circuit'
+        names(df5)[names(df5) == 'TimTes'] <- 'Times Tested'
+      }
+     
+      datatable(df5)
     }
-   
-    datatable(df5)
   })
 
 ## History of circuits ####    
   output$hc_circuits <- renderDataTable({
-    if(is.null(dfImport())) return(NULL)
-    
-    df6 <-dfActionCircuit()[dfActionCircuit()$Alumno == input$ns_student,] %>%
-      mutate(Time=round(Time,digits = 2),
-             `Sent Date`=FechaHoraEnvio,
-             `Coded Circuit`= Circuito) %>% 
-      select(Time,`Sent Date`,`Coded Circuit`,Measure)
-   
-    datatable(df6)
+    if(is.null(dfImport())) {
+      datatable(data.frame(character(0)), 
+                class="display",
+                colnames = '')
+    } else { 
+      df6 <-dfActionCircuit()[dfActionCircuit()$Alumno == input$ns_student,] %>%
+        mutate(Time=round(Time,digits = 2),
+               `Sent Date`=FechaHoraEnvio,
+               `Coded Circuit`= Circuito) %>% 
+        select(Time,`Sent Date`,`Coded Circuit`,Measure)
+     
+      datatable(df6)
+    }
   })
 
 #### WORK INDICATORS ####  
@@ -1423,7 +1460,7 @@ observeEvent(input$cmdReport, {
       ggplot()+
         coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
         annotate("text", x=-1, y=1,
-                        vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                        vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                         size=5)+theme_void()
     } else {
       visirtrMilestonesDifficulty(dfStudentsMilestones())
@@ -1436,7 +1473,7 @@ observeEvent(input$cmdReport, {
       ggplot()+
         coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
         annotate("text", x=-1, y=1,
-                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                  size=5)+theme_void()
     } else {
       visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
@@ -1449,7 +1486,7 @@ observeEvent(input$cmdReport, {
       ggplot()+
         coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
         annotate("text", x=-1, y=1,
-                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                  size=5)+theme_void()
     } else {
       visirtrMilestonesDifficulty(dfStudentsMilestonesEv()[,-ncol(dfStudentsMilestonesEv())])
@@ -1462,7 +1499,7 @@ observeEvent(input$cmdReport, {
       ggplot()+
         coord_cartesian(xlim=c(-1,1),ylim=c(-1,1))+
         annotate("text", x=-1, y=1,
-                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF OBSERVATION ITEMS ARE LOADED")', parse=T, 
+                 vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                  size=5)+theme_void()
     } else {
       visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL)

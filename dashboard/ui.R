@@ -121,7 +121,7 @@ ui <- dashboardPage(
 ),
 
       tabItem("timeana",
-        tabBox(height=480, width=12,
+        tabBox(height=600, width=12,
           tabPanel("Time Distribution", 
             fluidRow(
               valueBoxOutput("mintimespend",width = 3),
@@ -162,7 +162,7 @@ ui <- dashboardPage(
   
       
       tabItem("numcircu",
-              tabBox(height=480, width=12,
+              tabBox(height=600, width=12,
                      tabPanel( "Experiments Distribution",
                                fluidRow(
                                  valueBoxOutput("lowbound",width = 3),
@@ -220,7 +220,7 @@ ui <- dashboardPage(
       ),
       
       tabItem("circvstim",
-        tabBox(height=480, width=12,
+        tabBox(height=600, width=12,
           tabPanel( "Experiments vs Time",
             fluidRow(
               box(status="primary",
@@ -249,25 +249,31 @@ ui <- dashboardPage(
             box(status = "primary",
                 collapsible = FALSE, width=12,
               checkboxInput("simplified_common","Check to use simplified circuits (normalized circuits when unchecked)"),
-              tabBox(height=480, width=12,
+              tabBox(height=600, width=12,
                  tabPanel("Common Circuits",
                           fluidRow(box(status="primary",
+                                       textOutput("cc_circuits_explained"),
+                                       tags$br(),
                                        dataTableOutput("cc_circuits"), 
-                                       height=480, width=12))
+                                       height=600, width=12))
                  ),
                  tabPanel("Circuit in Timeline",
                           fluidRow(box(status="primary",
                                        htmlOutput("ct_selectCircuit"),
-                                       uiOutput("ct_plotu"),
                                        verbatimTextOutput("ct_plot_point"),
-                                       height=540, width=12))
+                                       uiOutput("ct_plotu"),
+                                       tags$br(),
+                                       textOutput("ct_plotu_explained"),
+                                       height=600, width=12))
                  ),
                  tabPanel("Circuit per User",
                           fluidRow(box(status="primary",
                                        htmlOutput("ntc_selectCircuit"),
-                                       uiOutput("ntc_plotu"),
                                        verbatimTextOutput("ntc_plot_point"),
-                                       height=540, width=12)))
+                                       uiOutput("ntc_plotu"),
+                                       tags$br(),
+                                       textOutput("ntc_plotu_explained"),
+                                       height=600, width=12)))
             )))
   ),
   
@@ -276,7 +282,7 @@ ui <- dashboardPage(
             box(status = "primary",
                 collapsible = FALSE, height=750, width=12,
               htmlOutput("spr_selectStudent"), 
-              tabBox(height=540, width=12,
+              tabBox(height=600, width=12,
                 tabPanel("Summary",
                   fluidRow(
                     valueBoxOutput("numStudActions",width = 3),
@@ -295,31 +301,55 @@ ui <- dashboardPage(
                  fluidRow(
                    box(status="primary",
                      checkboxInput("simplified_list","Check to use simplified circuits (normalized circuits when unchecked)"),
+                     textOutput("lcn_circuits_explained"),
+                     tags$br(),
                      dataTableOutput("lcn_circuits"), 
-                                height=480, width=12))),
+                                height=600, width=12))),
     
                 tabPanel("History of Experiments",
                   fluidRow(box(status="primary",
+                          textOutput("hc_circuits_explained"),
+                          tags$br(),
                           dataTableOutput("hc_circuits"), 
-                          height=480, width=12)))
+                          height=600, width=12)))
   )))
   ),
 
   tabItem("obsitems",
-          tabBox(height=480, width=12,
+          tabBox(height=600, width=12,
                  tabPanel("Group Performance",
-                          fluidRow(box(status="primary", plotOutput("proportionbars"),height=480, width=12)
+                          fluidRow(
+                            box(status="primary",
+                                plotOutput("proportionbars"),
+                                tags$br(),
+                                textOutput("proportionbars_explained"),
+                                height=600, width=12)
                           )),
-                 tabPanel("Performance per User",fluidRow(box(status="primary", plotOutput("heatmap"),
-                                                 height=480, width=12))))),
+                 tabPanel("Performance per User",
+                          fluidRow(
+                            box(status="primary",
+                                plotOutput("heatmap"),
+                                tags$br(),
+                                textOutput("heatmap_explained"),
+                                height=600, width=12))))),
   
   tabItem("evmil",
-          tabBox(height=480, width=12,
+          tabBox(height=600, width=12,
                  tabPanel("Group Performance",
-                          fluidRow(box(status="primary", plotOutput("evproportionbars"),height=480, width=12)
+                          fluidRow(
+                            box(status="primary",
+                                plotOutput("evproportionbars"),
+                                tags$br(),
+                                textOutput("evproportionbars_explained"),
+                                height=600, width=12)
                           )),
-                 tabPanel("Performance per User",fluidRow(box(status="primary", plotOutput("evheatmap"),
-                                                 height=480, width=12)))))
+                 tabPanel("Performance per User",
+                          fluidRow(
+                            box(status="primary",
+                                plotOutput("evheatmap"),
+                                tags$br(),
+                                textOutput("evheatmap_explained"),
+                                height=600, width=12)))))
     )
   )
 )  
