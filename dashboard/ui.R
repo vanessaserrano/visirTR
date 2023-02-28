@@ -249,7 +249,7 @@ ui <- dashboardPage(
             box(status = "primary",
                 collapsible = FALSE, width=12,
               checkboxInput("simplified_common","Check to use simplified circuits (normalized circuits when unchecked)"),
-              tabBox(height=600, width=12,
+              tabBox(height=700, width=12,
                  tabPanel("Common Circuits",
                           fluidRow(box(status="primary",
                                        textOutput("cc_circuits_explained"),
@@ -264,7 +264,7 @@ ui <- dashboardPage(
                                        uiOutput("ct_plotu"),
                                        tags$br(),
                                        textOutput("ct_plotu_explained"),
-                                       height=600, width=12))
+                                       height=700, width=12))
                  ),
                  tabPanel("Circuit per User",
                           fluidRow(box(status="primary",

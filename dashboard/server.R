@@ -1066,8 +1066,8 @@ observeEvent(input$cmdReport, {
            " circuits sorted by decreasing frequency in the log data. ",
            ifelse(input$simplified_common,
                   paste0("An empty simplified circuit means a circuit with",
-                  " errors in the connection on the multimeter."),
-                  ""))
+                  " errors in the connections to the multimeter."),
+                  "An empty normalized circuit means that no components have been added to the breadboard."))
   })
   
 ## Circuit in timeline ####
@@ -1176,6 +1176,20 @@ observeEvent(input$cmdReport, {
       return (paste("User:",response[1]))
   })
   
+  output$ct_plotu_explained <- renderText({
+    if(is.null(dfActionCircuit())) return(NULL)
+    
+    paste0("This chart shows the experiments performed by each user within their timeline. ",
+           "Experiments corresponding the selected ",
+           ifelse(input$simplified_common,
+                  "simplified","normalized"),
+           " circuit are circled in red color. ",
+           "By default, the empty circuit is selected. ",
+           "The line chart indicates the total time of work per user. Users are ordered by
+           ascending total time of work. ")
+  }) 
+  
+
   ## Circuit per User ####
   output$ntc_selectCircuit <- renderUI({
     if(is.null(dfImport())) return(NULL)
@@ -1247,7 +1261,20 @@ observeEvent(input$cmdReport, {
     plotOutput("ntc_plotu_chart", height=400)
   })
   
-
+  
+  output$ntc_plotu_explained <- renderText({
+    if(is.null(dfActionCircuit())) return(NULL)
+    
+    paste0("This chart shows the number of experiments performed by each user that ",
+           "correspond to the selected ",
+           ifelse(input$simplified_common,
+                  "simplified","normalized"),
+           " circuit. By default, the empty circuit is selected. ",
+           "Users are ordered by ascending total time of work, as in the previous chart. ")
+  }) 
+  
+  
+  
   #### USER-SPECIFIC RESULTS ####
   ### >> USER RESULTS ####
   
@@ -1436,6 +1463,21 @@ observeEvent(input$cmdReport, {
     }
   })
 
+  output$lcn_circuits_explained <- renderText({
+    if(is.null(dfImport())) return(NULL)
+    
+    paste0("This table lists the ",
+           ifelse(input$simplified_list,
+                  "simplified","normalized"),
+           " circuits built by the selected user, sorted by decreasing frequency in the log data. ",
+           "Users are sorted alfabetically and the first one is selected by default. ",
+           ifelse(input$simplified_list,
+                  paste0("An empty simplified circuit means a circuit with",
+                         " errors in the connections to the multimeter."),
+                  "An empty normalized circuit means that no components have been added to the breadboard."))
+  })
+  
+  
 ## History of circuits ####    
   output$hc_circuits <- renderDataTable({
     if(is.null(dfImport())) {
@@ -1448,11 +1490,22 @@ observeEvent(input$cmdReport, {
                `Sent Date`=FechaHoraEnvio,
                `Coded Circuit`= Circuito) %>% 
         select(Time,`Sent Date`,`Coded Circuit`,Measure)
-     
-      datatable(df6)
+      
+      rownames(df6) <- NULL
+      datatable(df6, rownames = T)
     }
   })
 
+  output$hc_circuits_explained <- renderText({
+    if(is.null(dfImport())) return(NULL)
+    
+    paste0("This table lists all the experiments performed by the selected user, sorted ",
+           "chronologically. ",
+           "Users are sorted alfabetically and the first one is selected by default. ",
+           "The table includes the measurement done in the experiment. An error there mean that ",
+           "the measurement was wrongly set up.")
+  })
+  
 #### WORK INDICATORS ####  
 ### >> OBSERVATION ITEMS ####
   output$proportionbars <- renderPlot ({
