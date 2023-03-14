@@ -335,7 +335,7 @@ ui <- dashboardPage(
   
   tabItem("evmil",
           tabBox(height=600, width=12,
-                 tabPanel("Group Performance",
+                 tabPanel("Group Achievement",
                           fluidRow(
                             box(status="primary",
                                 plotOutput("evproportionbars"),
@@ -343,7 +343,7 @@ ui <- dashboardPage(
                                 textOutput("evproportionbars_explained"),
                                 height=600, width=12)
                           )),
-                 tabPanel("Performance per User",
+                 tabPanel("Achievement per User",
                           fluidRow(
                             box(status="primary",
                                 plotOutput("evheatmap"),

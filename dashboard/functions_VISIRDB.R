@@ -1214,7 +1214,7 @@ getdfOIColors <- function(dfObsItems, dfEVMil) {
 
 #GRAPHS
 #With milestones.
-visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
+visirtrMilestonesDifficulty <- function(bMilestones=NULL, evaluation = F) {
   if (is.null(bMilestones)) return(NULL) 
 
   vecExits<-100*apply(bMilestones[,-1],2,sum)
@@ -1224,7 +1224,8 @@ visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
   
   g <- ggplot(df,aes(x=OItems, y=Percent)) +
     geom_bar(stat="identity", color=NA, fill="#00a676")+
-    labs(x="Work Indicator", y="Performance, in %")+
+    labs(x=ifelse(evaluation, "Assessment milestone", "Observation item"),
+         y=ifelse(evaluation,"Achievement, in %","Performance, in %"))+
     scale_x_discrete(limits=rev(levels(as.factor(df$OItems)))) +
     scale_y_continuous(limits = c(0,100), expand=c(0.01,0.01)) +
     coord_flip() +
@@ -1235,7 +1236,7 @@ visirtrMilestonesDifficulty <- function(bMilestones=NULL) {
   g
 }
 
-visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
+visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL, evaluation=F) {
   if (is.null(bMilestones)) return(NULL)
   
   nMilestones<-data.matrix(bMilestones[,-1])
@@ -1258,7 +1259,8 @@ visirtrHeatMapAchievedMilestonePerId<-function(bMilestones=NULL,labels=NULL) {
   g <- ggplot(data = bMilestonesL, aes(x = Alumno, y = WorkIndicator)) + 
     theme_bw() +
     geom_tile(aes(fill=Achieved), width=0.9, height=0.9) +
-    labs(x ="User", y= "Work Indicator") +
+    guides(fill=guide_legend(title=ifelse(evaluation, "Achieved", "Performed"))) +
+    labs(x ="User", y= ifelse(evaluation, "Assessment milestone", "Observation item")) +
     theme(axis.title = element_text(size=14),
           axis.text= element_text(size=11),
           legend.title = element_text(size=14),

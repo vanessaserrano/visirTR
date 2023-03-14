@@ -1502,7 +1502,7 @@ observeEvent(input$cmdReport, {
     paste0("This table lists all the experiments performed by the selected user, sorted ",
            "chronologically. ",
            "Users are sorted alfabetically and the first one is selected by default. ",
-           "The table includes the measurement done in the experiment. An error there mean that ",
+           "The table includes the measurement done in the experiment. An error there means that ",
            "the measurement was wrongly set up.")
   })
   
@@ -1516,8 +1516,15 @@ observeEvent(input$cmdReport, {
                         vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                         size=5)+theme_void()
     } else {
-      visirtrMilestonesDifficulty(dfStudentsMilestones())
+      visirtrMilestonesDifficulty(dfStudentsMilestones(), evaluation=F)
     }
+  })
+  
+  output$proportionbars_explained <- renderText({
+    if(is.null(dfStudentsMilestones())) return(NULL)
+    
+    paste0("This bar chart shows the percentage of users that performed each observation item ",
+           "anytime in their resolution process.")
   })
   
   #Heatmap
@@ -1529,9 +1536,17 @@ observeEvent(input$cmdReport, {
                  vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                  size=5)+theme_void()
     } else {
-      visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL)
+      visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestones(),labels=NULL, evaluation = F)
     }
   })
+  
+  output$heatmap_explained <- renderText({
+    if(is.null(dfStudentsMilestones())) return(NULL)
+    
+    paste0("The heatmap above indicates whether each user performed each observation item, ",
+           "anytime in the resolution process.")
+  })
+  
   
 ### >> ASSESSMENT MILESTONES ####
   output$evproportionbars <- renderPlot ({
@@ -1542,8 +1557,18 @@ observeEvent(input$cmdReport, {
                  vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                  size=5)+theme_void()
     } else {
-      visirtrMilestonesDifficulty(dfStudentsMilestonesEv()[,-ncol(dfStudentsMilestonesEv())])
+      visirtrMilestonesDifficulty(dfStudentsMilestonesEv()[,-ncol(dfStudentsMilestonesEv())],
+                                  evaluation = !is.null(input$evMilestonesImport))
     }
+  })
+  
+  output$evproportionbars_explained <- renderText({
+    if(is.null(dfStudentsMilestones())) return(NULL)
+    
+    paste0("This bar chart shows the percentage of users that achieved each assessment milestone ",
+           "anytime in their resolution process. ",
+           ifelse(is.null(input$evMilestonesImport), 
+              "As assessment milestones have not been loaded, observation items are used in their place.", ""))
   })
   
   #Heatmap
@@ -1555,8 +1580,18 @@ observeEvent(input$cmdReport, {
                  vjust=1, hjust=0, label='bold("THIS CHART WILL BE AVAILABLE ONLY IF LOG DATA AND OBSERVATION ITEMS ARE LOADED")', parse=T, 
                  size=5)+theme_void()
     } else {
-      visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL)
+      visirtrHeatMapAchievedMilestonePerId(dfStudentsMilestonesEv()[,1:(ncol(dfStudentsMilestonesEv())-1)],labels=NULL,
+                                           evaluation = !is.null(input$evMilestonesImport))
     }
+  })
+
+  output$evheatmap_explained <- renderText({
+    if(is.null(dfStudentsMilestones())) return(NULL)
+    
+    paste0("The heatmap above indicates whether each user achieved each assessment milestone, ",
+           "anytime in the resolution process. ",
+           ifelse(is.null(input$evMilestonesImport), 
+              "As assessment milestones have not been loaded, observation items are used in their place.", ""))
   })
   
 
