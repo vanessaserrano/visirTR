@@ -1312,6 +1312,6 @@ nActVStoTVSGrade <- function (dfStudents=NULL, dfStudentsMilestones=NULL, id=NUL
 showReport <- function() {
   reportName <- paste0("reportVISIRDB_",
                        format(Sys.time(),"%Y%m%d%H%M%S"), ".html")
-  rmarkdown::render("reportVISIRDB.Rmd", output_file=reportName)
+  knitr::knit2html("reportVISIRDB.Rmd", output=reportName)
   pander::openFileInOS(reportName)
 }

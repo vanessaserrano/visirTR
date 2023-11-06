@@ -1,12 +1,12 @@
 options(install.packages.check.source = "no",
         shiny.maxRequestSize=5*1024^3)
 
-pckgs<-c("rmarkdown","pander",
+pckgs<-c("pander",
          "shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
          "tidyverse","XML","DT","gplots",
          "xts","dygraphs","scales",
          "formattable","treemap","viridis","cat","gsubfn","vroom",
-         "parallel")
+         "parallel", "markdown", "knitr")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
 for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/",
