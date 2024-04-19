@@ -292,21 +292,31 @@ import_logFile <- function(inFile,sessionID) {
   linesToSkip <- min(which(clines)) - 1
   
   df <- vroom(filePath, col_names=F, delim=",", skip=linesToSkip,
-              quote="\"", n_max=10)
+              quote="\"", n_max=1000)
   
-  if (ncol(df) == 7) {
+  if (length(unique(pull(df[,1]))) == 1) {
     df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+                col_names=c("TBR","Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                            "DatosEnviadosXML","DatosRecibidosXML"),
+                col_types="ccccccc", escape_double = T, escape_backslash = F,
+                skip = linesToSkip)
+    df <- df[,-1]
+    df$Tarea <- NA
+  } else {
+    if (ncol(df) == 7) {
+      df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
                 col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
                             "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
                 col_types="ccccccc", escape_double = T, escape_backslash = F,
                 skip = linesToSkip)
-  } else {
-    df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+    } else {
+      df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
                 col_names=c("TBR", "Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
                             "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
                 col_types="cccccccc", escape_double = T, escape_backslash = F,
                 skip = linesToSkip)
-    df <- df[,-1]
+      df <- df[,-1]
+    }
   }
 
   # status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
@@ -319,7 +329,13 @@ create_dfActions <- function(df,sessionID) {
   if (is.null(df)) return(NULL)
   print(paste("pre-Act-",format(Sys.time(),"%Y%m%d%H%M%S")))
   
-  df$Dates <- format(as.Date(df$FechaHoraEnvio, format="%Y-%m-%d %H:%M:%S"),"%Y-%m-%d")
+  df$FechaHoraEnvio <- gsub("T"," ",df$FechaHoraEnvio)
+  df$FechaHoraRespuesta <- gsub("T"," ",df$FechaHoraRespuesta)
+  
+  df$Dates <- format(as.Date(df$FechaHoraEnvio,
+                             format="%Y-%m-%d %H:%M:%S"),
+                     "%Y-%m-%d")
+
   df$DatosEnviadosXML <- gsub("\n","", df$DatosEnviadosXML, fixed=T)
   df$DatosRecibidosXML <- gsub("\n","", df$DatosRecibidosXML, fixed=T)
   
@@ -328,17 +344,18 @@ create_dfActions <- function(df,sessionID) {
                              df$FechaHoraEnvio,
                              df$DatosEnviadosXML,
                              df$DatosRecibidosXML)),]
-
   # filtering for DC
-  sel <- !grepl("VFGENA_1_1",df$DatosEnviadosXML) &
-    !grepl("D_X",df$DatosEnviadosXML) &
-    !grepl("C_X",df$DatosEnviadosXML) &
-    !grepl("L_X",df$DatosEnviadosXML) &
-    !grepl("OP_X",df$DatosEnviadosXML) &
-    !grepl("POT_X",df$DatosEnviadosXML) &
-    !grepl(" PROBE",df$DatosEnviadosXML)
+  prefix <- "<request>.*<circuit>.*"
+  sel <- !grepl(paste0(prefix,"VFGENA_1_1"),df$DatosEnviadosXML) &
+    !grepl(paste0(prefix,"D_X"),df$DatosEnviadosXML) &
+    !grepl(paste0(prefix,"C_X"),df$DatosEnviadosXML) &
+    !grepl(paste0(prefix,"CE_X"),df$DatosEnviadosXML) &
+    !grepl(paste0(prefix,"L_X"),df$DatosEnviadosXML) &
+    !grepl(paste0(prefix,"OP_X"),df$DatosEnviadosXML) &
+    !grepl(paste0(prefix,"POT_X"),df$DatosEnviadosXML) &
+    !grepl(paste0(prefix," PROBE"),df$DatosEnviadosXML)
   df <- df[sel,]
-
+  
   # status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
   # save(status, file=paste0(sessionID,"_imp.rda"))  
   print(paste("post-Act-",format(Sys.time(),"%Y%m%d%H%M%S")))
@@ -430,7 +447,7 @@ create_dfActionCircuit <- function (dfActionTime) {
   tempCircuitos<-as.character(rep(NA,numCircuitos))
   for(i in 1:numCircuitos){
     #El primer resultat de regexec es el match global, el 2:n son els extrets
-    tempRegExpCircuito<-regexec("<circuitlist>([^<]*)",as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
+    tempRegExpCircuito<-regexec("<circuitlist>([^<]*)</circuitlist>",as.character(dfVISIR_accionesCircuito$DatosEnviadosXML[i]))
     tempCircuitos[i]<-substr(dfVISIR_accionesCircuito$DatosEnviadosXML[i],tempRegExpCircuito[[1]][2],
                              tempRegExpCircuito[[1]][2]+attr(tempRegExpCircuito[[1]],"match.length")[2]-1)
   }
@@ -746,7 +763,7 @@ plotDistribution <- function(values=NA,minValues=NULL,maxValues=NULL,xlabel="") 
   g <- ggplot(data=NULL,aes(x=values)) +
     geom_histogram(color="black", alpha=.2, fill="skyblue",
                    binwidth=bw2, boundary=ggmaxValues)+ 
-    geom_density(aes(x=values,y=..density..*length(values)*bw2),
+    geom_density(aes(x=values,y=after_stat(density)*length(values)*bw2),
               color="#CC6600", size=1) + 
     geom_vline(aes(xintercept=mean(values)), linetype="dashed", size=1)
   if(length(values) <=100) g <- g + geom_rug(alpha=0.5)
@@ -1310,7 +1327,10 @@ nActVStoTVSGrade <- function (dfStudents=NULL, dfStudentsMilestones=NULL, id=NUL
 
 #### REPORT ####
 showReport <- function() {
-  reportName <- paste0(tempdir(),"/reportVISIRDB_",
+  Sys.umask("011")
+  td <- tempdir()
+  dir.create(td, showWarnings = FALSE, recursive = FALSE, mode = "766")
+  reportName <- paste0(td,"/reportVISIRDB_",
                        format(Sys.time(),"%Y%m%d%H%M%S"), ".html")
   reportName <- knitr::knit2html("reportVISIRDB.Rmd", output=reportName)
   pander::openFileInOS(normalizePath(reportName))

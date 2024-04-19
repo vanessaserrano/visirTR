@@ -1,7 +1,7 @@
 ui <- dashboardPage( 
   skin="yellow",
   dashboardHeader(
-    title="VISIR-DB",
+    title="VISIR/HIVE-DB",
     tags$li(class = "dropdown",
             style = "padding:16px; margin:auto;",
             textOutput("inProgress", inline =T)),
