@@ -46,6 +46,7 @@ normalizarCircuito<-function(x) {
   circuito <- as.character(x)
   circuito <- gsub("([^A-Z0-9])0([^A-Z0-9])", "\\1GND\\2", circuito)
   circuito <- gsub("([^A-Z0-9])0$", "\\1GND", circuito)
+  circuito <- gsub("([^A-Z0-9])0[/]", "\\1GND/", circuito)
   
   ## Cambio de codificaciones en los nodos
   circuito <- gsub("A([0-9][^0-9])", "A0\\1", circuito)
@@ -73,11 +74,15 @@ normalizarCircuito<-function(x) {
       conectores[2] <- aux
     }
     
-    if(conectores[1] == "W_X" & substr(conectores[2],1,1) =="A") {
-      componentes <- gsub(conectores[2], conectores[3], componentes, fixed=TRUE)
+    if(conectores[1] == "W_X" & conectores[2] == conectores[3]) {
       componentes[i] <- ""
     } else {
-      componentes[i] <- paste(conectores, collapse=" ")
+      if(conectores[1] == "W_X" & substr(conectores[2],1,1) =="A") {
+        componentes <- gsub(conectores[2], conectores[3], componentes, fixed=TRUE)
+        componentes[i] <- ""
+      } else {
+        componentes[i] <- paste(conectores, collapse=" ")
+      }
     }
   }
   componentes <- componentes[order(gsub("A[0-9][0-9]","Axx",componentes))]
@@ -287,38 +292,108 @@ import_logFile <- function(inFile,sessionID) {
   logFileName_ext <<- inFile$name  
   filePath <- inFile$datapath
   
-  lines <- vroom_lines(filePath, n_max = 20)
-  clines <- grepl(",",lines)
-  linesToSkip <- min(which(clines)) - 1
-  
-  df <- vroom(filePath, col_names=F, delim=",", skip=linesToSkip,
-              quote="\"", n_max=1000)
-  
-  if (length(unique(pull(df[,1]))) == 1) {
-    df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
-                col_names=c("TBR","Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
-                            "DatosEnviadosXML","DatosRecibidosXML"),
-                col_types="ccccccc", escape_double = T, escape_backslash = F,
-                skip = linesToSkip)
-    df <- df[,-1]
-    df$Tarea <- NA
-  } else {
-    if (ncol(df) == 7) {
+  if(grepl("[.]csv$",inFile$name, ignore.case = T)) {
+    lines <- vroom_lines(filePath, n_max = 20)
+    clines <- grepl(",",lines)
+    linesToSkip <- min(which(clines)) - 1
+    
+    df <- vroom(filePath, col_names=F, delim=",", skip=linesToSkip,
+                quote="\"", n_max=1000)
+    
+    if (length(unique(pull(df[,1]))) == 1) {
       df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
-                col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
-                            "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
-                col_types="ccccccc", escape_double = T, escape_backslash = F,
-                skip = linesToSkip)
-    } else {
-      df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
-                col_names=c("TBR", "Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
-                            "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
-                col_types="cccccccc", escape_double = T, escape_backslash = F,
-                skip = linesToSkip)
+                  col_names=c("TBR","Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                              "DatosEnviadosXML","DatosRecibidosXML"),
+                  col_types="ccccccc", escape_double = T, escape_backslash = F,
+                  skip = linesToSkip)
       df <- df[,-1]
+      df$Tarea <- NA
+    } else {
+      if (ncol(df) == 7) {
+        df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+                  col_names=c("Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                              "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
+                  col_types="ccccccc", escape_double = T, escape_backslash = F,
+                  skip = linesToSkip)
+      } else {
+        df <- vroom(filePath, delim=",", quote="\"", na=c("NA"), show_col_types = F,
+                  col_names=c("TBR", "Alumno","Sesion","FechaHoraEnvio","FechaHoraRespuesta",
+                              "DatosEnviadosXML","DatosRecibidosXML","Tarea"),
+                  col_types="cccccccc", escape_double = T, escape_backslash = F,
+                  skip = linesToSkip)
+        df <- df[,-1]
+      }
     }
   }
-
+  if(grepl("[.]json$",inFile$name, ignore.case = T)) {
+    lines <- vroom_lines(filePath)
+    lines_ext <<- lines
+    
+    alumnos <- regexpr('"user_id": ".*?"',lines)
+    alumnos <- substr(lines, alumnos + 12, alumnos + attr(alumnos, "match.length") - 2) 
+    
+    sesiones <- regexpr('"session_id": ".*?"',lines)
+    sesiones <- substr(lines, sesiones + 15, sesiones + attr(sesiones, "match.length") - 2) 
+    
+    horasE <- regexpr('"request_start_time": ".*?"',lines)
+    horasE <- substr(lines, horasE + 23, horasE + attr(horasE, "match.length") - 2) 
+    
+    horasR <- regexpr('"request_end_time": ".*?"',lines)
+    horasR <- substr(lines, horasR + 21, horasR + attr(horasR, "match.length") - 2) 
+    
+    # We assume that HIVE json logs only include experiments
+    datosE_circ <- regexpr('"req": ".*?"',lines)
+    datosE_circ <- substr(lines, datosE_circ + 8, datosE_circ +
+                            attr(datosE_circ, "match.length") - 4)
+    datosE_circ <- gsub("\\n", "\n", datosE_circ, fixed=T)
+    
+    datosE_mm <- grepl('"dmm":',lines)
+    datosE_mm_mode <- regexpr('"mode": ".*?"',lines)
+    datosE_mm_mode <- substr(lines, datosE_mm_mode + 9, datosE_mm_mode +
+                               attr(datosE_mm_mode, "match.length") - 2) 
+    
+    # Multimeter resolution is set to 3.5 as fixed default
+    datosE_mm <- ifelse(datosE_mm,
+                        paste0("<multimeter id=\"1\"><dmm_function value=\"",
+                               datosE_mm_mode,
+                               "\"></dmm_function><dmm_resolution value=\"3.5\"></dmm_resolution></multimeter>"),
+                        "")
+    
+    datosE <- paste0("<protocol version=\"internal\"><request><circuit><circuitlist>",
+                     datosE_circ,
+                     "</circuitlist></circuit>",
+                     datosE_mm,
+                     "</request></protocol>")
+    
+    
+    datosR_result <- regexpr('"dmm_1": [{]"result": [-e.0-9]*',lines)
+    datosR_result <- substr(lines, datosR_result + 20, datosR_result +
+                            attr(datosR_result, "match.length")-1)
+    
+    # Multimeter resolution is set to 3.5 as fixed default
+    # Power source voltage is not available in HIVE (TO BE REMEMBERED
+    # WHEN CREATING MILESTONES)
+    datosR <- paste0("<protocol version=\"internal\"><response><multimeter id=\"1\">",
+                     "<dmm_function value=\"",
+                     datosE_mm_mode,
+                     "\"/><dmm_resolution value=\"3.5\"/>",
+                     "<dmm_result value=\"",
+                     datosR_result,
+                     "\"/></multimeter>",
+                     "<dcpower><dc_outputs></dc_outputs></dcpower>",
+                     "</response></protocol>")
+    
+    df <- data.frame(
+      Alumno=alumnos,
+      Sesion=sesiones,
+      FechaHoraEnvio=horasE,
+      FechaHoraRespuesta=horasR,
+      DatosEnviadosXML=datosE,
+      DatosRecibidosXML=datosR,
+      Tarea="hive"
+    )
+  }
+  
   # status <- paste0("done-", format(Sys.time(),"%Y%m%d%H%M%S"))
   # save(status, file=paste0(sessionID,"_loa.rda"))  
   print(paste("post-Log-",format(Sys.time(),"%Y%m%d%H%M%S")))
@@ -345,7 +420,7 @@ create_dfActions <- function(df,sessionID) {
                              df$DatosEnviadosXML,
                              df$DatosRecibidosXML)),]
   # filtering for DC
-  prefix <- "<request>.*<circuit>.*"
+  prefix <- "<request[^>]*>.*<circuit>.*"
   sel <- !grepl(paste0(prefix,"VFGENA_1_1"),df$DatosEnviadosXML) &
     !grepl(paste0(prefix,"D_X"),df$DatosEnviadosXML) &
     !grepl(paste0(prefix,"C_X"),df$DatosEnviadosXML) &
@@ -524,11 +599,16 @@ create_dfActionCircuit <- function (dfActionTime) {
   dfVISIR_accionesCircuito$MultimetroMal <- !vecMMOKV & !vecMMOKA  #No hay multimetro o estÃ¡ mal conectado
   dfVISIR_accionesCircuito$MultimetroV <- vecMMOKV
   dfVISIR_accionesCircuito$MultimetroA <- vecMMOKA
-  dfVISIR_accionesCircuito$MedidaCorrectaV <- dfVISIR_accionesCircuito$MultimetroV & grepl("dc v",dfVISIR_accionesCircuito$Medida)
+  dfVISIR_accionesCircuito$MedidaCorrectaV <- dfVISIR_accionesCircuito$MultimetroV & 
+    grepl("dc v",dfVISIR_accionesCircuito$Medida)
   
-  dfVISIR_accionesCircuito$MedidaCorrectaA <- dfVISIR_accionesCircuito$MultimetroA & grepl("dc c",dfVISIR_accionesCircuito$Medida)
+  dfVISIR_accionesCircuito$MedidaCorrectaA <- dfVISIR_accionesCircuito$MultimetroA & 
+    grepl("dc c",dfVISIR_accionesCircuito$Medida)
   
-  dfVISIR_accionesCircuito$MedidaCorrectaR <- dfVISIR_accionesCircuito$MultimetroV & grepl("resi",dfVISIR_accionesCircuito$Medida) & !grepl("DC_+",dfVISIR_accionesCircuito$DatosEnviadosXML)
+  # Consider removing check for power source here
+  dfVISIR_accionesCircuito$MedidaCorrectaR <- dfVISIR_accionesCircuito$MultimetroV & 
+    grepl("resi",dfVISIR_accionesCircuito$Medida) & 
+    !grepl("DC_+",dfVISIR_accionesCircuito$DatosEnviadosXML)
   
   Medida <- factor(ifelse(dfVISIR_accionesCircuito$MedidaCorrectaV,"Voltage",
                           ifelse(dfVISIR_accionesCircuito$MedidaCorrectaR,"Resistance",
