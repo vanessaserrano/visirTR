@@ -2,6 +2,7 @@ function(input, output, session) {
   sessionID <- format(Sys.time(),"%Y%m%d%H%M%S")
   
   session$onSessionEnded(function() {
+    save.image()
     files <- dir(pattern="[0-9]{14}.*[.]rda")
     file.remove(files)
     stopApp()
