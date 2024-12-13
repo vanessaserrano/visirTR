@@ -556,7 +556,7 @@ create_dfActionCircuit <- function (dfActionTime) {
   # Para version HTML5
   dfVISIR_accionesCircuito$Circuito<-gsub("DMM_1 DMM_1_1 DMM_1_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
   dfVISIR_accionesCircuito$Circuito<-gsub("DMM_2 DMM_2_1 DMM_2_2","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
-  dfVISIR_accionesCircuito$Circuito<-gsub("V?DC[-+][0-9]*V_[0-9] VDC[-+][0-9]*V_[0-9]_[0-9]","",dfVISIR_accionesCircuito$Circuito)
+  dfVISIR_accionesCircuito$Circuito<-gsub("VDC[-+][0-9]*V_[0-9] VDC[-+][0-9]*V_[0-9]_[0-9]","",dfVISIR_accionesCircuito$Circuito)
   #dfVISIR_accionesCircuito$Circuito<-gsub("VDC+6V_1 VDC+6V_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
   #dfVISIR_accionesCircuito$Circuito<-gsub("VDC+6V_2 VDC+6V_2_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
   #dfVISIR_accionesCircuito$Circuito<-gsub("VDC+25V_1 VDC+25V_1_1","",dfVISIR_accionesCircuito$Circuito,fixed=TRUE)
@@ -1058,7 +1058,7 @@ generatedfActionsMilestones <- function (actions, dfMilestones) {
           evaluated<-evaluated | as.logical(eval(parse(text=postLogicEval[j])))
         }			
       }
-      lisRegExpsElement[j]<-evaluated
+      lisRegExpsElement[j]<-ifelse(is.na(evaluated),F,evaluated)
     }
     dfRegExpsPerElement<-rbind(dfRegExpsPerElement,lisRegExpsElement)
   }
