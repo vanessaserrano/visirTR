@@ -20,12 +20,15 @@ ui <- dashboardPage(
       REMOVE_TO_ENABLE_a[href="#"] {
         z-index: -99999;
       }
+      #StudentsData {background-color:#ffda5b}
       #StrucInfo {background-color:#ffda5b}
       #Glossary {background-color:#ffda5b}
+      
       .skin-yellow .sidebar-menu>li.active>a, .skin-yellow .sidebar-menu>li:hover>a
                          {color: #000fff; background: #001F3F; border-left-color: #001F3F;}
       .small-box p {font-size: 14px;}
       .small-box h3 {font-size: 30px;}
+      
       span#loadingReady.shiny-image-output.shiny-bound-output img,
       span#actionsReady.shiny-image-output.shiny-bound-output img,
       span#timeReady.shiny-image-output.shiny-bound-output img,
@@ -61,6 +64,12 @@ ui <- dashboardPage(
       menuItem("Work Indicators",icon = icon("folder"), startExpanded  = FALSE,
                menuSubItem("Observation Items",tabName = "obsitems"),
                menuSubItem("Assessment Milestones",tabName = "evmil")),
+      menuItem("Data Download",icon = shiny::icon("download"), startExpanded  = FALSE,
+               downloadButton("StudentsData", "Students's Data File", 
+                              icon = NULL,
+                              style='width:175px;
+                                     margin: 6px 5px 6px 15px;
+                                     color: #333333;')),
       menuItem("Help",icon = icon("question-circle"), startExpanded  = FALSE,
                actionButton("StrucInfo", "Dashboard Structure",icon = NULL, style='width:175px'),
                actionButton("Glossary", "Glossary of Terms",icon =  NULL, style='width:175px'))

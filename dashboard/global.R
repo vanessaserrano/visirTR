@@ -6,7 +6,7 @@ pckgs<-c("pander",
          "tidyverse","XML","DT","gplots",
          "xts","dygraphs","scales",
          "formattable","treemap","viridis","cat","gsubfn","vroom",
-         "parallel", "markdown", "knitr")
+         "parallel", "markdown", "knitr", "writexl")
 pckgs2Install<-pckgs[!(pckgs %in% library()$results[,1])]
 pckgs2Load<-pckgs[!(pckgs %in% (.packages()))]
  # for(pckg in pckgs2Install) {install.packages(pckg,repos="https://cloud.r-project.org/",

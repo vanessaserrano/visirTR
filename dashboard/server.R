@@ -34,6 +34,18 @@ function(input, output, session) {
   #     status$loaded <- F
   #   }})
 
+#### CLEAN EXTERN. DATAFRAMES ####
+  dfActionCircuit_ext <<- data.frame()
+  dfActionsObsItems_ext <<- data.frame()
+  dfActionTime_ext <<- data.frame()
+  dfEvMilestones_xUser_ext <<- data.frame()
+  dfImport_ext <<- data.frame()
+  dfLoadLog_ext <<- data.frame()
+  dfObsItems_xUser_ext <<- data.frame()
+  sumxDate_ext <<- data.frame()
+  sumxStud_ext <<- data.frame()
+  sumxStudDate_ext <<- data.frame()
+  
 #### DEFINITIONS & CALCULATIONS ####
 ## Action & Student data ####
   dfLoadLog <- reactive({import_logFile(input$logsImport,sessionID)})
@@ -1595,16 +1607,34 @@ observeEvent(input$cmdReport, {
               "As assessment milestones have not been loaded, observation items are used in their place.", ""))
   })
   
-
+#### DATA DOWNLOAD ####
+  output$StudentsData <- downloadHandler(
+    filename = "StuData.xlsx",
+    content = function(file) {
+        if(nrow(dfObsItems_xUser_ext)==0) { 
+          dfStu <- sumxStud_ext
+        } else {
+          dfStu <- merge(sumxStud_ext, dfObsItems_xUser_ext, all=TRUE)
+        }
+      write_xlsx(dfStu, file)
+      }
+  )
+  
+  observeEvent(input$"StudentsData", {
+    dfStu <- merge(sumxStud_ext,dfObsItems_xUser_ext)
+    
+  })
+  
 #### HELP ####  
   observeEvent(input$"StrucInfo", {
     showModal(modalDialog(title = "Dashboard Structure",
-                          HTML("This dashboard is divided into five folders: <br/>
+                          HTML("This dashboard is divided into the following folders: <br/>
                           <b> Data Input </b> <br/> Data loading and main information <br/>
                           <b> Global Results </b> <br/> Global information about the time spent and the circuits performed by users <br/>
                           <b> Circuit-based Analysis </b> <br/> Detailed information about each of the circuits performed <br/>
                           <b> User-specific Results </b> <br/> Detailed information about the actions performed by each of the users <br/>
                           <b> Work Indicators </b> <br/> Performance analyses of the group and per user <br/> 
+                          <b> Data Download </b> <br/> Download of students' performance data <br/> 
                                      "),
                           footer = tagList(actionButton("closeDS", "OK"))
     ))
