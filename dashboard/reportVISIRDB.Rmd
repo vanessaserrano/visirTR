@@ -3,7 +3,7 @@ title: "VISIR-DB Report"
 author: "VISIR-DB"
 output:
   html_document:
-    self_contained: yes
+    self_contained: true
 ---
 
 ```{r setup, include=FALSE}

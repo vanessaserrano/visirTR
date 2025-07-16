@@ -3,7 +3,7 @@ options(install.packages.check.source = "no",
 
 pckgs<-c("pander",
          "shiny","shinyjs","shinythemes", "ggthemes","shinydashboard",
-         "tidyverse","XML","DT","gplots",
+         "tidyverse","ggrepel","XML","DT","gplots",
          "xts","dygraphs","scales",
          "formattable","treemap","viridis","cat","gsubfn","vroom",
          "parallel", "markdown", "knitr", "writexl")

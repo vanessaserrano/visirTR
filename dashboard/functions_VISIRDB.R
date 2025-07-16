@@ -1415,6 +1415,9 @@ showReport <- function() {
   dir.create(td, showWarnings = FALSE, recursive = FALSE, mode = "766")
   reportName <- paste0(td,"/reportVISIRDB_",
                        format(Sys.time(),"%Y%m%d%H%M%S"), ".html")
-  reportName <- knitr::knit2html("reportVISIRDB.Rmd", output=reportName)
+  # reportName <- knitr::knit2html("reportVISIRDB.Rmd", output=reportName)
+  rmarkdown::render("reportVISIRDB.Rmd", 
+                                  output_format = "html_document",
+                                  output_file=reportName)
   pander::openFileInOS(normalizePath(reportName))
 }
