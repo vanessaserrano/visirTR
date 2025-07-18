@@ -1410,14 +1410,20 @@ nActVStoTVSGrade <- function (dfStudents=NULL, dfStudentsMilestones=NULL, id=NUL
 
 #### REPORT ####
 showReport <- function() {
-  Sys.umask("011")
-  td <- tempdir()
-  dir.create(td, showWarnings = FALSE, recursive = FALSE, mode = "766")
-  reportName <- paste0(td,"/reportVISIRDB_",
-                       format(Sys.time(),"%Y%m%d%H%M%S"), ".html")
-  # reportName <- knitr::knit2html("reportVISIRDB.Rmd", output=reportName)
-  rmarkdown::render("reportVISIRDB.Rmd", 
-                                  output_format = "html_document",
-                                  output_file=reportName)
-  pander::openFileInOS(normalizePath(reportName))
+  # Sys.umask("011")
+  # td <- tempdir()
+  # dir.create(td, showWarnings = FALSE, recursive = FALSE, mode = "766")
+  # reportName <- paste0(td,"/reportVISIRDB_",
+  #                      format(Sys.time(),"%Y%m%d%H%M%S"), ".html")
+  reportName <- paste0("reportVISIRDB_",
+                      format(Sys.time(),"%Y%m%d%H%M%S"), ".html")
+  reportName <- knitr::knit2html("reportVISIRDB.Rmd", output=reportName,
+                                 force_v1=T, 
+                                 options=c('use_xhtml', 'base64_images'))
+  browseURL(normalizePath(reportName))
+  
+  # Consider making the report from HTML template to avoid
+  # writing to disk
+  
+  # Consider making a report without work indicators
 }

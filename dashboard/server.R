@@ -1611,10 +1611,10 @@ observeEvent(input$cmdReport, {
   output$StudentsData <- downloadHandler(
     filename = "StuData.xlsx",
     content = function(file) {
-        if(nrow(dfObsItems_xUser_ext)==0) { 
+        if(nrow(dfEvMilestones_xUser_ext)==0) { 
           dfStu <- sumxStud_ext
         } else {
-          dfStu <- merge(sumxStud_ext, dfObsItems_xUser_ext, all=TRUE)
+          dfStu <- merge(sumxStud_ext, dfEvMilestones_xUser_ext, all=TRUE)
         }
       write_xlsx(dfStu, file)
       }
