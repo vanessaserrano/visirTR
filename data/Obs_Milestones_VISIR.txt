@@ -1,9 +1,0 @@
-milNames	regExps	logTests
-P02M01	<circuit>W_X DMM_VHI A6/W_X DMM_VLO A10/R_X A6 A10 1k</circuit>	TRUE
-P02M02	<normalizedCircuit>R_X DMM_VHI DMM_VLO 1k</normalizedCircuit>	TRUE
-P02M03	<measure>resis</measure>	TRUE
-P02M04	<measure>dc vo</measure>	TRUE
-P02M05	<normalizedCircuit>.*R_X.*R_X.*</normalizedCircuit>	TRUE
-P02M06	<normalizedCircuit>.*R_X.*</normalizedCircuit>	TRUE
-P02M07	<normalizedCircuit>.*GND.*</normalizedCircuit>	TRUE
-P02M08	<measure>dc cu</measure>	TRUE
