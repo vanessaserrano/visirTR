@@ -1,5 +1,116 @@
 <html>
-  <body>
-    TEST
-  </body>
+<head>
+<title>VISIR/HIVE Dashboard</title>
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
+<style>
+<!--
+/* Style Definitions */
+p, li, div
+	{margin:0cm;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Arial",sans-serif;}
+div {display:block;}
+p, li {margin-bottom:5pt;
+    margin-left:30pt}
+h1, h2 {margin-left:30pt}
+a:link
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+#footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+-->
+</style>
+</head>
+
+
+<body style='min-width:600px;margin-bottom:50px;'>
+
+<div style='margin-bottom:50px;text-align:center;'>
+
+<div style='margin-right:50px;display:inline-block;'><img width="236" height="43" src="adamiqsl.png" style='margin-right:10px;' alt="Logo ADAMIQS" />
+<img width="64" height="43" src="iqs.png" alt="Logo IQS" />
+</div>
+<div style='margin-right:50px;display:inline-block;'>
+<img width="71" height="43" src="relate.gif" style='margin-right:10px;' alt="Logo RELATE" />
+<img width="191" height="43" src="urv.png" alt="Logo URV" />
+</div>
+<div style='margin-right:50px;display:inline-block;'>
+<img width="212" height="43" src="deustek.png" style='margin-right:10px;' alt="Logo Deustek" />
+<img width="110" height="43" src="deusto.png" alt="Logo Deusto" />
+</div>
+
+</div>
+
+<div>
+<p>This is the home for the VISIR/HIVE Dashboard (VISIR/HIVE-DB) project. It applies learning analytics approaches to the VISIR &amp; HIVE remote labs logged data.</p>
+<p>It is currently implemented as a Shiny app in R.</p>
+
+<h1>Current release (version 20250827)</h1>
+
+<h2>OPTION 1. Standalone VISIR/HIVE-DB (Windows OS only)</h2>
+
+<p>This file includes a portable version of R and VISIR/HIVE-DB. It runs as a standalone application.</p>
+<p>To run the dashboard:</p>
+
+<ol>
+<li>Download the current portable version: <a href="VISIR_DB_20250827.zip">VISIR_DB_20250827.zip</a>.</li>
+<li>Unzip the file.</li>
+<li>Launch <b>VISIR_DB</b> or <b>VISIR_DB.dat</b>. The dashboard may take some seconds to be fully available.</li>
+<li>Enjoy!</li>
+</ol>
+
+<h2>OPTION 2. Running VISIR/HIVE-DB from R (any OS with R installed)</h2>
+<p>R is required to use VISIR/HIVE-DB. To install R, follow the instructions from the <a href="https://www.r-project.org/">R project</a>.</p>
+
+<ol>
+<li>Download the R script to download and run the current version of VISIR-DB: <a href="runVISIRDB.R">runVISIRDB.R</a>.</li>
+<li>Source (execute) this script in your R interpreter.</li>
+<li>Enjoy!</li>
+</ol>
+
+<h1>Development version</h1>
+<p>The development files for VISIR/HIVE-DB are available at the following GitHub project: <a href="https://github.com/vanessaserrano/visirTR">https://github.com/vanessaserrano/visirTR</a>. The development version can be run from the script <a href="runVISIRDB_dev.R">runVISIRDB_dev.R</a>.</p>
+
+<h1>Scientific contributions related to VISIR/HIVE-DB</h1>
+<p>Please cite this work (i.e. Serrano et al., 2025) when using the VISIR/HIVE-DB in your research or teaching innovation efforts.</p>
+<ul>
+<li>Serrano, V., Cuadros, J., Fernández-Ruano, L., García-Zubía, J., Hernández-Jayo, U., & Lluch, F. (2025). Learning Analytics Dashboards for Assessing Remote Labs Users' Work: A Case Study with VISIR-DB. <i>Technology, Knowledge and Learning</i>, 30(1), 263-290. <br />
+<a href="https://doi.org/10.1007/s10758-024-09752-3">Paper</a></li>
+<li>Cuadros, J., Serrano, V., Lluch, F., Garcia-Zubia, J., &amp; Hernandez-Jayo, U. (2021, November). Mapping VISIR circuits for computer-assisted assessment. In <i>2021 World Engineering Education Forum/Global Engineering Deans Council (WEEF/GEDC)</i> (pp. 524-527). IEEE.<br />
+<a href="https://ieeexplore.ieee.org/abstract/document/9657349">Published contribution</a>, <a href="WEEF21_Presentation.pdf">Presentation</a>, <a href="WEEF_1233.mp4">Video</a></li>
+<li>García-Zubía, J., Cuadros, J., Serrano, V., Hernández-Jayo, U., Angulo-Martínez, I., Villar, A., ... & Alves, G. (2019, June). Dashboard for the VISIR remote lab. <i>2019 5th Experiment International Conference (exp. at'19)</i><br />
+<a href="https://www.semanticscholar.org/paper/Dashboard-for-the-VISIR-remote-lab-Garc%C3%ADa-Zub%C3%ADa-Cuadros/d4ef71ad46accb5604916aed7c8cd004823c3b09">Abstract</a>, <a href="https://recipp.ipp.pt/bitstream/10400.22/17593/1/COM_CIETI_GCA_2019.pdf">Paper</a></li>
+<li>Serrano, V., Cuadros, J., García-Zubía, J., Hernández-Jayo, U., &amp; Mompó, L.(2018). Design and Development of a Dashboard for the Visualization and Assessment of Students Work in a Remote Lab. <i>VIS 2018</i><br />
+<a href="https://vimeo.com/290331893">Abstract &amp; Video poster</a></li>
+</ul>
+
+<h1>Acknowledgements</h1>
+<p>This project has been supported with funds from the Aristos Campus Mundus.</p>
+
+<h1>To know more about the project, feel free to contact us.</h1>
+<ul>
+<li>Dr. Jordi Cuadros, <a href="mailto:jordi.cuadros@iqs.url.edu">jordi.cuadros@iqs.url.edu</a></li>
+<li>Dra. Vanessa Serrano, <a href="mailto:vanessa.serrano@urv.cat">vanessa.serrano@urv.cat</a></li>
+<li>Dr.  Javier García Zubía, <a href="mailto:zubia@deusto.es ">zubia@deusto.es</a></li>
+</ul>
+
+</div>
+
+<div id="footer" style='padding-top:5px;border-top:1px solid #888888;background-color:white;
+text-align:center'>
+<p style="font-size:11pt;">ADAMIQS; IQS Universitat Ramon Llull. RELATE; Universitat Rovira i Virgili. DEUSTEK; Universidad de Deusto. <span style="color:#888888;">Darrera actualització / <i>Última
+actualización</i> / Last update: 2025-08</span></p>
+</div>
+
+</body>
 </html>
+
