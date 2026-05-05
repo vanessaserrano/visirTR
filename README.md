@@ -1,7 +1,8 @@
-# visirTR
-VISIR Trace-Analyzer
+# VISIR/HIVE Dashboard (visirTR)
 
-The goal of this project is to build tools, R code and a dashboard, that allow analyzing the information collected in the VISIR (Virtual Instrument System in Reality) remote labs. This project is led by the ASISTEMBE group at IQS Universitat Ramon Llull (http://www.asistembe.iqs.edu/en/introduction) and DeustoTEK at Universidad de Deusto (http://deustotech.deusto.es). 
+The VISIR/HIVE Dashboard is a teacher-facing learning analytics tool that processes the information collected in VISIR (Virtual Instrument System in Reality, https://www.maxwell.vrac.puc-rio.br/VISIR/index.html) or HIVE (LabsLand Electronics Laboratory, https://labsland.com/web/hive) remote labs.
 
+The main page of the project is at https://vanessaserrano.github.io/visirTR/.
 
-For more information on the VISIR system please visit the VISIR+ project website (https://www.maxwell.vrac.puc-rio.br/VISIR/index.html).
+This project is led by the researchers at IQS Universitat Ramon Llull (http://www.iqs.edu), Universidad de Deusto (http://www.deusto.es) and Universitat Rovira i Virgili (https://www.urv.edu). 
+
