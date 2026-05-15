@@ -1666,8 +1666,8 @@ observeEvent(input$cmdReport, {
                                 <b> Measure:</b> Each of the posible magnitudes that can be determined in a circuit <br/>
       
                                <br/>Additional information can be found at 
-                               <a href='http://asistembe2.iqs.edu/visirtr/index.htm' target='_blank'>
-                               http://asistembe2.iqs.edu/visirtr/index.htm</a>."),
+                               <a href='https://vanessaserrano.github.io/visirTR/' target='_blank'>
+                               https://vanessaserrano.github.io/visirTR/</a>."),
                           footer = tagList(actionButton("closeG", "OK"))
     ))
     observeEvent(input$closeG, {
