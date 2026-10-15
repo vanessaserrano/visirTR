@@ -86,31 +86,35 @@ function(input, output, session) {
 })
   
   ## Work Indicators ####
-  dfMilestonesDef<-reactive({
+  dfObsItems<-reactive({
     inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else {
       oiFileName_ext <<- inFile$name
-      return(read.table(inFile$datapath, header=TRUE, sep="\t", quote=""))
+      dfOI <- read.table(inFile$datapath, header=TRUE, sep="\t", quote="")
+      colnames(dfOI) <- c("milNames","regExps","logTests") 
+      return(dfOI)
     }
   })
   
   dfActionsMilestones <- reactive({
     inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
-      generatedfActionsMilestones(dfActionCircuit(), dfMilestonesDef())
+      generatedfActionsMilestones(dfActionCircuit(), dfObsItems())
   })
   
   dfStudentsMilestones <- reactive({
     inFile <- input$obsItemsImport
     if (is.null(inFile)) return(NULL) else
-      generatedfUsersMilestones(dfActionsMilestones(), dfMilestonesDef())
+      generatedfUsersMilestones(dfActionsMilestones(), dfObsItems())
   })
   
   dfMilestonesEvDef<-reactive({
     inFile <- input$evMilestonesImport
     if (is.null(inFile)) return(NULL) else {
       emFileName_ext <<- inFile$name
-      return(read.table(inFile$datapath, header=TRUE, sep="\t", quote=""))
+      dfAM <- read.table(inFile$datapath, header=TRUE, sep="\t", quote="")
+      colnames(dfAM) <- c("milNames", "evTests")
+      return(dfAM)
     }
   })
   
@@ -119,7 +123,7 @@ function(input, output, session) {
   })
   
   dfOIColors <- reactive({
-    getdfOIColors(dfMilestonesDef(),dfMilestonesEvDef())
+    getdfOIColors(dfObsItems(),dfMilestonesEvDef())
   })
   
   # dfObsItemsLong <- reactive({
@@ -159,11 +163,11 @@ function(input, output, session) {
     
 ## Work Indicators ####
   output$milestonesData <- renderText({
-    if(is.null(dfMilestonesDef())) {
+    if(is.null(dfObsItems())) {
       "<em>Observation items to be loaded... use the control on the left if needed.</em>"
     } else {
-      paste("Read ",nrow(dfMilestonesDef()),
-            " observation items<br />", paste(dfMilestonesDef()[,1],collapse = ", ") , sep="")
+      paste("Read ",nrow(dfObsItems()),
+            " observation items<br />", paste(dfObsItems()[,1],collapse = ", ") , sep="")
     }
   })
   output$evmilestonesData <- renderText({

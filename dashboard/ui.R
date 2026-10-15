@@ -82,9 +82,9 @@ ui <- dashboardPage(
         fluidRow(
           box(title = "Data Input", status = "warning", solidHeader = TRUE, 
               width = 4, collapsible = FALSE,
-              fileInput('logsImport', 'Log File'),
-              fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('text/plain','.txt')),
-              fileInput('evMilestonesImport', 'Assessment Milestones (optional)', accept = c('text/plain','.txt'))
+              fileInput('logsImport', 'Log File', accept = c('.json','.csv')),
+              fileInput('obsItemsImport', 'Observation Items (optional)', accept = c('.txt')),
+              fileInput('evMilestonesImport', 'Assessment Milestones (optional)', accept = c('.txt'))
           ),
           column(width = 7,
             box(solidHeader = TRUE, width = NULL, htmlOutput("logFiles")),
